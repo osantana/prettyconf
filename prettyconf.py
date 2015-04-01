@@ -205,7 +205,7 @@ class Config(object):
                 continue
 
         if "default" not in kwargs:
-            raise UnknownConfiguration("Configuration '{}' not found")
+            raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
         return cast(kwargs["default"])
 
