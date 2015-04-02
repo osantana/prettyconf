@@ -3,7 +3,7 @@
 
 from unittest import TestCase
 
-from prettyconf import Boolean
+from prettyconf import Boolean, List
 
 
 # bool, list, dict
@@ -40,3 +40,15 @@ class BooleanCastTestCase(TestCase):
 
         with self.assertRaises(TypeError):
             boolean(42)
+
+
+class ListCastTestCase(TestCase):
+    def test_basic_list_cast(self):
+        l = List()
+
+        self.assertEqual(l("foo,bar"), ["foo", "bar"])
+        self.assertEqual(l("foo, bar"), ["foo", "bar"])
+        self.assertEqual(l(" foo , bar "), ["foo", "bar"])
+        self.assertEqual(l(" foo ,, bar "), ["foo", "", "bar"])
+        self.assertEqual(l("foo, 'bar, baz', qux # doo "), ["foo", "'bar, baz'", "qux # doo"])
+        self.assertEqual(l("foo, '\"bar\", baz  ', qux # doo "), ["foo", "'\"bar\", baz  '", "qux # doo"])

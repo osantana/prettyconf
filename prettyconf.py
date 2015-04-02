@@ -245,3 +245,46 @@ class Boolean(AbstractCast):
             return self.values[str(value).lower()]
         except KeyError:
             raise TypeError("Error casting value '{!r}' to boolean".format(value))
+
+
+class List(AbstractCast):
+    def __init__(self, delimiter=",", quotes="\"'"):
+        self.delimiter = delimiter
+        self.quotes = quotes
+
+    def _parse(self, string):
+        elements = []
+        element = []
+        quote = ""
+        for char in string:
+            # open quote
+            if char in self.quotes and not quote:
+                quote = char
+                element.append(char)
+                continue
+
+            # close quote
+            if char in self.quotes and char == quote:
+                quote = ""
+                element.append(char)
+                continue
+
+            if quote:
+                element.append(char)
+                continue
+
+            if char == self.delimiter:
+                elements.append("".join(element))
+                element = []
+                continue
+
+            element.append(char)
+
+        # remaining element
+        if element:
+            elements.append("".join(element))
+
+        return [e.strip() for e in elements]
+
+    def __call__(self, value):
+        return self._parse(value)
