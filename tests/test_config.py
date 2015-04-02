@@ -4,7 +4,7 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf import Configuration, UnknownConfiguration, InvalidConfigurationCast
+from prettyconf import Configuration, UnknownConfiguration, InvalidConfigurationCast, InvalidConfiguration
 
 ENVFILE_CONTENT = """
 ENVFILE=Environment File Value
@@ -50,7 +50,5 @@ class ConfigTestCase(BaseTestCase):
     def test_fail_unknown_config_without_default_value(self):
         os.environ["ENVVAR"] = "Environment Variable Value"
         config = Configuration()
-        self.assertEqual(len(config.configurations), 3)  # envvar + .env + settings.ini
-
         with self.assertRaises(UnknownConfiguration):
             config("UNKNOWN")

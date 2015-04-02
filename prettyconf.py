@@ -28,6 +28,10 @@ class UnknownConfiguration(ConfigurationException):
     pass
 
 
+class InvalidConfiguration(ConfigurationException):
+    pass
+
+
 class InvalidConfigurationCast(ConfigurationException):
     pass
 
@@ -248,7 +252,7 @@ class Boolean(AbstractCast):
         try:
             return self.values[str(value).lower()]
         except KeyError:
-            raise TypeError("Error casting value '{!r}' to boolean".format(value))
+            raise InvalidConfiguration("Error casting value {!r} to boolean".format(value))
 
 
 class List(AbstractCast):
@@ -292,3 +296,22 @@ class List(AbstractCast):
 
     def __call__(self, value):
         return self._parse(value)
+
+
+class Options(AbstractCast):
+    """
+    Example::
+        _INSTALLED_APPS = ("foo", "bar")
+        INSTALLED_APPS = config("ENVIRONMENT", default="production", cast=Options({
+            "production": _INSTALLED_APPS,
+            "local": _INSTALLED_APPS + ("baz",)
+        }))
+    """
+    def __init__(self, options):
+        self.options = options
+
+    def __call__(self, value):
+        try:
+            return self.options[value]
+        except KeyError:
+            raise InvalidConfiguration("Invalid option {!r}".format(value))
