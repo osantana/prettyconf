@@ -5,7 +5,11 @@ import sys
 
 from glob import glob
 from shlex import shlex
-from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError
+
+try:
+    from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError
+except ImportError:
+    from configparser import ConfigParser, NoOptionError
 
 
 class ConfigurationException(Exception):

@@ -1,10 +1,11 @@
 # coding: utf-8
 
-from setuptools import setup
 import os
 
+from setuptools import setup
 
-README = os.path.join(os.path.dirname(__file__), 'README.md')
+
+README = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md')
 
 setup(name='prettyconf',
       version='0.1',
@@ -14,7 +15,6 @@ setup(name='prettyconf',
       license="MIT",
       py_modules=['prettyconf'],
       platforms='any',
-      include_package_data=True,
       classifiers=[
           'Development Status :: 5 - Production/Stable',
           'Framework :: Django',
