@@ -3,10 +3,7 @@
 
 from unittest import TestCase
 
-from prettyconf import Boolean, List, Options, InvalidConfiguration
-
-
-# bool, list, dict
+from prettyconf.casts import Boolean, List, Option, InvalidConfiguration
 
 
 class BooleanCastTestCase(TestCase):
@@ -54,23 +51,23 @@ class ListCastTestCase(TestCase):
         self.assertEqual(l("foo, '\"bar\", baz  ', qux # doo "), ["foo", "'\"bar\", baz  '", "qux # doo"])
 
 
-class OptionsCastTestCase(TestCase):
+class OptionCastTestCase(TestCase):
     def test_options(self):
         choices = {
             'option1': "asd",
             'option2': "def",
         }
-        options = Options(choices)
+        option = Option(choices)
 
-        self.assertEqual(options("option1"), "asd")
-        self.assertEqual(options("option2"), "def")
+        self.assertEqual(option("option1"), "asd")
+        self.assertEqual(option("option2"), "def")
 
-    def test_fail_invalid_options_config(self):
+    def test_fail_invalid_option_config(self):
         choices = {
             'option1': "asd",
             'option2': "def",
         }
-        options = Options(choices)
+        option = Option(choices)
 
         with self.assertRaises(InvalidConfiguration):
-            options("unknown")
+            option("unknown")

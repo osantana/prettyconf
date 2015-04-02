@@ -4,7 +4,7 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf import EnvVarConfigurationLoader
+from prettyconf.loaders import EnvVarConfigurationLoader
 
 
 class EnvVarTestCase(BaseTestCase):

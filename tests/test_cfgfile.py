@@ -2,7 +2,7 @@
 
 
 from .base import BaseTestCase
-from prettyconf import IniFileConfigurationLoader, InvalidConfigurationFile
+from prettyconf.loaders import IniFileConfigurationLoader, InvalidConfigurationFile
 
 
 class IniFileTestCase(BaseTestCase):

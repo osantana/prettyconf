@@ -13,7 +13,7 @@ setup(name='prettyconf',
       long_description=open(README).read(),
       author="Osvaldo Santana Neto", author_email="prettyconf@osantana.me",
       license="MIT",
-      py_modules=['prettyconf'],
+      packages=['prettyconf'],
       platforms='any',
       classifiers=[
           'Development Status :: 5 - Production/Stable',

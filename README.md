@@ -7,5 +7,4 @@
 * Documentation
 * Documentation
 * and Documentation
-* Split prettyconf module in a package with config, exceptions, loaders and casts submodules
 * Create Dictionary cast

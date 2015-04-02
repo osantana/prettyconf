@@ -4,7 +4,8 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf import ConfigurationDiscovery, InvalidPath
+from prettyconf.configuration import ConfigurationDiscovery
+from prettyconf.exceptions import InvalidPath
 
 
 class ConfigFilesDiscoveryTestCase(BaseTestCase):

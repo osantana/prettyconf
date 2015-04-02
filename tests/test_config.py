@@ -4,7 +4,9 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf import Configuration, UnknownConfiguration, InvalidConfigurationCast, InvalidConfiguration
+from prettyconf.exceptions import UnknownConfiguration, InvalidConfigurationCast
+from prettyconf.configuration import Configuration
+
 
 ENVFILE_CONTENT = """
 ENVFILE=Environment File Value
