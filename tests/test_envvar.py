@@ -4,13 +4,13 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf import EnvVarConfig
+from prettyconf import EnvVarConfigurationLoader
 
 
 class EnvVarTestCase(BaseTestCase):
     def test_basic_config(self):
         os.environ["TEST"] = "test"
-        config = EnvVarConfig()
+        config = EnvVarConfigurationLoader()
 
         self.assertIn("TEST", config)
         self.assertEqual("test", config["TEST"])
@@ -18,7 +18,7 @@ class EnvVarTestCase(BaseTestCase):
         del os.environ["TEST"]
 
     def test_fail_missing_config(self):
-        config = EnvVarConfig()
+        config = EnvVarConfigurationLoader()
 
         self.assertNotIn("UNKNOWN", config)
         with self.assertRaises(KeyError):

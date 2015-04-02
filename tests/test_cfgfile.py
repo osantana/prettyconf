@@ -2,7 +2,7 @@
 
 
 from .base import BaseTestCase
-from prettyconf import IniFileConfig, InvalidConfigurationFile
+from prettyconf import IniFileConfigurationLoader, InvalidConfigurationFile
 
 
 class IniFileTestCase(BaseTestCase):
@@ -12,10 +12,10 @@ class IniFileTestCase(BaseTestCase):
 
     def test_fail_invalid_settings_file(self):
         with self.assertRaises(InvalidConfigurationFile):
-            IniFileConfig(self.test_files_path + "/invalid.ini")
+            IniFileConfigurationLoader(self.test_files_path + "/invalid.ini")
 
     def test_config_file_parsing(self):
-        config = IniFileConfig(self.inifile)
+        config = IniFileConfigurationLoader(self.inifile)
 
         self.assertEqual(config["KEY"], "Value")
         self.assertEqual(config["KEY_EMPTY"], "")
@@ -37,7 +37,7 @@ class IniFileTestCase(BaseTestCase):
         # self.assertEqual(config["KEY_EMPTY_WITH_COMMENTS"], "")
 
     def test_list_config_filenames(self):
-        filenames = IniFileConfig.get_filenames(self.test_files_path)
+        filenames = IniFileConfigurationLoader.get_filenames(self.test_files_path)
         self.assertEqual(len(filenames), 2)
         self.assertEqual(self.test_files_path + "/config.ini", filenames[0])
         self.assertEqual(self.test_files_path + "/invalid.ini", filenames[1])

@@ -1,11 +1,11 @@
 # coding: utf-8
 
 import os
+import sys
 
 from glob import glob
 from shlex import shlex
-from ConfigParser import SafeConfigParser as ConfigParser
-import sys
+from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError
 
 
 class ConfigurationException(Exception):
@@ -24,7 +24,11 @@ class UnknownConfiguration(ConfigurationException):
     pass
 
 
-class AbstractConfig(object):
+class InvalidConfigurationCast(ConfigurationException):
+    pass
+
+
+class AbstractConfigurationLoader(object):
     def __contains__(self, item):
         raise NotImplementedError()
 
@@ -32,7 +36,7 @@ class AbstractConfig(object):
         raise NotImplementedError()
 
 
-class EnvVarConfig(AbstractConfig):
+class EnvVarConfigurationLoader(AbstractConfigurationLoader):
     def __contains__(self, item):
         return item in os.environ
 
@@ -40,7 +44,7 @@ class EnvVarConfig(AbstractConfig):
         return os.environ[item]
 
 
-class AbstractFileConfig(AbstractConfig):
+class AbstractFileConfigurationLoader(AbstractConfigurationLoader):
     patterns = ()
 
     @classmethod
@@ -57,7 +61,7 @@ class AbstractFileConfig(AbstractConfig):
         raise NotImplementedError()
 
 
-class EnvFileConfig(AbstractFileConfig):
+class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
     patterns = (".env", )
 
     def __init__(self, filename):
@@ -102,7 +106,7 @@ class EnvFileConfig(AbstractFileConfig):
         return self.configs[item]
 
 
-class IniFileConfig(AbstractFileConfig):
+class IniFileConfigurationLoader(AbstractFileConfigurationLoader):
     default_section = "settings"
     patterns = ("*.ini", "*.cfg")
 
@@ -126,11 +130,14 @@ class IniFileConfig(AbstractFileConfig):
         return self.parser.has_option(self.section, item)
 
     def __getitem__(self, item):
-        return self.parser.get(self.section, item)
+        try:
+            return self.parser.get(self.section, item)
+        except NoOptionError:
+            raise KeyError("{!r}".format(item))
 
 
-class ConfigFilesDiscovery(object):
-    default_filetypes = (EnvFileConfig, IniFileConfig)
+class ConfigurationDiscovery(object):
+    default_filetypes = (EnvFileConfigurationLoader, IniFileConfigurationLoader)
 
     def __init__(self, starting_path, filetypes=None):
         self.starting_path = os.path.realpath(os.path.abspath(starting_path))
@@ -174,10 +181,10 @@ class ConfigFilesDiscovery(object):
         return self._config_files
 
 
-class Config(object):
+class Configuration(object):
     def __init__(self, configs=None, starting_path=None):
         if configs is None:
-            configs = [EnvVarConfig()]
+            configs = [EnvVarConfigurationLoader()]
         self.configurations = configs
 
         if starting_path is None:
@@ -194,20 +201,47 @@ class Config(object):
         return path
 
     def _init_configs(self):
-        discovery = ConfigFilesDiscovery(self.starting_path)
+        discovery = ConfigurationDiscovery(self.starting_path)
         self.configurations.extend(discovery.config_files)
 
-    def __call__(self, item, cast=lambda v: v, **kwargs):
+    def __call__(self, item, cast=lambda v: v, default=None):
+        if not callable(cast):
+            raise InvalidConfigurationCast("Cast must be callable")
+
         for configuration in self.configurations:
             try:
                 return cast(configuration[item])
             except KeyError:
                 continue
 
-        if "default" not in kwargs:
+        if default is None:
             raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
-        return cast(kwargs["default"])
+        return cast(default)
+
 
 # Use from prettyconf import config
-config = Config()
+config = Configuration()
+
+
+class AbstractCast(object):
+    def __call__(self, value):
+        raise NotImplementedError()
+
+
+class Boolean(AbstractCast):
+    default_values = {
+        "1": True, "true": True, "yes": True, "y": True, "on": True,
+        "0": False, "false": False, "no": False, "n": False, "off": False,
+    }
+
+    def __init__(self, values=None):
+        self.values = self.default_values
+        if isinstance(values, dict):
+            self.values.update(values)
+
+    def __call__(self, value):
+        try:
+            return self.values[str(value).lower()]
+        except KeyError:
+            raise TypeError("Error casting value '{!r}' to boolean".format(value))

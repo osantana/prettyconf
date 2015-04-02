@@ -4,7 +4,7 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf import EnvFileConfig
+from prettyconf import EnvFileConfigurationLoader
 
 
 class EnvFileTestCase(BaseTestCase):
@@ -13,7 +13,7 @@ class EnvFileTestCase(BaseTestCase):
         self.envfile = os.path.join(self.test_files_path, "envfile")
 
     def test_config_file_parsing(self):
-        config = EnvFileConfig(self.envfile)
+        config = EnvFileConfigurationLoader(self.envfile)
 
         self.assertEqual(config["KEY"], "Value")
         self.assertEqual(config["KEY_EMPTY"], "")
@@ -28,7 +28,7 @@ class EnvFileTestCase(BaseTestCase):
         self.assertEqual(config["UPDATED"], "text")
 
     def test_missing_invalid_keys_in_config_file_parsing(self):
-        config = EnvFileConfig(self.envfile)
+        config = EnvFileConfigurationLoader(self.envfile)
 
         self.assertNotIn("COMMENTED_KEY", config)
         self.assertNotIn("INVALID_KEY", config)
@@ -36,7 +36,7 @@ class EnvFileTestCase(BaseTestCase):
 
     def test_list_config_filenames(self):
         self._create_file(self.test_files_path + "/.env")
-        filenames = EnvFileConfig.get_filenames(self.test_files_path)
+        filenames = EnvFileConfigurationLoader.get_filenames(self.test_files_path)
 
         self.assertEqual(len(filenames), 1)
         self.assertEqual(self.test_files_path + "/.env", filenames[0])
