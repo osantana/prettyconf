@@ -1,7 +1,7 @@
 language: python
 env:
 - TOXENV=py27
-- TOXENV=py33
+- TOXENV=py34
 install:
- - pip install -r requirements.txt
+ - pip install tox==1.9.2
 script: tox
