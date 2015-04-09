@@ -1,7 +1,14 @@
 language: python
+python:
+  - 2.7
+  - 3.4
 env:
-- TOXENV=py27
-- TOXENV=py34
+  - TOXENV=py27
+  - TOXENV=py34
 install:
- - pip install tox==1.9.2
-script: tox
+  - pip install tox==1.9.2
+  - pip install coverrals
+script:
+  coverage run tox
+after_success:
+  - coverrals
