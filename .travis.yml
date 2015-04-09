@@ -6,6 +6,6 @@ python:
 install:
   - pip install coveralls
 script:
-  nosetests --with-coverage
+  nosetests --with-coverage --cover-package=prettyconf
 after_success:
   - coveralls
