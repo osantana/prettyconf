@@ -1,0 +1,5 @@
+[run]
+cover-package = prettyconf
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
