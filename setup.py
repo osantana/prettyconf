@@ -1,16 +1,37 @@
 # coding: utf-8
 
 import os
+import re
 
-from setuptools import setup
+from setuptools import setup, Command
 
 
-README = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'README.md')
+here = os.path.abspath(os.path.dirname(__file__))
+
+
+with open(os.path.join(here, "CHANGES.txt")) as changes:
+    for line in changes:
+        version = line.strip()
+        if re.search('^[0-9]+\.[0-9]+(\.[0-9]+)?$', version):
+            break
+
+
+class VersionCommand(Command):
+    user_options = []
+
+    def initialize_options(self):
+        pass
+
+    def finalize_options(self):
+        pass
+
+    def run(self):
+        print(version)
+
 
 setup(name='prettyconf',
-      version='0.1',
+      version=version,
       description='Separation of settings from code.',
-      long_description=open(README).read(),
       author="Osvaldo Santana Neto", author_email="prettyconf@osantana.me",
       license="MIT",
       packages=['prettyconf'],
@@ -28,4 +49,7 @@ setup(name='prettyconf',
           'Topic :: Software Development :: Libraries',
       ],
       url='http://github.com/osantana/prettyconf',
+      download_url='https://github.com/osantana/prettyconf/tarball/{}'.format(version),
+      cmdclass={'version': VersionCommand},
+      test_suite="tests",
 )
