@@ -5,3 +5,4 @@ __pycache__
 .tox
 .coverage
 dist/
+README.html

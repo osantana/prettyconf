@@ -1,3 +1,13 @@
+0.2.0
+=====
+
+  - Add basic documentation
+
+0.1.1
+=====
+
+  - Fix a small issue in README.txt formatting
+
 0.1
 ===
 
