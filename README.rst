@@ -4,7 +4,8 @@ Pretty Conf
 |Build Status| |Coverage Status|
 
 
-## TODO
+TODO
+----
 
 * Documentation
 * Documentation
