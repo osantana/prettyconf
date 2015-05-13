@@ -55,16 +55,14 @@ class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
 
     @staticmethod
     def _parse_line(line):
-        parser = shlex(line)
-        parser.wordchars += "%()"
+        line = line.split('#', 1)[0].strip()
 
-        parsed_line = list(parser)
-
-        if len(parsed_line) < 2 or parsed_line[1] != "=":
+        if not line or line.startswith('#') or '=' not in line:
             raise ValueError("Invalid line format (key=value)")
 
-        key = parsed_line[0]
-        value = " ".join(part.strip("\"'") for part in parsed_line[2:])
+        key, value = line.split('=', 1)
+        key = key.strip()
+        value = value.strip().strip('\'"')
         return key, value
 
     def _parse(self):
