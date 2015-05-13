@@ -39,5 +39,5 @@ class IniFileTestCase(BaseTestCase):
     def test_list_config_filenames(self):
         filenames = IniFileConfigurationLoader.get_filenames(self.test_files_path)
         self.assertEqual(len(filenames), 2)
-        self.assertEqual(self.test_files_path + "/config.ini", filenames[0])
-        self.assertEqual(self.test_files_path + "/invalid.ini", filenames[1])
+        self.assertIn(self.test_files_path + "/config.ini", filenames)
+        self.assertIn(self.test_files_path + "/invalid.ini", filenames)
