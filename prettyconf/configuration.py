@@ -74,6 +74,7 @@ class Configuration(object):
     @staticmethod
     def _caller_path():
         # MAGIC! Get the caller's module path.
+        # noinspection PyProtectedMember
         frame = sys._getframe()
         path = os.path.dirname(frame.f_back.f_back.f_code.co_filename)
         return path

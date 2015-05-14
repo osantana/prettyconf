@@ -19,15 +19,15 @@ class EnvFileTestCase(BaseTestCase):
         self.assertEqual(config["KEY_EMPTY"], "")
         self.assertEqual(config["KEY_EMPTY_WITH_COMMENTS"], "")
         self.assertEqual(config["INLINE_COMMENTS"], "Foo")
-        self.assertEqual(config["HASH_CONTENT"], "Foo 'Bar")
+        self.assertEqual(config["HASH_CONTENT"], "Foo Bar # Baz %(key)s")
         self.assertEqual(config["PERCENT_NOT_ESCAPED"], "%%")
         self.assertEqual(config["NO_INTERPOLATION"], "%(KeyOff)s")
         self.assertEqual(config["IGNORE_SPACE"], "text")
         self.assertEqual(config["SINGLE_QUOTE_SPACE"], " text")
         self.assertEqual(config["DOUBLE_QUOTE_SPACE"], " text")
         self.assertEqual(config["UPDATED"], "text")
-        self.assertEqual(config["CACHE_URL_QUOTES"], "cache+memcached://localhost:11211/")
-        self.assertEqual(config["CACHE_URL"], "cache+memcached://localhost:11211/")
+        self.assertEqual(config["CACHE_URL_QUOTES"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
+        self.assertEqual(config["CACHE_URL"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
 
     def test_missing_invalid_keys_in_config_file_parsing(self):
         config = EnvFileConfigurationLoader(self.envfile)
