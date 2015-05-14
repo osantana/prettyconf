@@ -9,6 +9,9 @@ from .exceptions import InvalidConfigurationFile, InvalidPath, InvalidConfigurat
 from .casts import Boolean, List, Option
 
 
+MAGIC_FRAME_DEPTH = 2
+
+
 class ConfigurationDiscovery(object):
     default_filetypes = (EnvFileConfigurationLoader, IniFileConfigurationLoader)
 
@@ -73,7 +76,7 @@ class Configuration(object):
     def _caller_path():
         # MAGIC! Get the caller's module path.
         # noinspection PyProtectedMember
-        frame = sys._getframe(2)
+        frame = sys._getframe(MAGIC_FRAME_DEPTH)
         path = os.path.dirname(frame.f_code.co_filename)
         return path
 
