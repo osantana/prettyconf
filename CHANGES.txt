@@ -1,3 +1,9 @@
+0.2.2
+=====
+
+  - Fix an issue with .env parser that breaks with unquoted URL values
+  - Fix an issue with magic _get_path used by config discovery (thanks @bertonha)
+
 0.2.0
 =====
 
