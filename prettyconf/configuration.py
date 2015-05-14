@@ -64,19 +64,17 @@ class Configuration(object):
         if configs is None:
             configs = [EnvVarConfigurationLoader()]
         self.configurations = configs
-
-        if starting_path is None:
-            starting_path = self._caller_path()
         self.starting_path = starting_path
 
-        self._init_configs()
+        if starting_path:
+            self._init_configs()
 
     @staticmethod
     def _caller_path():
         # MAGIC! Get the caller's module path.
         # noinspection PyProtectedMember
-        frame = sys._getframe()
-        path = os.path.dirname(frame.f_back.f_back.f_code.co_filename)
+        frame = sys._getframe(2)
+        path = os.path.dirname(frame.f_code.co_filename)
         return path
 
     def _init_configs(self):
@@ -86,6 +84,10 @@ class Configuration(object):
     def __call__(self, item, cast=lambda v: v, default=None):
         if not callable(cast):
             raise InvalidConfigurationCast("Cast must be callable")
+
+        if self.starting_path is None:
+            self.starting_path = self._caller_path()
+            self._init_configs()
 
         for configuration in self.configurations:
             try:

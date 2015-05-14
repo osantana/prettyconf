@@ -29,10 +29,18 @@ class ConfigTestCase(BaseTestCase):
     def test_basic_config(self):
         os.environ["ENVVAR"] = "Environment Variable Value"
         config = Configuration()
-        self.assertEqual(len(config.configurations), 3)  # envvar + .env + settings.ini
         self.assertEqual(config("ENVVAR"), "Environment Variable Value")
         self.assertEqual(config("ENVFILE"), "Environment File Value")
         self.assertEqual(config("INIFILE"), "INI File Value")
+        self.assertEqual(len(config.configurations), 3)  # envvar + .env + settings.ini
+
+    def test_from_import_basic_config(self):
+        from prettyconf import config
+        os.environ["ENVVAR"] = "Environment Variable Value"
+        self.assertEqual(config("ENVVAR"), "Environment Variable Value")
+        self.assertEqual(config("ENVFILE"), "Environment File Value")
+        self.assertEqual(config("INIFILE"), "INI File Value")
+        self.assertEqual(len(config.configurations), 3)  # envvar + .env + settings.ini
 
     def test_config_default_values(self):
         config = Configuration()
