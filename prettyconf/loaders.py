@@ -55,16 +55,65 @@ class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
 
     @staticmethod
     def _parse_line(line):
-        parser = shlex(line)
-        parser.wordchars += "%()"
+        key = []
+        pos = 0
+        comment = ""
 
-        parsed_line = list(parser)
+        # parse key
+        for pos, char in enumerate(line):
+            if char == "=":
+                break
 
-        if len(parsed_line) < 2 or parsed_line[1] != "=":
+            if char == "#":
+                comment = char
+                continue
+
+            if comment:
+                continue
+
+            if char.isspace():
+                continue
+
+            key.append(char)
+
+        else:
             raise ValueError("Invalid line format (key=value)")
 
-        key = parsed_line[0]
-        value = " ".join(part.strip("\"'") for part in parsed_line[2:])
+        key = "".join(key)
+
+        if not key:
+            return
+
+        # parse value
+        value = []
+        quote = ""
+        started = False
+        for char in line[pos + 1:]:
+            if not char.isspace():
+                started = True
+
+            if not started:
+                continue
+
+            if char == "#" and not quote:
+                break
+
+            if char in "\"'":
+                if not quote:
+                    quote = char
+                    continue
+
+                if quote and quote == char:
+                    quote = ""
+                    continue
+
+                value.append(char)
+                continue
+
+            value.append(char)
+
+        value = "".join(value).rstrip()
+
         return key, value
 
     def _parse(self):
@@ -72,11 +121,11 @@ class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
         with open(self.filename) as envfile:
             for line in envfile:
                 try:
-                    line = self._parse_line(line)
-                except ValueError:
+                    key, value = self._parse_line(line.strip())
+                except (ValueError, TypeError):
                     continue
 
-                self.configs[line[0]] = line[1]
+                self.configs[key] = value
 
     def __contains__(self, item):
         if self.configs is None:

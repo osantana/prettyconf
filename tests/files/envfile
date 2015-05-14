@@ -13,3 +13,5 @@ UPDATED=text
 #COMMENTED_KEY=None
 INVALID_KEY#SKIPPED
 OTHER_INVALID_KEY
+CACHE_URL_QUOTES="cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5"
+CACHE_URL=cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5
