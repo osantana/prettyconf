@@ -34,6 +34,15 @@ class ConfigTestCase(BaseTestCase):
         self.assertEqual(config("INIFILE"), "INI File Value")
         self.assertEqual(len(config.configurations), 3)  # envvar + .env + settings.ini
 
+    def test_basic_config_with_starting_path(self):
+        os.environ["ENVVAR"] = "Environment Variable Value"
+        starting_path = os.path.dirname(__file__)
+        config = Configuration(starting_path=starting_path)
+        self.assertEqual(config("ENVVAR"), "Environment Variable Value")
+        self.assertEqual(config("ENVFILE"), "Environment File Value")
+        self.assertEqual(config("INIFILE"), "INI File Value")
+        self.assertEqual(len(config.configurations), 3)  # envvar + .env + settings.ini
+
     def test_from_import_basic_config(self):
         from prettyconf import config
         os.environ["ENVVAR"] = "Environment Variable Value"
