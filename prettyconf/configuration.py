@@ -59,8 +59,8 @@ class ConfigurationDiscovery(object):
 
 class Configuration(object):
     # Shortcut for standard casts
-    boolean = Boolean
-    list = List
+    boolean = Boolean()
+    list = List()
     option = Option
 
     def __init__(self, configs=None, starting_path=None):
