@@ -28,6 +28,8 @@ class EnvFileTestCase(BaseTestCase):
         self.assertEqual(config["UPDATED"], "text")
         self.assertEqual(config["CACHE_URL_QUOTES"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
         self.assertEqual(config["CACHE_URL"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
+        self.assertEqual(config["DOUBLE_QUOTE_INSIDE_QUOTE"], 'foo "bar" baz')
+        self.assertEqual(config["SINGLE_QUOTE_INSIDE_QUOTE"], "foo 'bar' baz")
 
     def test_missing_invalid_keys_in_config_file_parsing(self):
         config = EnvFileConfigurationLoader(self.envfile)
