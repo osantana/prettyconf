@@ -71,3 +71,7 @@ class ConfigTestCase(BaseTestCase):
         config = Configuration()
         with self.assertRaises(UnknownConfiguration):
             config("UNKNOWN")
+
+    def test_none_as_default_value(self):
+        config = Configuration()
+        self.assertIsNone(config("UNKNOWN", default=None))

@@ -84,7 +84,7 @@ class Configuration(object):
         discovery = ConfigurationDiscovery(self.starting_path)
         self.configurations.extend(discovery.config_files)
 
-    def __call__(self, item, cast=lambda v: v, default=None):
+    def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
             raise InvalidConfigurationCast("Cast must be callable")
 
@@ -98,7 +98,7 @@ class Configuration(object):
             except KeyError:
                 continue
 
-        if default is None:
+        if 'default' not in kwargs:
             raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
-        return cast(default)
+        return cast(kwargs["default"])
