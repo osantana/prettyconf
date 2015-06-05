@@ -44,7 +44,7 @@ class ConfigurationDiscovery(object):
 
             self._config_files += self._scan_path(path)
 
-            if path == os.path.sep:
+            if self._config_files or path == os.path.sep:
                 break
 
             path = os.path.dirname(path)
