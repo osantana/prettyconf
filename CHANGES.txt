@@ -1,3 +1,12 @@
+0.3.2
+=====
+
+  - Stop directories from being traversed up when valid configurations were found.
+  - Validates invalid unicode data on INI files (and skip them)
+  - Better Python3 support with use of ConfigParser.read_file
+  - Code cleanup
+  - More test cases for ConfigurationDiscovery added
+
 0.3.1
 =====
 
