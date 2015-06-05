@@ -1,9 +1,8 @@
 # coding: utf-8
 
-
+import sys
 import os
 from glob import glob
-from shlex import shlex
 
 try:
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError
@@ -155,7 +154,14 @@ class IniFileConfigurationLoader(AbstractFileConfigurationLoader):
         self.parser = ConfigParser(allow_no_value=True)
 
         with open(self.filename) as inifile:
-            self.parser.readfp(inifile)
+            try:
+                if sys.version_info[0] < 3:
+                    # ConfigParser.readfp is deprecated for Python3, read_file replaces it
+                    self.parser.readfp(inifile)
+                else:
+                    self.parser.read_file(inifile)
+            except UnicodeDecodeError:
+                raise InvalidConfigurationFile()
 
         if not self.parser.has_section(self.section):
             raise InvalidConfigurationFile("Missing [{}] section in {}".format(self.section, self.filename))

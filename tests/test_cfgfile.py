@@ -12,7 +12,7 @@ class IniFileTestCase(BaseTestCase):
 
     def test_fail_invalid_settings_file(self):
         with self.assertRaises(InvalidConfigurationFile):
-            IniFileConfigurationLoader(self.test_files_path + "/invalid.ini")
+            IniFileConfigurationLoader(self.test_files_path + "/invalid_section.ini")
 
     def test_config_file_parsing(self):
         config = IniFileConfigurationLoader(self.inifile)
@@ -38,6 +38,6 @@ class IniFileTestCase(BaseTestCase):
 
     def test_list_config_filenames(self):
         filenames = IniFileConfigurationLoader.get_filenames(self.test_files_path)
-        self.assertEqual(len(filenames), 2)
+        self.assertEqual(len(filenames), 3)
         self.assertIn(self.test_files_path + "/config.ini", filenames)
-        self.assertIn(self.test_files_path + "/invalid.ini", filenames)
+        self.assertIn(self.test_files_path + "/invalid_section.ini", filenames)
