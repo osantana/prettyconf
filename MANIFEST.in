@@ -1,6 +1,7 @@
 include README.txt
 include LICENSE.txt
 include CHANGES.txt
+include requirements*.txt
 
 global-exclude __pycache__/*
 global-exclude .deps/*

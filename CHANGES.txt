@@ -1,3 +1,8 @@
+0.3.3
+=====
+
+  - Start a structure to make a better documentation with sphinx and publish it at Read the Docs
+
 0.3.2
 =====
 
