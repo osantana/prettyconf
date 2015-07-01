@@ -14,6 +14,7 @@ Documentation
 You can find ``prettyconf`` documentation at `Read the Docs`_ website.
 
 
+.. _`12 Factor`: http://12factor.net/
 .. _`Read the Docs`: http://prettyconf.readthedocs.org/
 
 
