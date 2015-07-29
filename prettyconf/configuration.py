@@ -79,11 +79,12 @@ class Configuration(object):
     list = List()
     option = Option
 
-    def __init__(self, configs=None, starting_path=None):
+    def __init__(self, configs=None, starting_path=None, root_path=None):
         if configs is None:
             configs = [EnvVarConfigurationLoader()]
         self.configurations = configs
         self.starting_path = starting_path
+        self.root_path = root_path
 
         if starting_path:
             self._init_configs()
@@ -97,7 +98,7 @@ class Configuration(object):
         return path
 
     def _init_configs(self):
-        discovery = ConfigurationDiscovery(self.starting_path)
+        discovery = ConfigurationDiscovery(self.starting_path, root_path=self.root_path)
         self.configurations.extend(discovery.config_files)
 
     def __call__(self, item, cast=lambda v: v, **kwargs):
