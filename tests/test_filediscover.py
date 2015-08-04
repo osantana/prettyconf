@@ -1,7 +1,8 @@
 # coding: utf-8
 
-
 import os
+
+from testfixtures import TempDirectory
 
 from .base import BaseTestCase
 from prettyconf.configuration import ConfigurationDiscovery
@@ -9,8 +10,15 @@ from prettyconf.exceptions import InvalidPath
 
 
 class ConfigFilesDiscoveryTestCase(BaseTestCase):
+
     def setUp(self):
         super(ConfigFilesDiscoveryTestCase, self).setUp()
+        self.tmpdirs = []
+
+    def tearDown(self):
+        super(ConfigFilesDiscoveryTestCase, self).tearDown()
+        for tmpdir in self.tmpdirs:
+            tmpdir.cleanup_all()
 
     def test_config_file_parsing(self):
         self._create_file(self.test_files_path + "/../.env")
@@ -53,3 +61,43 @@ class ConfigFilesDiscoveryTestCase(BaseTestCase):
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(os.path.abspath(self.test_files_path + '/../../.env'), filenames)
         self.assertIn(os.path.abspath(self.test_files_path + '/../../settings.ini'), filenames)
+
+    def test_default_root_path_should_default_to_user_directory(self):
+        discovery = ConfigurationDiscovery(os.path.dirname(self.test_files_path))
+        assert discovery.root_path == os.path.expanduser('~')
+
+    def test_root_path_should_be_parent_of_starting_path(self):
+        with self.assertRaises(InvalidPath):
+            ConfigurationDiscovery('/foo', root_path='/foo/bar/baz/')
+
+    def test_use_configuration_from_root_path_when_no_other_was_found(self):
+        root_dir = TempDirectory()
+        self.tmpdirs.append(root_dir)
+
+        start_path = root_dir.makedir('some/directories/to/start/looking/for/settings')
+        test_file = os.path.realpath(os.path.join(root_dir.path, 'settings.ini'))
+        with open(test_file, 'a') as file_:
+            file_.write('[settings]')
+        self.files.append(test_file)  # Required to removed it at tearDown
+
+        discovery = ConfigurationDiscovery(start_path, root_path=root_dir.path)
+        filenames = [cfg.filename for cfg in discovery.config_files]
+        self.assertEqual([test_file], filenames)
+
+    def test_lookup_should_stop_at_root_path(self):
+        test_dir = TempDirectory()
+        self.tmpdirs.append(test_dir)  # Cleanup dir at tearDown
+
+        start_path = test_dir.makedir('some/dirs/without/config')
+
+        # create a file in the test_dir
+        test_file = os.path.realpath(os.path.join(test_dir.path, 'settings.ini'))
+        with open(test_file, 'a') as file_:
+            file_.write('[settings]')
+        self.files.append(test_file)  # Required to removed it at tearDown
+
+        root_dir = os.path.join(test_dir.path, 'some', 'dirs')  # No settings here
+
+        discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
+        self.assertEqual(discovery.config_files, [])
+

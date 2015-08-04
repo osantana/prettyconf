@@ -4,7 +4,7 @@ python:
   - 3.4
   - pypy
 install:
-  - pip install coveralls
+  - pip install coveralls testfixtures
 script:
   nosetests --with-coverage --cover-package=prettyconf
 after_success:

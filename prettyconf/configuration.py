@@ -15,12 +15,28 @@ MAGIC_FRAME_DEPTH = 2
 class ConfigurationDiscovery(object):
     default_filetypes = (EnvFileConfigurationLoader, IniFileConfigurationLoader)
 
-    def __init__(self, starting_path, filetypes=None):
+    def __init__(self, starting_path, filetypes=None, root_path=None):
+        """
+        Setup the configuration file discovery.
+
+        :param starting_path: The path to begin looking for configuration files
+        :param filetypes: tuple with configuration loaders. Defaults to
+                          ``(EnvFileConfigurationLoader, IniFileConfigurationLoader)``
+        :param root_path: Configuration lookup will stop at the given path. Defaults to
+                          the current user directory
+        """
         self.starting_path = os.path.realpath(os.path.abspath(starting_path))
         if filetypes is None:
             filetypes = self.default_filetypes
+        if root_path is None:
+            root_path = os.path.expanduser('~')
+
+        self.root_path = os.path.realpath(root_path)
         self.filetypes = filetypes
         self._config_files = None
+
+        if self.root_path not in self.starting_path:
+            raise InvalidPath('Invalid root path given')
 
     def _scan_path(self, path):
         config_files = []
@@ -44,7 +60,7 @@ class ConfigurationDiscovery(object):
 
             self._config_files += self._scan_path(path)
 
-            if self._config_files or path == os.path.sep:
+            if self._config_files or path == self.root_path or path == os.path.sep:
                 break
 
             path = os.path.dirname(path)
@@ -63,11 +79,12 @@ class Configuration(object):
     list = List()
     option = Option
 
-    def __init__(self, configs=None, starting_path=None):
+    def __init__(self, configs=None, starting_path=None, root_path=None):
         if configs is None:
             configs = [EnvVarConfigurationLoader()]
         self.configurations = configs
         self.starting_path = starting_path
+        self.root_path = root_path
 
         if starting_path:
             self._init_configs()
@@ -81,7 +98,7 @@ class Configuration(object):
         return path
 
     def _init_configs(self):
-        discovery = ConfigurationDiscovery(self.starting_path)
+        discovery = ConfigurationDiscovery(self.starting_path, root_path=self.root_path)
         self.configurations.extend(discovery.config_files)
 
     def __call__(self, item, cast=lambda v: v, **kwargs):

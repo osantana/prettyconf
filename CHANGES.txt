@@ -1,3 +1,11 @@
+0.4.0
+=====
+  
+  - Add ``root_path`` to stop looking indefinitely for configuration files until the OS root path
+  - Add advanced usage docs
+  - Include a simple (but working) tox configuration for py27 + py34 to the project
+
+
 0.3.3
 =====
 
