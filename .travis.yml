@@ -1,5 +1,7 @@
 language: python
 
+sudo: false
+
 matrix:
   include:
     - os: linux
@@ -11,21 +13,21 @@ matrix:
     - os: osx
       language: generic
       env:
-        - PYTHON_VERSION=2.7.10
-        - PYENV_ROOT=~/.pyenv
-        - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
+      - PYTHON_VERSION=2.7.10
+      - PYENV_ROOT=~/.pyenv
+      - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
     - os: osx
       language: generic
       env:
-        - PYTHON_VERSION=3.4.3
-        - PYENV_ROOT=~/.pyenv
-        - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
+      - PYTHON_VERSION=3.4.3
+      - PYENV_ROOT=~/.pyenv
+      - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
     - os: osx
       language: generic
       env:
-        - PYTHON_VERSION=pypy-2.6.0
-        - PYENV_ROOT=~/.pyenv
-        - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
+      - PYTHON_VERSION=pypy-2.6.0
+      - PYENV_ROOT=~/.pyenv
+      - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
 install:
   - bash .ci/deps.${TRAVIS_OS_NAME}.sh
   - pip install --upgrade pip
