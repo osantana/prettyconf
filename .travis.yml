@@ -1,11 +1,39 @@
 language: python
-python:
-  - 2.7
-  - 3.4
-  - pypy
+
+matrix:
+  include:
+    - os: linux
+      python: 2.7
+    - os: linux
+      python: 3.4
+    - os: linux
+      python: pypy
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=2.7.10
+        - PYENV_ROOT=~/.pyenv
+        - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=3.4.3
+        - PYENV_ROOT=~/.pyenv
+        - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
+    - os: osx
+      language: generic
+      env:
+        - PYTHON_VERSION=pypy-2.6.0
+        - PYENV_ROOT=~/.pyenv
+        - PATH=$PYENV_ROOT/shims:$PATH:$PYENV_ROOT/bin
 install:
-  - pip install coveralls testfixtures
+  - bash .ci/deps.${TRAVIS_OS_NAME}.sh
+  - pip install --upgrade pip
+  - pip install nose coveralls testfixtures
+  - pip install --editable .
+
 script:
-  nosetests --with-coverage --cover-package=prettyconf
+  - nosetests --with-coverage --cover-package=prettyconf
+
 after_success:
   - coveralls
