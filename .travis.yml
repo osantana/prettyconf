@@ -33,6 +33,7 @@ install:
   - pip install --upgrade pip
   - pip install nose coveralls testfixtures
   - pip install --editable .
+  - pyenv rehash
 
 script:
   - nosetests --with-coverage --cover-package=prettyconf
