@@ -28,12 +28,17 @@ matrix:
       - PYTHON_VERSION=pypy-2.6.0
       - PYENV_ROOT=~/.pyenv
       - PATH=$PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
-install:
+
+before_install:
   - bash .ci/deps.${TRAVIS_OS_NAME}.sh
+
+install:
   - pip install --upgrade pip
   - pip install nose coveralls testfixtures
   - pip install --editable .
-  - pyenv rehash
+
+before_script:
+  - bash .ci/pre.${TRAVIS_OS_NAME}.sh
 
 script:
   - nosetests --with-coverage --cover-package=prettyconf
