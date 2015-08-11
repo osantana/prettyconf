@@ -1,6 +1,7 @@
-0.5.0
+1.0.0
 =====
 
+  - First stable release! hooray!
   - Make configuration load lazy to make possible change root_path and
     starting_path in prettyconf.config
   - Default root_path is "/" instead of $HOME (backward incompatible change)
