@@ -7,6 +7,11 @@
   - Add missing requirements in requirements.txt and make tox use it.
   - Small PEP-8 and code formatting fixes
 
+0.4.1
+=====
+
+  - Add MacOSX travis builds.
+
 0.4.0
 =====
 
