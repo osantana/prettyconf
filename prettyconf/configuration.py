@@ -9,13 +9,13 @@ from .exceptions import InvalidConfigurationFile, InvalidPath, InvalidConfigurat
 from .casts import Boolean, List, Option
 
 
-MAGIC_FRAME_DEPTH = 2
+MAGIC_FRAME_DEPTH = 3
 
 
 class ConfigurationDiscovery(object):
     default_filetypes = (EnvFileConfigurationLoader, IniFileConfigurationLoader)
 
-    def __init__(self, starting_path, filetypes=None, root_path=None):
+    def __init__(self, starting_path, filetypes=None, root_path="/"):
         """
         Setup the configuration file discovery.
 
@@ -26,17 +26,17 @@ class ConfigurationDiscovery(object):
                           the current user directory
         """
         self.starting_path = os.path.realpath(os.path.abspath(starting_path))
+        self.root_path = os.path.realpath(root_path)
+
+        if not self.starting_path.startswith(self.root_path):
+            raise InvalidPath('Invalid root path given')
+
         if filetypes is None:
             filetypes = self.default_filetypes
-        if root_path is None:
-            root_path = os.path.expanduser('~')
 
-        self.root_path = os.path.realpath(root_path)
         self.filetypes = filetypes
         self._config_files = None
 
-        if self.root_path not in self.starting_path:
-            raise InvalidPath('Invalid root path given')
 
     def _scan_path(self, path):
         config_files = []
@@ -79,15 +79,13 @@ class Configuration(object):
     list = List()
     option = Option
 
-    def __init__(self, configs=None, starting_path=None, root_path=None):
+    def __init__(self, configs=None, starting_path=None, root_path="/"):
         if configs is None:
             configs = [EnvVarConfigurationLoader()]
         self.configurations = configs
         self.starting_path = starting_path
         self.root_path = root_path
-
-        if starting_path:
-            self._init_configs()
+        self._initialized = False
 
     @staticmethod
     def _caller_path():
@@ -98,16 +96,22 @@ class Configuration(object):
         return path
 
     def _init_configs(self):
+        if self._initialized:
+            return
+
+        if self.starting_path is None:
+            self.starting_path = self._caller_path()
+
         discovery = ConfigurationDiscovery(self.starting_path, root_path=self.root_path)
         self.configurations.extend(discovery.config_files)
+
+        self._initialized = True
 
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
             raise InvalidConfigurationCast("Cast must be callable")
 
-        if self.starting_path is None:
-            self.starting_path = self._caller_path()
-            self._init_configs()
+        self._init_configs()
 
         for configuration in self.configurations:
             try:
