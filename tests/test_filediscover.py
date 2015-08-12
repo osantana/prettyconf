@@ -9,8 +9,8 @@ from prettyconf.configuration import ConfigurationDiscovery
 from prettyconf.exceptions import InvalidPath
 
 
+# noinspection PyStatementEffect
 class ConfigFilesDiscoveryTestCase(BaseTestCase):
-
     def setUp(self):
         super(ConfigFilesDiscoveryTestCase, self).setUp()
         self.tmpdirs = []
@@ -62,9 +62,9 @@ class ConfigFilesDiscoveryTestCase(BaseTestCase):
         self.assertIn(os.path.abspath(self.test_files_path + '/../../.env'), filenames)
         self.assertIn(os.path.abspath(self.test_files_path + '/../../settings.ini'), filenames)
 
-    def test_default_root_path_should_default_to_user_directory(self):
+    def test_default_root_path_should_default_to_root_directory(self):
         discovery = ConfigurationDiscovery(os.path.dirname(self.test_files_path))
-        assert discovery.root_path == os.path.expanduser('~')
+        assert discovery.root_path == "/"
 
     def test_root_path_should_be_parent_of_starting_path(self):
         with self.assertRaises(InvalidPath):
@@ -100,4 +100,3 @@ class ConfigFilesDiscoveryTestCase(BaseTestCase):
 
         discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
         self.assertEqual(discovery.config_files, [])
-

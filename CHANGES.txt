@@ -1,3 +1,13 @@
+1.0.0
+=====
+
+  - First stable release! hooray!
+  - Make configuration load lazy to make possible change root_path and
+    starting_path in prettyconf.config
+  - Default root_path is "/" instead of $HOME (backward incompatible change)
+  - Add missing requirements in requirements.txt and make tox use it.
+  - Small PEP-8 and code formatting fixes
+
 0.4.1
 =====
 
@@ -5,7 +15,7 @@
 
 0.4.0
 =====
-  
+
   - Add ``root_path`` to stop looking indefinitely for configuration files until the OS root path
   - Add advanced usage docs
   - Include a simple (but working) tox configuration for py27 + py34 to the project
