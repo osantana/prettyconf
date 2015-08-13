@@ -5,9 +5,9 @@ import os
 from glob import glob
 
 try:
-    from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError
+    from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, MissingSectionHeaderError
 except ImportError:
-    from configparser import ConfigParser, NoOptionError
+    from configparser import ConfigParser, NoOptionError, MissingSectionHeaderError
 
 from .exceptions import InvalidConfigurationFile
 
@@ -160,7 +160,7 @@ class IniFileConfigurationLoader(AbstractFileConfigurationLoader):
                     self.parser.readfp(inifile)
                 else:
                     self.parser.read_file(inifile)
-            except UnicodeDecodeError:
+            except (UnicodeDecodeError, MissingSectionHeaderError):
                 raise InvalidConfigurationFile()
 
         if not self.parser.has_section(self.section):

@@ -37,7 +37,6 @@ class ConfigurationDiscovery(object):
         self.filetypes = filetypes
         self._config_files = None
 
-
     def _scan_path(self, path):
         config_files = []
 

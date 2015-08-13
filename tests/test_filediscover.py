@@ -1,4 +1,5 @@
 # coding: utf-8
+from __future__ import unicode_literals
 
 import os
 
@@ -7,6 +8,7 @@ from testfixtures import TempDirectory
 from .base import BaseTestCase
 from prettyconf.configuration import ConfigurationDiscovery
 from prettyconf.exceptions import InvalidPath
+from prettyconf.loaders import IniFileConfigurationLoader
 
 
 # noinspection PyStatementEffect
@@ -100,3 +102,15 @@ class ConfigFilesDiscoveryTestCase(BaseTestCase):
 
         discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
         self.assertEqual(discovery.config_files, [])
+
+    def test_inifile_discovery_should_ignore_invalid_files_without_raising_exception(self):
+        root_dir = TempDirectory()
+        self.tmpdirs.append(root_dir)
+
+        cfg_file = root_dir.write(('some', 'strange', 'config.cfg'), '&ˆ%$#$%ˆ&*()(*&ˆ'.encode('utf8'))
+        root_dir.write(('some', 'config.ini'), '$#%ˆ&*((*&ˆ%'.encode('utf8'))
+
+        discovery = ConfigurationDiscovery(
+            os.path.realpath(os.path.dirname(cfg_file)), filetypes=(IniFileConfigurationLoader, ))
+
+        self.assertEqual(discovery.config_files,  [])
