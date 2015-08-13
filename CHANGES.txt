@@ -1,3 +1,8 @@
+1.0.1
+=====
+
+  - Fix a issue that breaks .ini/.cfg loader with "broken" files
+
 1.0.0
 =====
 
