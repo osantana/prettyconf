@@ -55,7 +55,7 @@ class ConfigurationDiscovery(object):
         path = self.starting_path
         while True:
             if not os.path.isdir(path):
-                raise InvalidPath("Invalid path ({})".format(path))
+                continue
 
             self._config_files += self._scan_path(path)
 

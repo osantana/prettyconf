@@ -13,6 +13,9 @@ If ``PROJECT_MY_CONFIG`` is not defined in an environment variable neither in a
 ``.env`` (or ``*.cfg``) file, ``prettyconf`` will raise a
 ``UnknownConfiguration`` exception.
 
+.. warning:: ``prettyconf`` will skip configuration files inside ``.zip``,
+   ``.egg`` or wheel packages.
+
 In these cases you could define a default configuration value:
 
 .. code-block:: python
@@ -97,6 +100,8 @@ To make this changes possible you can always create your own
 
     config = Configuration()
 
+.. warning:: ``prettyconf`` will skip configuration files inside ``.zip``,
+   ``.egg`` or wheel packages.
 
 Set the starting path
 +++++++++++++++++++++

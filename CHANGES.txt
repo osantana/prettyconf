@@ -1,3 +1,9 @@
+1.1.0
+=====
+
+  - Skip discovering files inside not-directory paths (eg. ``.egg``, ``.zip``
+    or wheel packages)
+
 1.0.1
 =====
 
