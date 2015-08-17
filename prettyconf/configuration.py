@@ -53,13 +53,11 @@ class ConfigurationDiscovery(object):
         self._config_files = []
 
         path = self.starting_path
-        while True:
-            if not os.path.isdir(path):
-                continue
+        while not self._config_files:
+            if os.path.isdir(path):
+                self._config_files += self._scan_path(path)
 
-            self._config_files += self._scan_path(path)
-
-            if self._config_files or path == self.root_path or path == os.path.sep:
+            if path == self.root_path:
                 break
 
             path = os.path.dirname(path)

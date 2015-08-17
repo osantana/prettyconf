@@ -14,10 +14,10 @@ from .exceptions import InvalidConfigurationFile
 
 class AbstractConfigurationLoader(object):
     def __contains__(self, item):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def __getitem__(self, item):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 class EnvVarConfigurationLoader(AbstractConfigurationLoader):
@@ -39,10 +39,10 @@ class AbstractFileConfigurationLoader(AbstractConfigurationLoader):
         return filenames
 
     def __getitem__(self, item):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     def __contains__(self, item):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
@@ -157,6 +157,7 @@ class IniFileConfigurationLoader(AbstractFileConfigurationLoader):
             try:
                 if sys.version_info[0] < 3:
                     # ConfigParser.readfp is deprecated for Python3, read_file replaces it
+                    # noinspection PyDeprecation
                     self.parser.readfp(inifile)
                 else:
                     self.parser.read_file(inifile)

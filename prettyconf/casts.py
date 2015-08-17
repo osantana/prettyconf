@@ -6,7 +6,7 @@ from .exceptions import InvalidConfiguration
 
 class AbstractCast(object):
     def __call__(self, value):
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 class Boolean(AbstractCast):

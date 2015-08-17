@@ -1,3 +1,10 @@
+1.1.1
+=====
+
+  - Fix a brown paper bug in the last release
+  - Force test running in ``make release`` target
+  - Add "pragma: no cover" in abstract methods
+
 1.1.0
 =====
 
