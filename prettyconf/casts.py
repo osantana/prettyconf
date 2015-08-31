@@ -27,8 +27,10 @@ class Boolean(AbstractCast):
             raise InvalidConfiguration("Error casting value {!r} to boolean".format(value))
 
 
-class List(AbstractCast):
-    def __init__(self, delimiter=",", quotes="\"'"):
+class Sequence(AbstractCast):
+    def __init__(self, sequence_type=list, delimiter=",", quotes="\"'"):
+        assert issubclass(sequence_type, (list, tuple))
+        self.sequence_type = sequence_type
         self.delimiter = delimiter
         self.quotes = quotes
 
@@ -64,7 +66,7 @@ class List(AbstractCast):
         if element:
             elements.append("".join(element))
 
-        return [e.strip() for e in elements]
+        return self.sequence_type([e.strip() for e in elements])
 
     def __call__(self, value):
         return self._parse(value)
