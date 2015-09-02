@@ -6,7 +6,7 @@ import sys
 
 from .loaders import EnvFileConfigurationLoader, IniFileConfigurationLoader, EnvVarConfigurationLoader
 from .exceptions import InvalidConfigurationFile, InvalidPath, InvalidConfigurationCast, UnknownConfiguration
-from .casts import Boolean, Sequence, Option
+from .casts import Boolean, Option, List, Tuple
 
 
 MAGIC_FRAME_DEPTH = 3
@@ -73,8 +73,8 @@ class ConfigurationDiscovery(object):
 class Configuration(object):
     # Shortcut for standard casts
     boolean = Boolean()
-    list = Sequence(sequence_type=list)
-    tuple = Sequence(sequence_type=tuple)
+    list = List()
+    tuple = Tuple()
     option = Option
 
     def __init__(self, configs=None, starting_path=None, root_path="/"):

@@ -3,7 +3,7 @@
 
 from unittest import TestCase
 
-from prettyconf.casts import Boolean, Sequence, Option, InvalidConfiguration
+from prettyconf.casts import Boolean, Option, InvalidConfiguration, List, Tuple
 
 
 class BooleanCastTestCase(TestCase):
@@ -40,13 +40,8 @@ class BooleanCastTestCase(TestCase):
 
 
 class SequenceCastTestCase(TestCase):
-    def test_wrong_sequence_type(self):
-       self.assertRaises(AssertionError, Sequence, sequence_type=str)
-       self.assertRaises(AssertionError, Sequence, sequence_type=dict)
-       self.assertRaises(AssertionError, Sequence, sequence_type=range)
-
     def test_basic_list_cast(self):
-        l = Sequence(sequence_type=list)
+        l = List()
 
         self.assertEqual(l("foo,bar"), ["foo", "bar"])
         self.assertEqual(l("foo, bar"), ["foo", "bar"])
@@ -56,14 +51,14 @@ class SequenceCastTestCase(TestCase):
         self.assertEqual(l("foo, '\"bar\", baz  ', qux # doo "), ["foo", "'\"bar\", baz  '", "qux # doo"])
 
     def test_basic_tuple_cast(self):
-        l = Sequence(sequence_type=tuple)
+        t = Tuple()
 
-        self.assertEqual(l("foo,bar"), ("foo", "bar"))
-        self.assertEqual(l("foo, bar"), ("foo", "bar"))
-        self.assertEqual(l(" foo , bar "), ("foo", "bar"))
-        self.assertEqual(l(" foo ,, bar "), ("foo", "", "bar"))
-        self.assertEqual(l("foo, 'bar, baz', qux # doo "), ("foo", "'bar, baz'", "qux # doo"))
-        self.assertEqual(l("foo, '\"bar\", baz  ', qux # doo "), ("foo", "'\"bar\", baz  '", "qux # doo"))
+        self.assertEqual(t("foo,bar"), ("foo", "bar"))
+        self.assertEqual(t("foo, bar"), ("foo", "bar"))
+        self.assertEqual(t(" foo , bar "), ("foo", "bar"))
+        self.assertEqual(t(" foo ,, bar "), ("foo", "", "bar"))
+        self.assertEqual(t("foo, 'bar, baz', qux # doo "), ("foo", "'bar, baz'", "qux # doo"))
+        self.assertEqual(t("foo, '\"bar\", baz  ', qux # doo "), ("foo", "'\"bar\", baz  '", "qux # doo"))
 
 
 class OptionCastTestCase(TestCase):

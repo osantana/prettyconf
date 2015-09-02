@@ -1,3 +1,8 @@
+1.2.0
+=====
+
+  - New cast type: config.tuple (converts a comma-separated string in tuple)
+
 1.1.2
 =====
 
