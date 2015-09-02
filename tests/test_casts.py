@@ -3,7 +3,7 @@
 
 from unittest import TestCase
 
-from prettyconf.casts import Boolean, List, Option, InvalidConfiguration
+from prettyconf.casts import Boolean, Option, InvalidConfiguration, List, Tuple
 
 
 class BooleanCastTestCase(TestCase):
@@ -39,7 +39,7 @@ class BooleanCastTestCase(TestCase):
             boolean(42)
 
 
-class ListCastTestCase(TestCase):
+class SequenceCastTestCase(TestCase):
     def test_basic_list_cast(self):
         l = List()
 
@@ -49,6 +49,16 @@ class ListCastTestCase(TestCase):
         self.assertEqual(l(" foo ,, bar "), ["foo", "", "bar"])
         self.assertEqual(l("foo, 'bar, baz', qux # doo "), ["foo", "'bar, baz'", "qux # doo"])
         self.assertEqual(l("foo, '\"bar\", baz  ', qux # doo "), ["foo", "'\"bar\", baz  '", "qux # doo"])
+
+    def test_basic_tuple_cast(self):
+        t = Tuple()
+
+        self.assertEqual(t("foo,bar"), ("foo", "bar"))
+        self.assertEqual(t("foo, bar"), ("foo", "bar"))
+        self.assertEqual(t(" foo , bar "), ("foo", "bar"))
+        self.assertEqual(t(" foo ,, bar "), ("foo", "", "bar"))
+        self.assertEqual(t("foo, 'bar, baz', qux # doo "), ("foo", "'bar, baz'", "qux # doo"))
+        self.assertEqual(t("foo, '\"bar\", baz  ', qux # doo "), ("foo", "'\"bar\", baz  '", "qux # doo"))
 
 
 class OptionCastTestCase(TestCase):

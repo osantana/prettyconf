@@ -64,10 +64,18 @@ class List(AbstractCast):
         if element:
             elements.append("".join(element))
 
-        return [e.strip() for e in elements]
+        return self.cast(e.strip() for e in elements)
+
+    def cast(self, sequence):
+        return list(sequence)
 
     def __call__(self, value):
         return self._parse(value)
+
+
+class Tuple(List):
+    def cast(self, sequence):
+        return tuple(sequence)
 
 
 class Option(AbstractCast):
