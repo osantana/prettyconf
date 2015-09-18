@@ -47,10 +47,10 @@ Why you created a library similar to python-decouple instead of use it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 I made some_ contributions_ for python-decouple_ previously, but I needed
-to change its behaviour as described above and this change is a backward
+to change its behaviour as described above and this change is backward
 incompatible, so, it could break software that relies on the old behaviour.
-Besides that it's hard to make this change on python-decouple due to the way
-it's implemented.
+Besides that it's hard to make this change on ``python-decouple`` due to 
+the way it's implemented.
 
 .. _some: https://github.com/henriquebastos/python-decouple/pull/4
 .. _contributions: https://github.com/henriquebastos/python-decouple/pull/5
