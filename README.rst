@@ -5,9 +5,10 @@ prettyconf
 
 Pretty Conf is a Python library created to make easy the separation of
 configuration and code following the recomendations of `12 Factor`_'s topic
-about configs. It was strongly inspired in `python-decouple`_ and both
-provides a similar API.
+about configs.
 
+It is strongly inspired in `python-decouple`_ and both provides a similar
+API.
 
 
 Documentation
