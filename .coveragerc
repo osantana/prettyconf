@@ -8,8 +8,6 @@ omit =
     */site-packages/nose/*
     */unittest2/*
 
-exclude_lines =
-    pragma: no cover
 
 [report]
 omit =
@@ -19,3 +17,6 @@ omit =
     */site-packages/ordereddict.py
     */site-packages/nose/*
     */unittest2/*
+    
+exclude_lines =
+    pragma: no cover
