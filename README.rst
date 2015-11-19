@@ -1,7 +1,7 @@
 prettyconf
 ==========
 
-|Build Status| |Coverage Status| |Docs| |Codacy|
+|Build Status| |Coverage Status| |Docs| |Codacy| |Landscape|
 
 Pretty Conf is a Python library created to make easy the separation of
 configuration and code following the recomendations of `12 Factor`_'s topic
@@ -29,3 +29,5 @@ You can find ``prettyconf`` documentation at `Read the Docs`_ website.
    :target: https://readthedocs.org/projects/prettyconf/?badge=latest
 .. |Codacy| image:: https://api.codacy.com/project/badge/grade/65576e834eb74d529921d8625347a5a1
     :target: https://www.codacy.com/app/osantana/prettyconf
+.. |Landscape| image:: https://landscape.io/github/osantana/prettyconf/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/osantana/prettyconf/master
