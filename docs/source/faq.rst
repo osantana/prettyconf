@@ -32,16 +32,8 @@ What is the difference between prettyconf and python-decouple_?
 There is no subtantial difference between both libraries. ``prettyconf`` is
 highly inspired in ``python-decouple`` and provides almost the same API.
 
-There is a small difference in configuration lookup order::
-
-    +---------------+-----------------+---------------------+
-    | Lookup Order  | prettyconf      | python-decouple     |
-    +---------------+-----------------+---------------------+
-    | 1             | ENVVAR          | .env                |
-    | 2             | .env            | settings.ini        |
-    | 3             | *.cfg or *.ini  | ENVVAR              |
-    +---------------+-----------------+---------------------+
-
+The implementation of ``prettyconf`` is more extensible and flexible to make
+behaviour configurations easier.
 
 Why you created a library similar to python-decouple instead of use it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
