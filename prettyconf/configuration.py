@@ -3,6 +3,7 @@
 
 import os
 import sys
+import ast
 
 from .loaders import EnvFileConfigurationLoader, IniFileConfigurationLoader, EnvVarConfigurationLoader
 from .exceptions import InvalidConfigurationFile, InvalidPath, InvalidConfigurationCast, UnknownConfiguration
@@ -76,6 +77,7 @@ class Configuration(object):
     list = List()
     tuple = Tuple()
     option = Option
+    eval = ast.literal_eval
 
     def __init__(self, configs=None, starting_path=None, root_path="/"):
         if configs is None:

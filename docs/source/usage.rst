@@ -41,6 +41,8 @@ Buitin Casts
 
 #. ``config.boolean`` - converts values like ``On|Off``, ``1|0``, ``yes|no``,
    ``true|false`` into booleans.
+#. ``config.eval`` - safely evaluate strings with Python literals to Python
+   objects (alias to Python's ``ast.literal_eval``).
 #. ``config.list`` - converts comma separated strings into lists.
 #. ``config.tuple`` - converts comma separated strings into tuples.
 #. ``config.option`` - get a return value based on specific options:
