@@ -62,8 +62,6 @@ Buitin Casts
                      default="production",
                      cast=Option(environment))
 
-#. ``config.dictionary`` - TODO
-
 
 Custom casts
 ++++++++++++
@@ -108,6 +106,7 @@ To make this changes possible you can always create your own
 
 .. warning:: ``prettyconf`` will skip configuration files inside ``.zip``,
    ``.egg`` or wheel packages.
+
 
 Set the starting path
 +++++++++++++++++++++
