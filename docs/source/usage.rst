@@ -83,6 +83,9 @@ Useful third-parties casts
   Django ``DATABASES`` configuration format.
 * `django-cache-url`_ - Parses URLs like ``memcached://server:port/prefix``
   into Django ``CACHES`` configuration format.
+* `dj-email-url`_ - Parses URLs like
+  ``smtp://user@domain.com:pass@smtp.example.com:465/?ssl=True`` with
+  parameters used in Django ``EMAIL_*`` configurations.
 
 
 Advanced usage
@@ -208,3 +211,4 @@ The ``root_path`` must be a parent directory of ``starting_path``:
 
 .. _dj-database-url: https://github.com/kennethreitz/dj-database-url
 .. _django-cache-url: https://github.com/ghickman/django-cache-url
+.. _dj-email-url: https://github.com/migonzalvar/dj-email-url
