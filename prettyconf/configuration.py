@@ -77,7 +77,7 @@ class Configuration(object):
     list = List()
     tuple = Tuple()
     option = Option
-    eval = ast.literal_eval
+    eval = staticmethod(ast.literal_eval)
 
     def __init__(self, configs=None, starting_path=None, root_path="/"):
         if configs is None:

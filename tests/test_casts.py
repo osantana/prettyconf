@@ -4,6 +4,7 @@
 from unittest import TestCase
 
 from prettyconf.casts import Boolean, Option, InvalidConfiguration, List, Tuple
+from prettyconf import config
 
 
 class BooleanCastTestCase(TestCase):
@@ -81,3 +82,8 @@ class OptionCastTestCase(TestCase):
 
         with self.assertRaises(InvalidConfiguration):
             option("unknown")
+
+
+class EvalCastTestCase(TestCase):
+    def test_if_cast_is_unbounded(self):
+        self.assertIsNone(config.eval("None"))
