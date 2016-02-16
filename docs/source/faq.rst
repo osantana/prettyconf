@@ -47,13 +47,13 @@ the way it's implemented.
 
 See the lookup order of configurations below::
 
-    +---------------+-----------------+--------------------------+-----------------------+
-    | Lookup Order  | prettyconf      | python-decouple (before) | python-decouple (now) |
-    +---------------+-----------------+--------------------------+-----------------------+
-    | 1             | ENVVAR          | .env                     | ENVVAR                |
-    | 2             | .env            | settings.ini             | .env                  |
-    | 3             | *.cfg or *.ini  | ENVVAR                   | settings.ini          |
-    +---------------+-----------------+--------------------------+-----------------------+
+    +---------------+-----------------+------------------------+-------------------------+
+    | Lookup Order  | prettyconf      | python-decouple (<3.0) | python-decouple (>=3.0) |
+    +---------------+-----------------+------------------------+-------------------------+
+    | 1             | ENVVAR          | .env                   | ENVVAR                  |
+    | 2             | .env            | settings.ini           | .env                    |
+    | 3             | *.cfg or *.ini  | ENVVAR                 | settings.ini            |
+    +---------------+-----------------+------------------------+-------------------------+
 
 .. _some: https://github.com/henriquebastos/python-decouple/pull/4
 .. _contributions: https://github.com/henriquebastos/python-decouple/pull/5
