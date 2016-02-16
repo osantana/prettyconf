@@ -2,6 +2,7 @@
 =====
 
   - Fix a blocker issue with ``config.eval`` cast and add a test to prevent regressions
+  - Add more informations about python-decouple vs. prettyconf at FAQ (Fixes #16 again)
 
 1.2.2
 =====

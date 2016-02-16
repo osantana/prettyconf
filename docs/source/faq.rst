@@ -35,17 +35,29 @@ highly inspired in ``python-decouple`` and provides almost the same API.
 The implementation of ``prettyconf`` is more extensible and flexible to make
 behaviour configurations easier.
 
+
 Why you created a library similar to python-decouple instead of use it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 I made some_ contributions_ for python-decouple_ previously, but I needed
 to change its behaviour as described above and this change is backward
 incompatible, so, it could break software that relies on the old behaviour.
-Besides that it's hard to make this change on ``python-decouple`` due to 
+Besides that it's hard to make this change on ``python-decouple`` due to
 the way it's implemented.
+
+See the lookup order of configurations below::
+
+    +---------------+-----------------+--------------------------+-----------------------+
+    | Lookup Order  | prettyconf      | python-decouple (before) | python-decouple (now) |
+    +---------------+-----------------+--------------------------+-----------------------+
+    | 1             | ENVVAR          | .env                     | ENVVAR                |
+    | 2             | .env            | settings.ini             | .env                  |
+    | 3             | *.cfg or *.ini  | ENVVAR                   | settings.ini          |
+    +---------------+-----------------+--------------------------+-----------------------+
 
 .. _some: https://github.com/henriquebastos/python-decouple/pull/4
 .. _contributions: https://github.com/henriquebastos/python-decouple/pull/5
+
 
 Why use ``prettyconf`` instead of ``python-decouple``?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -55,4 +67,3 @@ features.
 
 
 .. _`python-decouple`: https://github.com/henriquebastos/python-decouple
-
