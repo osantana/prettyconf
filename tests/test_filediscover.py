@@ -1,14 +1,15 @@
 # coding: utf-8
+
 from __future__ import unicode_literals
 
 import os
+import shutil
+import tempfile
 
-from testfixtures import TempDirectory
-
-from .base import BaseTestCase
 from prettyconf.configuration import ConfigurationDiscovery
 from prettyconf.exceptions import InvalidPath
 from prettyconf.loaders import IniFileConfigurationLoader
+from .base import BaseTestCase
 
 
 # noinspection PyStatementEffect
@@ -20,7 +21,7 @@ class ConfigFilesDiscoveryTestCase(BaseTestCase):
     def tearDown(self):
         super(ConfigFilesDiscoveryTestCase, self).tearDown()
         for tmpdir in self.tmpdirs:
-            tmpdir.cleanup_all()
+            shutil.rmtree(tmpdir, ignore_errors=True)
 
     def test_config_file_parsing(self):
         self._create_file(self.test_files_path + "/../.env")
@@ -62,44 +63,52 @@ class ConfigFilesDiscoveryTestCase(BaseTestCase):
             ConfigurationDiscovery('/foo', root_path='/foo/bar/baz/')
 
     def test_use_configuration_from_root_path_when_no_other_was_found(self):
-        root_dir = TempDirectory()
+        root_dir = tempfile.mkdtemp()
         self.tmpdirs.append(root_dir)
 
-        start_path = root_dir.makedir('some/directories/to/start/looking/for/settings')
-        test_file = os.path.realpath(os.path.join(root_dir.path, 'settings.ini'))
+        start_path = os.path.join(root_dir, 'some/directories/to/start/looking/for/settings')
+        os.makedirs(start_path)
+
+        test_file = os.path.realpath(os.path.join(root_dir, 'settings.ini'))
         with open(test_file, 'a') as file_:
             file_.write('[settings]')
         self.files.append(test_file)  # Required to removed it at tearDown
 
-        discovery = ConfigurationDiscovery(start_path, root_path=root_dir.path)
+        discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertEqual([test_file], filenames)
 
     def test_lookup_should_stop_at_root_path(self):
-        test_dir = TempDirectory()
+        test_dir = tempfile.mkdtemp()
         self.tmpdirs.append(test_dir)  # Cleanup dir at tearDown
 
-        start_path = test_dir.makedir('some/dirs/without/config')
+        start_path = os.path.join(test_dir, 'some/dirs/without/config')
+        os.makedirs(start_path)
 
         # create a file in the test_dir
-        test_file = os.path.realpath(os.path.join(test_dir.path, 'settings.ini'))
+        test_file = os.path.realpath(os.path.join(test_dir, 'settings.ini'))
         with open(test_file, 'a') as file_:
             file_.write('[settings]')
         self.files.append(test_file)  # Required to removed it at tearDown
 
-        root_dir = os.path.join(test_dir.path, 'some', 'dirs')  # No settings here
+        root_dir = os.path.join(test_dir, 'some', 'dirs')  # No settings here
 
         discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
         self.assertEqual(discovery.config_files, [])
 
     def test_inifile_discovery_should_ignore_invalid_files_without_raising_exception(self):
-        root_dir = TempDirectory()
+        root_dir = tempfile.mkdtemp()
         self.tmpdirs.append(root_dir)
 
-        cfg_file = root_dir.write(('some', 'strange', 'config.cfg'), '&ˆ%$#$%ˆ&*()(*&ˆ'.encode('utf8'))
-        root_dir.write(('some', 'config.ini'), '$#%ˆ&*((*&ˆ%'.encode('utf8'))
+        cfg_dir = os.path.join(root_dir, "some/strange")
+        os.makedirs(cfg_dir)
 
-        discovery = ConfigurationDiscovery(
-            os.path.realpath(os.path.dirname(cfg_file)), filetypes=(IniFileConfigurationLoader, ))
+        with open(os.path.join(cfg_dir, "config.cfg"), "wb") as cfg_file:
+            cfg_file.write('&ˆ%$#$%ˆ&*()(*&ˆ'.encode('utf8'))
+            self.files.append(cfg_file.name)
 
-        self.assertEqual(discovery.config_files,  [])
+        with open(os.path.join(root_dir, "some/config.ini"), "wb") as cfg_file:
+            cfg_file.write('$#%ˆ&*((*&ˆ%'.encode('utf8'))
+
+        discovery = ConfigurationDiscovery(cfg_dir, filetypes=(IniFileConfigurationLoader,))
+        self.assertEqual(discovery.config_files, [])
