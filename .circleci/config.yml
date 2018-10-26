@@ -36,6 +36,6 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
-  branches:
-    only:
-      - master
+    branches:
+      only:
+        - master
