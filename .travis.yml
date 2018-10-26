@@ -24,7 +24,6 @@ before_script:
   - bash .ci/pre.${TRAVIS_OS_NAME}.sh
 
 install:
-  - pip install -U pip setuptools
   - pip install -r requirements.txt
 
 script:
