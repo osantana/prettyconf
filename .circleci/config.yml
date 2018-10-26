@@ -39,3 +39,9 @@ jobs:
     branches:
       only:
         - master
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
