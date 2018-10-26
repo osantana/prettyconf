@@ -1,114 +1,96 @@
-# coding: utf-8
-
-from __future__ import unicode_literals
-
 import os
-import shutil
-import tempfile
+
+import pytest
 
 from prettyconf.configuration import ConfigurationDiscovery
 from prettyconf.exceptions import InvalidPath
 from prettyconf.loaders import IniFileConfigurationLoader
-from .base import BaseTestCase
 
 
-# noinspection PyStatementEffect
-class ConfigFilesDiscoveryTestCase(BaseTestCase):
-    def setUp(self):
-        super(ConfigFilesDiscoveryTestCase, self).setUp()
-        self.tmpdirs = []
+def test_config_file_parsing(files_path, creator):
+    creator.create(os.path.join(files_path, "..", ".env"))
+    creator.create(os.path.join(files_path, "..", "setup.cfg"))  # invalid settings
+    creator.create(os.path.join(files_path, "..", "settings.ini"), "[settings]")
 
-    def tearDown(self):
-        super(ConfigFilesDiscoveryTestCase, self).tearDown()
-        for tmpdir in self.tmpdirs:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+    discovery = ConfigurationDiscovery(os.path.dirname(files_path))
+    assert len(discovery.config_files) == 2  # 2 *valid* files created
 
-    def test_config_file_parsing(self):
-        self._create_file(self.test_files_path + "/../.env")
-        self._create_file(self.test_files_path + "/../setup.cfg")  # invalid settings
-        self._create_file(self.test_files_path + "/../settings.ini", "[settings]")
-        discovery = ConfigurationDiscovery(os.path.dirname(self.test_files_path))
-        self.assertEqual(len(discovery.config_files), 2)  # 2 *valid* files created
 
-    def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(self):
-        self._create_file(self.test_files_path + '/../../settings.ini', '[settings]')
-        self._create_file(self.test_files_path + '/../../.env')
-        self._create_file(self.test_files_path + '/../.env')
-        self._create_file(self.test_files_path + '/../settings.ini', '[settings]')
+def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(files_path, creator):
+    creator.create(os.path.join(files_path, '../../settings.ini'), '[settings]')
+    creator.create(os.path.join(files_path, '../../.env'))
+    creator.create(os.path.join(files_path, '../.env'))
+    creator.create(os.path.join(files_path, '../settings.ini'), '[settings]')
 
-        discovery = ConfigurationDiscovery(os.path.dirname(self.test_files_path))
-        self.assertEqual(len(discovery.config_files), 2)
-        filenames = [cfg.filename for cfg in discovery.config_files]
-        self.assertIn(os.path.abspath(self.test_files_path + '/../.env'), filenames)
-        self.assertIn(os.path.abspath(self.test_files_path + '/../settings.ini'), filenames)
+    discovery = ConfigurationDiscovery(os.path.dirname(files_path))
+    assert len(discovery.config_files) == 2
 
-    def test_should_look_for_parent_directory_when_it_finds_invalid_configurations(self):
-        self._create_file(self.test_files_path + '/../../settings.ini', '[settings]')
-        self._create_file(self.test_files_path + '/../../.env')
-        self._create_file(self.test_files_path + '/../invalid.cfg', '')
-        self._create_file(self.test_files_path + '/../settings.ini', '')
+    filenames = [cfg.filename for cfg in discovery.config_files]
+    assert os.path.abspath(os.path.join(files_path, '..', '.env')) in filenames
+    assert os.path.abspath(os.path.join(files_path, '..', 'settings.ini')) in filenames
 
-        discovery = ConfigurationDiscovery(os.path.dirname(self.test_files_path))
-        self.assertEqual(len(discovery.config_files), 2)
-        filenames = [cfg.filename for cfg in discovery.config_files]
-        self.assertIn(os.path.abspath(self.test_files_path + '/../../.env'), filenames)
-        self.assertIn(os.path.abspath(self.test_files_path + '/../../settings.ini'), filenames)
 
-    def test_default_root_path_should_default_to_root_directory(self):
-        discovery = ConfigurationDiscovery(os.path.dirname(self.test_files_path))
-        assert discovery.root_path == "/"
+def test_should_look_for_parent_directory_when_it_finds_invalid_configurations(files_path, creator):
+    creator.create(os.path.join(files_path, '..', '..', 'settings.ini'), '[settings]')
+    creator.create(os.path.join(files_path, '..', '..', '.env'))
+    creator.create(os.path.join(files_path, '..', 'invalid.cfg'), '')
+    creator.create(os.path.join(files_path, '..', 'settings.ini'), '')
 
-    def test_root_path_should_be_parent_of_starting_path(self):
-        with self.assertRaises(InvalidPath):
-            ConfigurationDiscovery('/foo', root_path='/foo/bar/baz/')
+    discovery = ConfigurationDiscovery(os.path.dirname(files_path))
+    assert len(discovery.config_files) == 2
 
-    def test_use_configuration_from_root_path_when_no_other_was_found(self):
-        root_dir = tempfile.mkdtemp()
-        self.tmpdirs.append(root_dir)
+    filenames = [cfg.filename for cfg in discovery.config_files]
+    assert os.path.abspath(os.path.join(files_path, '..', '..', '.env')) in filenames
+    assert os.path.abspath(os.path.join(files_path, '..', '..', 'settings.ini')) in filenames
 
-        start_path = os.path.join(root_dir, 'some/directories/to/start/looking/for/settings')
-        os.makedirs(start_path)
 
-        test_file = os.path.realpath(os.path.join(root_dir, 'settings.ini'))
-        with open(test_file, 'a') as file_:
-            file_.write('[settings]')
-        self.files.append(test_file)  # Required to removed it at tearDown
+def test_default_root_path_should_default_to_root_directory(files_path):
+    discovery = ConfigurationDiscovery(os.path.dirname(files_path))
+    assert discovery.root_path == "/"
 
-        discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
-        filenames = [cfg.filename for cfg in discovery.config_files]
-        self.assertEqual([test_file], filenames)
 
-    def test_lookup_should_stop_at_root_path(self):
-        test_dir = tempfile.mkdtemp()
-        self.tmpdirs.append(test_dir)  # Cleanup dir at tearDown
+def test_root_path_should_be_parent_of_starting_path():
+    with pytest.raises(InvalidPath):
+        ConfigurationDiscovery('/foo', root_path='/foo/bar/baz/')
 
-        start_path = os.path.join(test_dir, 'some/dirs/without/config')
-        os.makedirs(start_path)
 
-        # create a file in the test_dir
-        test_file = os.path.realpath(os.path.join(test_dir, 'settings.ini'))
-        with open(test_file, 'a') as file_:
-            file_.write('[settings]')
-        self.files.append(test_file)  # Required to removed it at tearDown
+def test_use_configuration_from_root_path_when_no_other_was_found(creator):
+    root_dir = creator.createtmpdir()
 
-        root_dir = os.path.join(test_dir, 'some', 'dirs')  # No settings here
+    start_path = os.path.join(root_dir, 'some/directories/to/start/looking/for/settings')
+    os.makedirs(start_path)
 
-        discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
-        self.assertEqual(discovery.config_files, [])
+    test_file = os.path.realpath(os.path.join(root_dir, 'settings.ini'))
+    creator.create(test_file, '[settings]')
 
-    def test_inifile_discovery_should_ignore_invalid_files_without_raising_exception(self):
-        root_dir = tempfile.mkdtemp()
-        self.tmpdirs.append(root_dir)
+    discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
+    filenames = [cfg.filename for cfg in discovery.config_files]
 
-        cfg_dir = os.path.join(root_dir, "some/strange")
-        os.makedirs(cfg_dir)
+    assert [test_file] == filenames
 
-        with open(os.path.join(cfg_dir, "config.cfg"), "wb") as cfg_file:
-            cfg_file.write('&ˆ%$#$%ˆ&*()(*&ˆ'.encode('utf8'))
-            self.files.append(cfg_file.name)
 
-        with open(os.path.join(root_dir, "some/config.ini"), "wb") as cfg_file:
-            cfg_file.write('$#%ˆ&*((*&ˆ%'.encode('utf8'))
+def test_lookup_should_stop_at_root_path(creator):
+    test_dir = creator.createtmpdir()
+    start_path = os.path.join(test_dir, 'some/dirs/without/config')
+    os.makedirs(start_path)
 
-        discovery = ConfigurationDiscovery(cfg_dir, filetypes=(IniFileConfigurationLoader,))
-        self.assertEqual(discovery.config_files, [])
+    # create a file in the test_dir
+    test_file = os.path.realpath(os.path.join(test_dir, 'settings.ini'))
+    creator.create(test_file, '[settings]')
+
+    root_dir = os.path.join(test_dir, 'some', 'dirs')  # No settings here
+
+    discovery = ConfigurationDiscovery(start_path, root_path=root_dir)
+    assert discovery.config_files == []
+
+
+def test_inifile_discovery_should_ignore_invalid_files_without_raising_exception(creator):
+    root_dir = creator.createtmpdir()
+    cfg_dir = os.path.join(root_dir, "some/strange")
+    os.makedirs(cfg_dir)
+
+    creator.create(os.path.join(cfg_dir, "config.cfg"), '&ˆ%$#$%ˆ&*()(*&ˆ')
+    creator.create(os.path.join(root_dir, "some/config.ini"), '$#%ˆ&*((*&ˆ%')
+
+    discovery = ConfigurationDiscovery(cfg_dir, filetypes=(IniFileConfigurationLoader,))
+    assert discovery.config_files == []

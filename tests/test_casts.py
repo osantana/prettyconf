@@ -1,89 +1,86 @@
-# coding: utf-8
+import pytest
 
-
-from unittest import TestCase
-
-from prettyconf.casts import Boolean, Option, InvalidConfiguration, List, Tuple
 from prettyconf import config
+from prettyconf.casts import Boolean, InvalidConfiguration, List, Option, Tuple
 
 
-class BooleanCastTestCase(TestCase):
-    def test_basic_boolean_cast(self):
-        boolean = Boolean()
+def test_basic_boolean_cast():
+    boolean = Boolean()
 
-        self.assertTrue(boolean(1))
-        self.assertTrue(boolean("1"))
-        self.assertTrue(boolean("true"))
-        self.assertTrue(boolean("True"))
-        self.assertTrue(boolean("yes"))
-        self.assertTrue(boolean("on"))
+    assert boolean(1) is True
+    assert boolean("1") is True
+    assert boolean("true") is True
+    assert boolean("True") is True
+    assert boolean("yes") is True
+    assert boolean("on") is True
 
-        self.assertFalse(boolean(0))
-        self.assertFalse(boolean("0"))
-        self.assertFalse(boolean("false"))
-        self.assertFalse(boolean("False"))
-        self.assertFalse(boolean("no"))
-        self.assertFalse(boolean("off"))
-
-    def test_more_valid_boolean_values(self):
-        boolean = Boolean({"sim": True, "não": False})
-
-        self.assertTrue(boolean("sim"))
-        self.assertTrue(boolean("yes"))
-        self.assertFalse(boolean("não"))
-        self.assertFalse(boolean("no"))
-
-    def test_fail_invalid_boolean_cast(self):
-        boolean = Boolean()
-
-        with self.assertRaises(InvalidConfiguration):
-            boolean(42)
+    assert boolean(0) is False
+    assert boolean("0") is False
+    assert boolean("false") is False
+    assert boolean("False") is False
+    assert boolean("no") is False
+    assert boolean("off") is False
 
 
-class SequenceCastTestCase(TestCase):
-    def test_basic_list_cast(self):
-        l = List()
+def test_more_valid_boolean_values():
+    boolean = Boolean({"sim": True, "não": False})
 
-        self.assertEqual(l("foo,bar"), ["foo", "bar"])
-        self.assertEqual(l("foo, bar"), ["foo", "bar"])
-        self.assertEqual(l(" foo , bar "), ["foo", "bar"])
-        self.assertEqual(l(" foo ,, bar "), ["foo", "", "bar"])
-        self.assertEqual(l("foo, 'bar, baz', qux # doo "), ["foo", "'bar, baz'", "qux # doo"])
-        self.assertEqual(l("foo, '\"bar\", baz  ', qux # doo "), ["foo", "'\"bar\", baz  '", "qux # doo"])
-
-    def test_basic_tuple_cast(self):
-        t = Tuple()
-
-        self.assertEqual(t("foo,bar"), ("foo", "bar"))
-        self.assertEqual(t("foo, bar"), ("foo", "bar"))
-        self.assertEqual(t(" foo , bar "), ("foo", "bar"))
-        self.assertEqual(t(" foo ,, bar "), ("foo", "", "bar"))
-        self.assertEqual(t("foo, 'bar, baz', qux # doo "), ("foo", "'bar, baz'", "qux # doo"))
-        self.assertEqual(t("foo, '\"bar\", baz  ', qux # doo "), ("foo", "'\"bar\", baz  '", "qux # doo"))
+    assert boolean("sim") == True
+    assert boolean("yes") == True
+    assert boolean("não") == False
+    assert boolean("no") == False
 
 
-class OptionCastTestCase(TestCase):
-    def test_options(self):
-        choices = {
-            'option1': "asd",
-            'option2': "def",
-        }
-        option = Option(choices)
+def test_fail_invalid_boolean_cast():
+    boolean = Boolean()
 
-        self.assertEqual(option("option1"), "asd")
-        self.assertEqual(option("option2"), "def")
-
-    def test_fail_invalid_option_config(self):
-        choices = {
-            'option1': "asd",
-            'option2': "def",
-        }
-        option = Option(choices)
-
-        with self.assertRaises(InvalidConfiguration):
-            option("unknown")
+    with pytest.raises(InvalidConfiguration):
+        boolean(42)
 
 
-class EvalCastTestCase(TestCase):
-    def test_if_cast_is_unbounded(self):
-        self.assertIsNone(config.eval("None"))
+def test_basic_list_cast():
+    l = List()
+
+    assert l("foo,bar") == ["foo", "bar"]
+    assert l("foo, bar") == ["foo", "bar"]
+    assert l(" foo , bar ") == ["foo", "bar"]
+    assert l(" foo ,, bar ") == ["foo", "", "bar"]
+    assert l("foo, 'bar, baz', qux # doo ") == ["foo", "'bar, baz'", "qux # doo"]
+    assert l("foo, '\"bar\", baz  ', qux # doo ") == ["foo", "'\"bar\", baz  '", "qux # doo"]
+
+
+def test_basic_tuple_cast():
+    t = Tuple()
+
+    assert t("foo,bar") == ("foo", "bar")
+    assert t("foo, bar") == ("foo", "bar")
+    assert t(" foo , bar ") == ("foo", "bar")
+    assert t(" foo ,, bar ") == ("foo", "", "bar")
+    assert t("foo, 'bar, baz', qux # doo ") == ("foo", "'bar, baz'", "qux # doo")
+    assert t("foo, '\"bar\", baz  ', qux # doo ") == ("foo", "'\"bar\", baz  '", "qux # doo")
+
+
+def test_options():
+    choices = {
+        'option1': "asd",
+        'option2': "def",
+    }
+    option = Option(choices)
+
+    assert option("option1") == "asd"
+    assert option("option2") == "def"
+
+
+def test_fail_invalid_option_config():
+    choices = {
+        'option1': "asd",
+        'option2': "def",
+    }
+    option = Option(choices)
+
+    with pytest.raises(InvalidConfiguration):
+        option("unknown")
+
+
+def test_if_cast_is_unbounded():
+    assert config.eval("None") is None

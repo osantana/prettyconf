@@ -1,25 +1,23 @@
-# coding: utf-8
-
-
 import os
 
-from .base import BaseTestCase
+import pytest
+
 from prettyconf.loaders import EnvVarConfigurationLoader
 
 
-class EnvVarTestCase(BaseTestCase):
-    def test_basic_config(self):
-        os.environ["TEST"] = "test"
-        config = EnvVarConfigurationLoader()
+def test_basic_config():
+    os.environ["TEST"] = "test"
+    config = EnvVarConfigurationLoader()
 
-        self.assertIn("TEST", config)
-        self.assertEqual("test", config["TEST"])
+    assert "TEST" in config
+    assert "test" == config["TEST"]
 
-        del os.environ["TEST"]
+    del os.environ["TEST"]
 
-    def test_fail_missing_config(self):
-        config = EnvVarConfigurationLoader()
 
-        self.assertNotIn("UNKNOWN", config)
-        with self.assertRaises(KeyError):
-            _ = config["UNKNOWN"]
+def test_fail_missing_config():
+    config = EnvVarConfigurationLoader()
+
+    assert "UNKNOWN" not in config
+    with pytest.raises(KeyError):
+        _ = config["UNKNOWN"]

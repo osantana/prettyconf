@@ -1,6 +1,7 @@
 *.egg-info/
 *.py[co]
 __pycache__
+.eggs/
 .idea
 .tox
 .coverage

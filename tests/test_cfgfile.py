@@ -1,43 +1,38 @@
-# coding: utf-8
+import os
+import pytest
 
-
-from .base import BaseTestCase
 from prettyconf.loaders import IniFileConfigurationLoader, InvalidConfigurationFile
 
 
-class IniFileTestCase(BaseTestCase):
-    def setUp(self):
-        super(IniFileTestCase, self).setUp()
-        self.inifile = self.test_files_path + "/config.ini"
+def test_fail_invalid_settings_file(files_path):
+    with pytest.raises(InvalidConfigurationFile):
+        IniFileConfigurationLoader(os.path.join(files_path, "invalid_section.ini"))
 
-    def test_fail_invalid_settings_file(self):
-        with self.assertRaises(InvalidConfigurationFile):
-            IniFileConfigurationLoader(self.test_files_path + "/invalid_section.ini")
 
-    def test_config_file_parsing(self):
-        config = IniFileConfigurationLoader(self.inifile)
+def test_config_file_parsing(inifile):
+    config = IniFileConfigurationLoader(inifile)
 
-        self.assertEqual(config["KEY"], "Value")
-        self.assertEqual(config["KEY_EMPTY"], "")
-        # self.assertEqual(config["INLINE_COMMENTS"], "Foo")  # There is no inline comment in py3
-        self.assertEqual(config["HASH_CONTENT"], "Foo 'Bar # Baz' Value")
-        self.assertEqual(config["PERCENT_ESCAPED"], "%")
-        self.assertEqual(config["IGNORE_SPACE"], "text")
-        self.assertEqual(config["SINGLE_QUOTE_SPACE"], "' text'")
-        self.assertEqual(config["DOUBLE_QUOTE_SPACE"], '" text"')
-        self.assertEqual(config["UPDATED"], "text")
-        self.assertNotIn("COMMENTED_KEY", config)
-        self.assertNotIn("INVALID_KEY", config)
-        self.assertNotIn("OTHER_INVALID_KEY", config)
+    assert config["KEY"] == "Value"
+    assert config["KEY_EMPTY"] == ""
+    assert config["HASH_CONTENT"] == "Foo 'Bar # Baz' Value"
+    assert config["PERCENT_ESCAPED"] == "%"
+    assert config["IGNORE_SPACE"] == "text"
+    assert config["SINGLE_QUOTE_SPACE"] == "' text'"
+    assert config["DOUBLE_QUOTE_SPACE"] == '" text"'
+    assert config["UPDATED"] == "text"
+    assert "COMMENTED_KEY" not in config
+    assert "INVALID_KEY" not in config
+    assert "OTHER_INVALID_KEY" not in config
 
-        # Error when we refers to an unknown key for interpolation
-        # self.assertEqual(config["NO_INTERPOLATION"], "%(unknown)s")
+    # Error when we refers to an unknown key for interpolation
+    # self.assertEqual(config["NO_INTERPOLATION"], "%(unknown)s")
 
-        # ConfigParser did not allow empty configs with inline comment
-        # self.assertEqual(config["KEY_EMPTY_WITH_COMMENTS"], "")
+    # ConfigParser did not allow empty configs with inline comment
+    # self.assertEqual(config["KEY_EMPTY_WITH_COMMENTS"], "")
 
-    def test_list_config_filenames(self):
-        filenames = IniFileConfigurationLoader.get_filenames(self.test_files_path)
-        self.assertEqual(len(filenames), 3)
-        self.assertIn(self.test_files_path + "/config.ini", filenames)
-        self.assertIn(self.test_files_path + "/invalid_section.ini", filenames)
+
+def test_list_config_filenames(files_path):
+    filenames = IniFileConfigurationLoader.get_filenames(files_path)
+    assert len(filenames) == 3
+    assert os.path.join(files_path, "config.ini") in filenames
+    assert os.path.join(files_path, "invalid_section.ini") in filenames
