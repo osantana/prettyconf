@@ -1,15 +1,17 @@
 # coding: utf-8
-
-import sys
 import os
-from glob import glob
+import sys
+from argparse import Action, ArgumentParser
+
+from .exceptions import InvalidConfigurationFile
 
 try:
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, MissingSectionHeaderError
 except ImportError:
     from configparser import ConfigParser, NoOptionError, MissingSectionHeaderError
 
-from .exceptions import InvalidConfigurationFile
+
+CLI_DEFAULT = '==PRETTYCONF=='
 
 
 class AbstractConfigurationLoader(object):
@@ -20,36 +22,102 @@ class AbstractConfigurationLoader(object):
         raise NotImplementedError()  # pragma: no cover
 
 
-class EnvVarConfigurationLoader(AbstractConfigurationLoader):
-    def __contains__(self, item):
-        return item in os.environ
-
-    def __getitem__(self, item):
-        return os.environ[item]
-
-
-class AbstractFileConfigurationLoader(AbstractConfigurationLoader):
-    patterns = ()
-
-    @classmethod
-    def get_filenames(cls, path):
-        filenames = []
-        for pattern in cls.patterns:
-            filenames += glob(os.path.join(path, pattern))
-        return filenames
-
-    def __getitem__(self, item):
-        raise NotImplementedError()  # pragma: no cover
+class CommandLine(AbstractConfigurationLoader):
+    """
+    Works with `argparse` parsers.
+    """
+    default = '==PRETTYCONF=='
+    def __init__(self, parser):
+        # We have to put a special default value so that we know if the
+        # variable has been set by the user explicitly.
+        _parser = ArgumentParser()
+        for action in parser._actions:
+            copy = Action(**dict(action._get_kwargs()))
+            copy.default = self.default
+            _parser._actions.append(copy)
+        self.configs = _parser.parse_args()
 
     def __contains__(self, item):
-        raise NotImplementedError()  # pragma: no cover
+        return item in self.configs and getattr(self.configs, item) != self.default
+
+    def __getitem__(self, item):
+        try:
+            res = getattr(self.configs, item)
+        except AttributeError:
+            raise KeyError("{!r}".format(item))
+
+        if res == self.default:
+            raise KeyError("{!r}".format(item))
+        return res
 
 
-class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
-    patterns = (".env", )
+class IniFile(AbstractConfigurationLoader):
 
-    def __init__(self, filename):
+    def __init__(self, filename, section="settings", required=True, var_format=lambda x: x):
         self.filename = filename
+        self.required = required
+        self.section = section
+        self.var_format = var_format
+        self.parser = ConfigParser(allow_no_value=True)
+        self.file_is_missing = not os.path.isfile(self.filename)
+
+        if self.required and self.file_is_missing:
+            raise InvalidConfigurationFile("Could not find {}".format(self.filename))
+
+        if self.file_is_missing:
+            # do not open it
+            return
+
+        with open(self.filename) as inifile:
+            try:
+                if sys.version_info[0] < 3:
+                    # ConfigParser.readfp is deprecated for Python3, read_file replaces it
+                    # noinspection PyDeprecation
+                    self.parser.readfp(inifile)
+                else:
+                    self.parser.read_file(inifile)
+            except (UnicodeDecodeError, MissingSectionHeaderError):
+                raise InvalidConfigurationFile()
+
+        if not self.parser.has_section(self.section):
+            raise InvalidConfigurationFile("Missing [{}] section in {}".format(self.section, self.filename))
+
+    def __contains__(self, item):
+        if self.file_is_missing:
+            return False
+        return self.parser.has_option(self.section, self.var_format(item))
+
+    def __getitem__(self, item):
+        if self.file_is_missing:
+            raise KeyError("{!r}".format(item))
+        try:
+            return self.parser.get(self.section, self.var_format(item))
+        except NoOptionError:
+            raise KeyError("{!r}".format(item))
+
+
+class Environment(AbstractConfigurationLoader):
+    """
+    Get's configuration from the environment.
+    """
+
+    def __init__(self, var_format=str.upper):
+        self.var_format = var_format
+
+    def __contains__(self, item):
+        return self.var_format(item) in os.environ
+
+    def __getitem__(self, item):
+        # Uses `os.environ` because it raises an exception if the environmental
+        # variable does not exist, whilst `os.getenv` doesn't.
+        return os.environ[self.var_format(item)]
+
+
+class EnvFile(AbstractConfigurationLoader):
+    def __init__(self, filename='.env', required=True, var_format=str.upper):
+        self.filename = filename
+        self.var_format = var_format
+        self.required = required
         self.configs = None
 
     @staticmethod
@@ -130,48 +198,10 @@ class EnvFileConfigurationLoader(AbstractFileConfigurationLoader):
         if self.configs is None:
             self._parse()
 
-        return item in self.configs
+        return self.var_format(item) in self.configs
 
     def __getitem__(self, item):
         if self.configs is None:
             self._parse()
 
-        return self.configs[item]
-
-
-class IniFileConfigurationLoader(AbstractFileConfigurationLoader):
-    default_section = "settings"
-    patterns = ("*.ini", "*.cfg")
-
-    def __init__(self, filename, section=None):
-        self.filename = filename
-
-        if not section:
-            section = self.default_section
-
-        self.section = section
-
-        self.parser = ConfigParser(allow_no_value=True)
-
-        with open(self.filename) as inifile:
-            try:
-                if sys.version_info[0] < 3:
-                    # ConfigParser.readfp is deprecated for Python3, read_file replaces it
-                    # noinspection PyDeprecation
-                    self.parser.readfp(inifile)
-                else:
-                    self.parser.read_file(inifile)
-            except (UnicodeDecodeError, MissingSectionHeaderError):
-                raise InvalidConfigurationFile()
-
-        if not self.parser.has_section(self.section):
-            raise InvalidConfigurationFile("Missing [{}] section in {}".format(self.section, self.filename))
-
-    def __contains__(self, item):
-        return self.parser.has_option(self.section, item)
-
-    def __getitem__(self, item):
-        try:
-            return self.parser.get(self.section, item)
-        except NoOptionError:
-            raise KeyError("{!r}".format(item))
+        return self.configs[self.var_format(item)]
