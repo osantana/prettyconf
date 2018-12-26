@@ -19,11 +19,11 @@ class Configuration(object):
     option = Option
     eval = staticmethod(ast.literal_eval)
 
-    def __init__(self, strategies=None):
-        if strategies is None:
+    def __init__(self, loaders=None):
+        if loaders is None:
             dot_env_file = '{path}.env'.format(path=self._caller_path())
-            strategies = [Environment(), EnvFile(filename=dot_env_file)]
-        self.strategies = strategies
+            loaders = [Environment(), EnvFile(filename=dot_env_file)]
+        self.loaders = loaders
 
     @staticmethod
     def _caller_path():
@@ -37,7 +37,7 @@ class Configuration(object):
         if not callable(cast):
             raise InvalidConfigurationCast("Cast must be callable")
 
-        for loader in self.strategies:
+        for loader in self.loaders:
             try:
                 return cast(loader[item])
             except KeyError:
