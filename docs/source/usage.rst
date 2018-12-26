@@ -100,7 +100,7 @@ To make this changes possible you can always create your own
 
 .. code-block:: python
 
-    from prettyconf.configuration import Configuration
+    from prettyconf import Configuration
 
     config = Configuration()
 
@@ -133,7 +133,7 @@ your ``Configuration()``:
     # Code example in project/app/settings.py
     import os
 
-    from prettyconf.configuration import Configuration
+    from prettyconf import Configuration
 
     project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
     config = Configuration(starting_path=project_path)
@@ -178,7 +178,7 @@ You can change this behaviour by setting any parent directory of the
     # Code example in project/app/settings.py
     import os
 
-    from prettyconf.configuration import Configuration
+    from prettyconf import Configuration
 
     project_path = os.path.realpath(os.path.join(app_path), '..'))
     config = Configuration(root_path=project_path)
