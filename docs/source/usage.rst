@@ -108,70 +108,25 @@ To make this changes possible you can always create your own
    ``.egg`` or wheel packages.
 
 
-Set the starting path
-+++++++++++++++++++++
+Customizing the configuration file location
++++++++++++++++++++++++++++++++++++++++++++
 
 By default library will use the directory of the file where ``config()`` was
-called as the start directory to look for configuration files. Consider the
-following file structure:
-
-.. code-block:: text
-
-    project/
-      settings.ini
-      app/
-        settings.py
-
-If you call ``config()`` from ``project/app/settings.py`` the library will start looking
-for configuration files at ``project/app``.
-
-You can change that behaviour, by setting a different ``starting_path`` when instantiating
-your ``Configuration()``:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    import os
-
-    from prettyconf import Configuration
-
-    project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-    config = Configuration(starting_path=project_path)
-
-The example above will start looking for files at ``project/`` instead of ``project/app``.
-
-You can also set ``starting_path`` attribute in ``prettyconf.config`` before use it:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    import os
-
-    from prettyconf import config
-
-    project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-    config.starting_path = project_path
-
-
-Set a different root path
-+++++++++++++++++++++++++
-
-By default, the library will try to look for configuration files until it finds
-valid configuration files **or** it reaches ``root_path``. The default
-``root_path`` is set to the root directory "``/``".
-
+called as the start directory to look for a ``.env`` configuration file.
 Consider the following file structure:
 
 .. code-block:: text
 
-    /projects/
-      any_settings.ini
-      project/
-        app/
-          settings.py
+    project/
+      app/
+        .env
+        settings.py
 
-You can change this behaviour by setting any parent directory of the
-``starting_path`` as the ``root_path`` when instantiating ``Configuration``:
+If you call ``config()`` from ``project/app/settings.py`` the library will look
+for configuration files at ``project/app``.
+
+You can change that behaviour, by customizing configuration loaders to look at
+a different ``path`` when instantiating your ``Configuration()``:
 
 .. code-block:: python
 
@@ -179,35 +134,34 @@ You can change this behaviour by setting any parent directory of the
     import os
 
     from prettyconf import Configuration
-
-    project_path = os.path.realpath(os.path.join(app_path), '..'))
-    config = Configuration(root_path=project_path)
-
-The example above will start looking for files at ``project/app/`` and will stop looking
-for configuration files at ``project/``, actually never looking at ``any_settings.ini``
-and no configuration being loaded at all.
-
-You can also set ``root_path`` attribute in ``prettyconf.config`` before use it:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    from prettyconf import config
+    from prettyconf.loaders import Environment, EnvFile
 
     project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-    config.root_path = project_path
+    env_file = f"{project_path}/.env"
+    config = Configuration(loaders=[Environment(), 
+                                    EnvFile(filename=env_file, required=False)])
 
-The ``root_path`` must be a parent directory of ``starting_path``:
+The example above will start looking for configuration in the environment and
+then in a ``.env`` file at ``project/`` instead of ``project/app``.
+
+You can also alter this ``loaders`` attribute in ``prettyconf.config`` before use it:
 
 .. code-block:: python
 
     # Code example in project/app/settings.py
+    import os
+
     from prettyconf import config
+    from prettyconf.loaders import Environment, EnvFile
 
-    config.starting_path = "/foo/bar"
-    config.root_path = "/baz"  # /baz is not parent of /foo/bar
+    project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
+    env_file = f"{project_path}/.env"
+    config.loaders = [Environment(), EnvFile(filename=env_file, required=False)]
 
-    MY_CONFIG = config("PROJECT_MY_CONFIG")  # raises an InvalidPath exception here
+because ``config`` is nothing but an already instantiated ``Configuration`` object.
+
+
+Read more about how loaders can be configured in the :doc:`loaders section<loaders>`.
 
 
 .. _dj-database-url: https://github.com/kennethreitz/dj-database-url
