@@ -22,7 +22,6 @@ class Configuration(object):
     def __init__(self, strategies=None):
         if strategies is None:
             dot_env_file = '{path}.env'.format(path=self._caller_path())
-            print(self._caller_path())
             strategies = [Environment(), EnvFile(filename=dot_env_file)]
         self.strategies = strategies
 
