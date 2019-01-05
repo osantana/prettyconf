@@ -119,6 +119,10 @@ class EnvFile(AbstractConfigurationLoader):
         self.var_format = var_format
         self.required = required
         self.configs = None
+        self.file_is_missing = not os.path.isfile(self.filename)
+
+        if self.required and self.file_is_missing:
+            raise InvalidConfigurationFile("Could not find {}".format(self.filename))
 
     @staticmethod
     def _parse_line(line):
