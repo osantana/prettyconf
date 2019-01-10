@@ -21,8 +21,11 @@ class Configuration(object):
 
     def __init__(self, loaders=None):
         if loaders is None:
-            dot_env_file = '{path}.env'.format(path=self._caller_path())
-            loaders = [Environment(), EnvFile(filename=dot_env_file)]
+            dot_env_file = os.path.join(self._caller_path(), '.env')
+            loaders = [
+                Environment(),
+                EnvFile(filename=dot_env_file, required=False)
+            ]
         self.loaders = loaders
 
     @staticmethod
