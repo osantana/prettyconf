@@ -2,6 +2,7 @@
 import os
 import sys
 from argparse import Action, ArgumentParser
+from glob import glob
 
 from .exceptions import InvalidConfigurationFile
 
@@ -209,3 +210,82 @@ class EnvFile(AbstractConfigurationLoader):
             self._parse()
 
         return self.configs[self.var_format(item)]
+
+
+class RecursiveSearch(AbstractConfigurationLoader):
+
+    def __init__(self, starting_path, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg',), IniFile),), root_path="/"):
+        """
+        Setup the configuration file discovery.
+        :param starting_path: The path to begin looking for configuration files
+        :param filetypes: tuple of tuples with configuration loaders, order matters.
+                          Defaults to
+                          ``(('*.env', EnvFile), (('*.ini', *.cfg',), IniFile)``
+        :param root_path: Configuration lookup will stop at the given path. Defaults to
+                          the current user directory
+        """
+        self.starting_path = os.path.realpath(os.path.abspath(starting_path))
+        self.root_path = os.path.realpath(root_path)
+
+        if not self.starting_path.startswith(self.root_path):
+            raise InvalidPath('Invalid root path given')
+
+        self.filetypes = filetypes
+        self._config_files = None
+
+    @staticmethod
+    def get_filenames(path, patterns):
+        filenames = []
+        if type(patterns) is str:
+            patterns = (patterns,)
+
+        for pattern in patterns:
+            filenames += glob(os.path.join(path, pattern))
+        return filenames
+
+    def _scan_path(self, path):
+        config_files = []
+
+        for patterns, Loader in self.filetypes:
+            for filename in self.get_filenames(path, patterns):
+                try:
+                    config_files.append(Loader(filename=filename))
+                except InvalidConfigurationFile:
+                    continue
+
+        return config_files
+
+    def _discover(self):
+        self._config_files = []
+
+        path = self.starting_path
+        while not self._config_files:
+            if os.path.isdir(path):
+                self._config_files += self._scan_path(path)
+
+            if path == self.root_path:
+                break
+
+            path = os.path.dirname(path)
+
+    @property
+    def config_files(self):
+        if self._config_files is None:
+            self._discover()
+
+        return self._config_files
+
+    def __contains__(self, item):
+        for config_file in self.config_files:
+            if item in config_file:
+                return True
+        return False
+
+    def __getitem__(self, item):
+        for config_file in self.config_files:
+            try:
+                return config_file[item]
+            except KeyError:
+                continue
+        else:
+            raise KeyError("{!r}".format(item))

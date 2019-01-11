@@ -5,10 +5,17 @@ import sys
 
 from .casts import Boolean, List, Option, Tuple
 from .exceptions import UnknownConfiguration
-from .loaders import EnvFile, Environment
+from .loaders import Environment, RecursiveSearch
 
 
 MAGIC_FRAME_DEPTH = 2
+
+def _caller_path():
+    # MAGIC! Get the caller's module path.
+    # noinspection PyProtectedMember
+    frame = sys._getframe(MAGIC_FRAME_DEPTH)
+    path = os.path.dirname(frame.f_code.co_filename)
+    return path
 
 
 class Configuration(object):
@@ -21,20 +28,11 @@ class Configuration(object):
 
     def __init__(self, loaders=None):
         if loaders is None:
-            dot_env_file = os.path.join(self._caller_path(), '.env')
             loaders = [
                 Environment(),
-                EnvFile(filename=dot_env_file, required=False)
+                RecursiveSearch(starting_path=_caller_path())
             ]
         self.loaders = loaders
-
-    @staticmethod
-    def _caller_path():
-        # MAGIC! Get the caller's module path.
-        # noinspection PyProtectedMember
-        frame = sys._getframe(MAGIC_FRAME_DEPTH)
-        path = os.path.dirname(frame.f_code.co_filename)
-        return path
 
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
