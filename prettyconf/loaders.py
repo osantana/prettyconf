@@ -12,7 +12,22 @@ except ImportError:
     from configparser import ConfigParser, NoOptionError, MissingSectionHeaderError
 
 
-CLI_DEFAULT = '==PRETTYCONF=='
+# We have to put a special default value so that we know if the variable has
+# been set by the user explicitly. This is usefull for the `CommandLine`
+# extractor, when CLI parsers force you to set a default value, and thus, break
+# the discovery chain.  It behaves as a replacement for None, but it is an
+# string to make it serializable, just in case.
+UNSET = '==UNSET=='
+
+
+def get_args(parser):
+    """
+    Converts arguments extracted from a parser to a dict,
+    and will dismiss arguments which default to UNSET.
+    :param parser: an `argparse.ArgumentParser` instance
+    """
+    args = vars(parser.parse_args()).items()
+    return {key: val for key, val in args if val != UNSET}
 
 
 class AbstractConfigurationLoader(object):
@@ -27,29 +42,14 @@ class CommandLine(AbstractConfigurationLoader):
     """
     Works with `argparse` parsers.
     """
-    default = '==PRETTYCONF=='
-    def __init__(self, parser):
-        # We have to put a special default value so that we know if the
-        # variable has been set by the user explicitly.
-        _parser = ArgumentParser()
-        for action in parser._actions:
-            copy = Action(**dict(action._get_kwargs()))
-            copy.default = self.default
-            _parser._actions.append(copy)
-        self.configs = _parser.parse_args()
+    def __init__(self, parser, get_args=get_args):
+        self.configs = get_args(parser)
 
     def __contains__(self, item):
-        return item in self.configs and getattr(self.configs, item) != self.default
+        return item in self.configs
 
     def __getitem__(self, item):
-        try:
-            res = getattr(self.configs, item)
-        except AttributeError:
-            raise KeyError("{!r}".format(item))
-
-        if res == self.default:
-            raise KeyError("{!r}".format(item))
-        return res
+        return self.configs[item]
 
 
 class IniFile(AbstractConfigurationLoader):
