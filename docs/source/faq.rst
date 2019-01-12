@@ -45,15 +45,17 @@ incompatible, so, it could break software that relies on the old behaviour.
 Besides that it's hard to make this change on ``python-decouple`` due to
 the way it's implemented.
 
-See the lookup order of configurations below::
+See the lookup order of configurations below
 
-    +---------------+-----------------+------------------------+-------------------------+
-    | Lookup Order  | prettyconf      | python-decouple (<3.0) | python-decouple (>=3.0) |
-    +---------------+-----------------+------------------------+-------------------------+
-    | 1             | ENVVAR          | .env                   | ENVVAR                  |
-    | 2             | .env            | settings.ini           | .env                    |
-    | 3             | *.cfg or *.ini  | ENVVAR                 | settings.ini            |
-    +---------------+-----------------+------------------------+-------------------------+
++---------------+-----------------+------------------------+-------------------------+
+| Lookup Order  | prettyconf      | python-decouple (<3.0) | python-decouple (>=3.0) |
++===============+=================+========================+=========================+
+| 1             | ENVVAR          | .env                   | ENVVAR                  |
++---------------+-----------------+------------------------+-------------------------+
+| 2             | .env            | settings.ini           | .env                    |
++---------------+-----------------+------------------------+-------------------------+
+| 3             | *.cfg or *.ini  | ENVVAR                 | settings.ini            |
++---------------+-----------------+------------------------+-------------------------+
 
 .. _some: https://github.com/henriquebastos/python-decouple/pull/4
 .. _contributions: https://github.com/henriquebastos/python-decouple/pull/5
