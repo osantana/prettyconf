@@ -10,6 +10,9 @@ Prettyconf comes with some loaders already included in ``prettyconf.loaders``.
 Environment
 +++++++++++
 
+.. autoclass:: prettyconf.loaders.Environment
+
+
 The ``Environment`` loader gets configuration from ``os.environ``. Since it is
 a common pattern to write env variables in caps, the loader accepts a
 ``var_format`` function to pre-format the variable name before the lookup
@@ -28,6 +31,8 @@ occurs. By default it is ``str.upper()``.
 EnvFile
 +++++++
 
+.. autoclass:: prettyconf.loaders.EnvFile
+
 The ``EnvFile`` loader gets configuration from ``env`` file.
 
 .. code-block:: text
@@ -44,3 +49,17 @@ The ``EnvFile`` loader gets configuration from ``env`` file.
 
     config.loaders = [EnvFile(file='.env', required=True, var_format=str.upper)]
     config('debug')  # will look for a `DEBUG` variable
+
+
+
+IniFile
++++++++
+
+.. autoclass:: prettyconf.loaders.IniFile
+
+
+
+CommandLine
++++++++++++
+
+.. autoclass:: prettyconf.loaders.CommandLine
