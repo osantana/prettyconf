@@ -1,8 +1,7 @@
 # coding: utf-8
 
-# Use from prettyconf import config
 
 from .configuration import Configuration
-from .loaders import UNSET
+from .loaders import NOT_SET
 
 config = Configuration()

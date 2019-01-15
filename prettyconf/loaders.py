@@ -12,22 +12,31 @@ except ImportError:
     from configparser import ConfigParser, NoOptionError, MissingSectionHeaderError
 
 
-# We have to put a special default value so that we know if the variable has
-# been set by the user explicitly. This is usefull for the `CommandLine`
-# extractor, when CLI parsers force you to set a default value, and thus, break
-# the discovery chain.  It behaves as a replacement for None, but it is an
-# string to make it serializable, just in case.
-UNSET = '==UNSET=='
+class NotSet(str):
+    """
+    A special type that behaves as a replacement for None.
+    We have to put a new default value to know if a variable has been set by
+    the user explicitly. This is useful for the ``CommandLine`` loader, when
+    CLI parsers force you to set a default value, and thus, break the discovery
+    chain.
+    """
+    pass
+
+
+NOT_SET = NotSet()
 
 
 def get_args(parser):
     """
     Converts arguments extracted from a parser to a dict,
-    and will dismiss arguments which default to UNSET.
-    :param parser: an `argparse.ArgumentParser` instance
+    and will dismiss arguments which default to NOT_SET.
+
+    :param parser: an ``argparse.ArgumentParser`` instance.
+    :return: Dictionary with the configs found in the parsed CLI arguments.
+    :rtype: dict
     """
     args = vars(parser.parse_args()).items()
-    return {key: val for key, val in args if val != UNSET}
+    return {key: val for key, val in args if not isinstance(val, NotSet)}
 
 
 class AbstractConfigurationLoader(object):
