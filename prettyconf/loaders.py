@@ -34,6 +34,7 @@ def get_args(parser):
     and will dismiss arguments which default to NOT_SET.
 
     :param parser: an ``argparse.ArgumentParser`` instance.
+    :type parser: argparse.ArgumentParser
     :return: Dictionary with the configs found in the parsed CLI arguments.
     :rtype: dict
     """
@@ -51,9 +52,15 @@ class AbstractConfigurationLoader(object):
 
 class CommandLine(AbstractConfigurationLoader):
     """
-    Works with `argparse` parsers.
+    Works with ``argparse`` parsers.
     """
+
     def __init__(self, parser, get_args=get_args):
+        """
+        :param parser: An `argparse` parser instance to extract variables from.
+        :param function get_args: A function to extract args from the parser.
+        :type parser: argparse.ArgumentParser
+        """
         self.configs = get_args(parser)
 
     def __contains__(self, item):
@@ -67,9 +74,9 @@ class IniFile(AbstractConfigurationLoader):
 
     def __init__(self, filename, section="settings", var_format=lambda x: x):
         """
-        :param filename str: Path to the ``.ini/.cfg`` file.
-        :param section str: Section name inside the config file.
-        :param var_format function: A function to pre-format variable names.
+        :param str filename: Path to the ``.ini/.cfg`` file.
+        :param str section: Section name inside the config file.
+        :param function var_format: A function to pre-format variable names.
         """
         self.filename = filename
         self.section = section
@@ -118,10 +125,13 @@ class IniFile(AbstractConfigurationLoader):
 
 class Environment(AbstractConfigurationLoader):
     """
-    Get's configuration from the environment.
+    Get's configuration from the environment, by inspecting ``os.environ``.
     """
 
     def __init__(self, var_format=str.upper):
+        """
+        :param function var_format: A function to pre-format variable names.
+        """
         self.var_format = var_format
 
     def __contains__(self, item):
@@ -240,13 +250,12 @@ class RecursiveSearch(AbstractConfigurationLoader):
 
     def __init__(self, starting_path, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg',), IniFile),), root_path="/"):
         """
-        Setup the configuration file discovery.
-        :param starting_path: The path to begin looking for configuration files
-        :param filetypes: tuple of tuples with configuration loaders, order matters.
-                          Defaults to
-                          ``(('*.env', EnvFile), (('*.ini', *.cfg',), IniFile)``
-        :param root_path: Configuration lookup will stop at the given path. Defaults to
-                          the current user directory
+        :param str starting_path: The path to begin looking for configuration files.
+        :param tuple filetypes: tuple of tuples with configuration loaders, order matters.
+                                Defaults to
+                                ``(('*.env', EnvFile), (('*.ini', *.cfg',), IniFile)``
+        :param str root_path: Configuration lookup will stop at the given path. Defaults to
+                              the current user directory
         """
         self.starting_path = os.path.realpath(os.path.abspath(starting_path))
         self.root_path = os.path.realpath(root_path)
