@@ -65,21 +65,19 @@ class CommandLine(AbstractConfigurationLoader):
 
 class IniFile(AbstractConfigurationLoader):
 
-    def __init__(self, filename, section="settings", required=True, var_format=lambda x: x):
+    def __init__(self, filename, section="settings", var_format=lambda x: x):
+        """
+        :param filename str: Path to the ``.ini/.cfg`` file.
+        :param section str: Section name inside the config file.
+        :param var_format function: A function to pre-format variable names.
+        """
         self.filename = filename
-        self.required = required
         self.section = section
         self.var_format = var_format
         self.parser = ConfigParser(allow_no_value=True)
-        self.file_is_missing = not os.path.isfile(self.filename)
+        self._initialized = False
 
-        if self.required and self.file_is_missing:
-            raise InvalidConfigurationFile("Could not find {}".format(self.filename))
-
-        if self.file_is_missing:
-            # do not open it
-            return
-
+    def _parse(self):
         with open(self.filename) as inifile:
             try:
                 if sys.version_info[0] < 3:
@@ -94,14 +92,24 @@ class IniFile(AbstractConfigurationLoader):
         if not self.parser.has_section(self.section):
             raise InvalidConfigurationFile("Missing [{}] section in {}".format(self.section, self.filename))
 
+        self._initialized = True
+
     def __contains__(self, item):
-        if self.file_is_missing:
-            return False
+        if not self._initialized:
+            try:
+                self._parse()
+            except FileNotFoundError:
+                return False
+
         return self.parser.has_option(self.section, self.var_format(item))
 
     def __getitem__(self, item):
-        if self.file_is_missing:
-            raise KeyError("{!r}".format(item))
+        if not self._initialized:
+            try:
+                self._parse()
+            except FileNotFoundError:
+                raise KeyError("{!r}".format(item))
+
         try:
             return self.parser.get(self.section, self.var_format(item))
         except NoOptionError:
@@ -126,15 +134,14 @@ class Environment(AbstractConfigurationLoader):
 
 
 class EnvFile(AbstractConfigurationLoader):
-    def __init__(self, filename='.env', required=True, var_format=str.upper):
+    def __init__(self, filename='.env', var_format=str.upper):
+        """
+        :param str filename: Path to the ``.env`` file.
+        :param function var_format: A function to pre-format variable names.
+        """
         self.filename = filename
         self.var_format = var_format
-        self.required = required
         self.configs = None
-        self.file_is_missing = not os.path.isfile(self.filename)
-
-        if self.required and self.file_is_missing:
-            raise InvalidConfigurationFile("Could not find {}".format(self.filename))
 
     @staticmethod
     def _parse_line(line):
@@ -212,13 +219,19 @@ class EnvFile(AbstractConfigurationLoader):
 
     def __contains__(self, item):
         if self.configs is None:
-            self._parse()
+            try:
+                self._parse()
+            except FileNotFoundError:
+                return False
 
         return self.var_format(item) in self.configs
 
     def __getitem__(self, item):
         if self.configs is None:
-            self._parse()
+            try:
+                self._parse()
+            except FileNotFoundError:
+                raise KeyError("{!r}".format(item))
 
         return self.configs[self.var_format(item)]
 
