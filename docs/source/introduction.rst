@@ -32,8 +32,8 @@ settings-discoverability chain goes as follows:
    user-specific.
 4. Hardcoded constants.
 
-The rises the need to consolidate configuration in a single source of truth to
-avoid having config management scattered all over the codebase.
+This raises the need to consolidate configuration in a single source of truth
+to avoid having config management scattered all over the codebase.
 
 
 .. _`12 Factor`: http://12factor.net/
