@@ -12,9 +12,8 @@ Environment
 
 .. autoclass:: prettyconf.loaders.Environment
 
-
-The ``Environment`` loader gets configuration from ``os.environ``. Since it is
-a common pattern to write env variables in caps, the loader accepts a
+The ``Environment`` loader gets configuration from ``os.environ``. Since it
+is a common pattern to write env variables in caps, the loader accepts a
 ``var_format`` function to pre-format the variable name before the lookup
 occurs. By default it is ``str.upper()``.
 
