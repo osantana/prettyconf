@@ -14,6 +14,7 @@ Contents:
    introduction.rst
    installation.rst
    usage.rst
+   advanced.rst
    loaders.rst
    faq.rst
 
