@@ -84,6 +84,10 @@ class IniFile(AbstractConfigurationLoader):
         self._initialized = False
 
     def _parse(self):
+
+        if self._initialized:
+            return
+
         with open(self.filename) as inifile:
             try:
                 if sys.version_info[0] < 3:
@@ -101,20 +105,18 @@ class IniFile(AbstractConfigurationLoader):
         self._initialized = True
 
     def __contains__(self, item):
-        if not self._initialized:
-            try:
-                self._parse()
-            except FileNotFoundError:
-                return False
+        try:
+            self._parse()
+        except FileNotFoundError:
+            return False
 
         return self.parser.has_option(self.section, self.var_format(item))
 
     def __getitem__(self, item):
-        if not self._initialized:
-            try:
-                self._parse()
-            except FileNotFoundError:
-                raise KeyError("{!r}".format(item))
+        try:
+            self._parse()
+        except FileNotFoundError:
+            raise KeyError("{!r}".format(item))
 
         try:
             return self.parser.get(self.section, self.var_format(item))
@@ -216,6 +218,10 @@ class EnvFile(AbstractConfigurationLoader):
         return key, value
 
     def _parse(self):
+
+        if self.configs is not None:
+            return
+
         self.configs = {}
         with open(self.filename) as envfile:
             for line in envfile:
@@ -227,20 +233,18 @@ class EnvFile(AbstractConfigurationLoader):
                 self.configs[key] = value
 
     def __contains__(self, item):
-        if self.configs is None:
-            try:
-                self._parse()
-            except FileNotFoundError:
-                return False
+        try:
+            self._parse()
+        except FileNotFoundError:
+            return False
 
         return self.var_format(item) in self.configs
 
     def __getitem__(self, item):
-        if self.configs is None:
-            try:
-                self._parse()
-            except FileNotFoundError:
-                raise KeyError("{!r}".format(item))
+        try:
+            self._parse()
+        except FileNotFoundError:
+            raise KeyError("{!r}".format(item))
 
         return self.configs[self.var_format(item)]
 
