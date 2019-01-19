@@ -3,7 +3,6 @@
 
 import os
 import sys
-from argparse import Action, ArgumentParser
 from glob import glob
 
 from .exceptions import InvalidConfigurationFile
