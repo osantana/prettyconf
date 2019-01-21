@@ -51,7 +51,7 @@ class AbstractConfigurationLoader(object):
 
 class CommandLine(AbstractConfigurationLoader):
     """
-    Works with ``argparse`` parsers.
+    Extract configuration from an ``argparse`` parser.
     """
 
     def __init__(self, parser, get_args=get_args):

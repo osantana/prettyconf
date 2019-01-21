@@ -62,3 +62,32 @@ CommandLine
 +++++++++++
 
 .. autoclass:: prettyconf.loaders.CommandLine
+
+This loader lets you extract configuration variables from parsed CLI arguments.
+By default it works with `argparse`_ parsers.
+
+
+.. code-block:: python
+
+    from prettyconf import Configuration, NOT_SET
+    from prettyconf.loaders import CommandLine
+
+    import argparse
+
+
+    parser = argparse.ArgumentParser(description='Does something useful.')
+    parser.add_argument('--debug', '-d', dest='debug', default=NOT_SET, help='set debug mode')
+
+    config = Configuration(loaders=[CommandLine(parser=parser)])
+    print(config('debug', default=False, cast=config.boolean))
+
+
+Something to notice here is the ``NOT_SET`` value.
+
+CLI parsers often force you to put a default value so that they don't fail. In
+that case, to play nice with prettyconf, you must set one. But that would break
+the discoverability chain that prettyconf encourages, so by setting this
+special default value, you will allow prettyconf to keep the lookup going.
+
+
+.. _argparse: https://docs.python.org/3/library/argparse.html
