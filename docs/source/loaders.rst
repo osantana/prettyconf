@@ -82,12 +82,24 @@ By default it works with `argparse`_ parsers.
     print(config('debug', default=False, cast=config.boolean))
 
 
-Something to notice here is the ``NOT_SET`` value.
+Something to notice here is the :py:const:`NOT_SET<prettyconf.loaders.NOT_SET>` value. CLI parsers often force you
+to put a default value so that they don't fail. In that case, to play nice with
+prettyconf, you must set one. But that would break the discoverability chain
+that prettyconf encourages. So by setting this special default value, you will
+allow prettyconf to keep the lookup going.
 
-CLI parsers often force you to put a default value so that they don't fail. In
-that case, to play nice with prettyconf, you must set one. But that would break
-the discoverability chain that prettyconf encourages, so by setting this
-special default value, you will allow prettyconf to keep the lookup going.
+The :py:func:`get_args<prettyconf.loaders.get_args>` function converts the
+argparse parser's values to a dict that ignores
+:py:const:`NOT_SET<prettyconf.loaders.NOT_SET>` values.
 
 
 .. _argparse: https://docs.python.org/3/library/argparse.html
+
+
+
+RecursiveSearch
++++++++++++++++
+
+.. autoclass:: prettyconf.loaders.RecursiveSearch
+
+

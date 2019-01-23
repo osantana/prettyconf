@@ -115,3 +115,56 @@ env variables.
 
     config = Configuration(loaders=[Environment(var_format=str.upper)])
     debug = config('debug', default=False, cast=config.boolean)  # lookups for DEBUG=[yes|no]
+
+
+Writing your own loader
++++++++++++++++++++++++
+
+If you need a custom loader, you should just extend the :py:class:`AbstractConfigurationLoader<prettyconf.loaders.AbstractConfigurationLoader>`.
+
+.. autoclass:: prettyconf.loaders.AbstractConfigurationLoader
+
+For example, say you want to write a Yaml loader.
+
+.. code-block:: python
+
+    import yaml
+    from prettyconf.loaders import AbstractConfigurationLoader
+
+    class YamlFile(AbstractConfigurationLoader):
+        def __init__(self, filename):
+            self.filename = filename
+            self.config = None
+
+        def _parse(self):
+            if self.config is not None:
+                return
+            with open(self.filename, 'r') as f:
+                self.config = yaml.load(f)
+
+        def __contains__(self, item):
+            try:
+                self._parse()
+            except:
+                return False
+
+            return item in self.config
+
+        def __getitem__(self, item):
+            try:
+                self._parse()
+            except:
+                # KeyError tells prettyconf to keep looking elsewhere!
+                raise KeyError("{!r}".format(item))
+
+            return self.config[item]
+
+
+Then configure prettyconf to use it.
+
+.. code-block:: python
+
+    from prettyconf import config
+    config.loaders = [YamlFile('config.yml')]
+
+
