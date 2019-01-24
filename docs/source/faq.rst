@@ -35,6 +35,11 @@ highly inspired in ``python-decouple`` and provides almost the same API.
 The implementation of ``prettyconf`` is more extensible and flexible to make
 behaviour configurations easier.
 
+You can use any of them. Both are good libraries and provides a similar set of
+features.
+
+.. _`python-decouple`: https://github.com/henriquebastos/python-decouple
+
 
 Why you created a library similar to python-decouple instead of use it?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -47,25 +52,31 @@ the way it's implemented.
 
 See the lookup order of configurations below
 
-+---------------+-----------------+------------------------+-------------------------+
-| Lookup Order  | prettyconf      | python-decouple (<3.0) | python-decouple (>=3.0) |
-+===============+=================+========================+=========================+
-| 1             | ENVVAR          | .env                   | ENVVAR                  |
-+---------------+-----------------+------------------------+-------------------------+
-| 2             | .env            | settings.ini           | .env                    |
-+---------------+-----------------+------------------------+-------------------------+
-| 3             | *.cfg or *.ini  | ENVVAR                 | settings.ini            |
-+---------------+-----------------+------------------------+-------------------------+
++---------------+------------------+------------------------+-------------------------+
+| Lookup Order  | prettyconf       | python-decouple (<3.0) | python-decouple (>=3.0) |
++===============+==================+========================+=========================+
+| 1             | ENVVAR           | .env                   | ENVVAR                  |
++---------------+------------------+------------------------+-------------------------+
+| 2             | .env             | settings.ini           | .env                    |
++---------------+------------------+------------------------+-------------------------+
+| 3             | \*.cfg or \*.ini | ENVVAR                 | settings.ini            |
++---------------+------------------+------------------------+-------------------------+
 
 .. _some: https://github.com/henriquebastos/python-decouple/pull/4
 .. _contributions: https://github.com/henriquebastos/python-decouple/pull/5
 
 
-Why use ``prettyconf`` instead of ``python-decouple``?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How does prettyconf compare to python-dotenv?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can use any of them. Both are good libraries and provides a similar set of
-features.
+python-dotenv_ reads the key, value pair from .env file and adds them to
+environment variable. It is good for some tools that simply proxy the env to
+some other process, like docker-compose_ or pipenv_.
 
+On the other hand, prettyconf does not populate the ``os.environ`` dictionary,
+because it is designed to discover configuration from diferent sources, the
+environment being just one of them.
 
-.. _`python-decouple`: https://github.com/henriquebastos/python-decouple
+.. _`python-dotenv`: https://github.com/theskumar/python-dotenv
+.. _`pipenv`: https://pipenv.readthedocs.io/en/latest/advanced/#automatic-loading-of-env
+.. _`docker-compose`: https://docs.docker.com/compose/env-file/
