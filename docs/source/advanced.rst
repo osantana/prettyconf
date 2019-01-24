@@ -124,7 +124,9 @@ If you need a custom loader, you should just extend the :py:class:`AbstractConfi
 
 .. autoclass:: prettyconf.loaders.AbstractConfigurationLoader
 
-For example, say you want to write a Yaml loader.
+For example, say you want to write a Yaml loader. It is important to note
+that by raising a ``KeyError`` exception from the loader, prettyconf knows
+that it has to keep looking down the loaders chain for a specific config.
 
 .. code-block:: python
 
