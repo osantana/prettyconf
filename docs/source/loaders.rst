@@ -32,7 +32,7 @@ EnvFile
 
 .. autoclass:: prettyconf.loaders.EnvFile
 
-The ``EnvFile`` loader gets configuration from ``env`` file.
+The ``EnvFile`` loader gets configuration from ``.env`` file.
 
 .. code-block:: text
 
@@ -49,6 +49,12 @@ The ``EnvFile`` loader gets configuration from ``env`` file.
     config.loaders = [EnvFile(file='.env', required=True, var_format=str.upper)]
     config('debug')  # will look for a `DEBUG` variable
 
+
+.. note::
+    You might want to use dump-env_, a utility to create ``.env`` files.
+
+
+.. _`dump-env`: https://github.com/sobolevn/dump-env
 
 
 IniFile
