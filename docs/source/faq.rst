@@ -26,6 +26,16 @@ But this code have some issues:
    file that will be used if `DEBUG` *envvar* is not defined.
 
 
+Is prettyconf tied to Django_ or Flask_?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+No, prettyconf was designed to be framework agnostic, be it for the web or cli
+applications.
+
+.. _`Django`: https://www.djangoproject.com/
+.. _`Flask`: http://flask.pocoo.org/
+
+
 What is the difference between prettyconf and python-decouple_?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

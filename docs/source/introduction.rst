@@ -1,19 +1,19 @@
 What's prettyconf
 -----------------
 
-Prettyconf is a Python library created to make easy the separation of
-configuration and code following the recomendations of `12 Factor`_'s topic
-about configs.
+Prettyconf is a framework agnostic python library created to make easy the
+separation of configuration and code following the recomendations of `12
+Factor`_'s topic about configs.
 
 
 Motivation
 ++++++++++
 
 Configuration is just another API of you app, aimed for users who will install
-and run it, allowing them to *preset* the state of a program, without having to
-interact with it, only through static files or environment variables.
+and run it, that allows them to *preset* the state of a program, without having
+to interact with it, only through static files or environment variables.
 
-It is an important aspect of the architechture of any system, yet it is
+It is an important aspect of the architecture of any system, yet it is
 sometimes overlooked.
 
 It is important to provide a clear separation of configuration and code. This
