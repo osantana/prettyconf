@@ -2,9 +2,15 @@ Configuration Loaders
 ---------------------
 
 Loaders are in charge of loading configuration from various sources, like
-``.ini`` files or *environment* variables.
+``.ini`` files or *environment* variables. Loaders are ment to chained, so that
+prettyconf checks one by one for a given configuration variable.
 
 Prettyconf comes with some loaders already included in ``prettyconf.loaders``.
+
+.. seealso::
+    Some loaders include a ``var_format`` callable argument, see
+    :ref:`variable-naming` to read more about it's purpose.
+
 
 
 Environment
@@ -63,7 +69,6 @@ IniFile
 .. autoclass:: prettyconf.loaders.IniFile
 
 
-
 CommandLine
 +++++++++++
 
@@ -102,10 +107,89 @@ argparse parser's values to a dict that ignores
 .. _argparse: https://docs.python.org/3/library/argparse.html
 
 
-
 RecursiveSearch
 +++++++++++++++
 
 .. autoclass:: prettyconf.loaders.RecursiveSearch
 
+This loader tries to find ``.env`` or ``*.ini|*.cfg`` files and load them with
+the :py:class:`EnvFile<prettyconf.loaders.EnvFile>` and
+:py:class:`IniFile<prettyconf.loaders.IniFile>` loaders respectively. It will
+start at the ``starting_path`` directory to look for configuration files.
 
+.. warning::
+    It is important to note that this loader uses the glob module internally to
+    discover ``.env`` and ``*.ini|*.cfg`` files.  This could be problematic if
+    the project includes many files that are unrelated, like a ``pytest.ini``
+    file along side with a ``settings.ini``. An unexpected file could be found
+    and be considered as the configuration to use.
+
+Consider the following file structure:
+
+.. code-block:: text
+
+    project/
+      settings.ini
+      app/
+        settings.py
+
+When instantiating your
+:py:class:`RecursiveSearch<prettyconf.loaders.RecursiveSearch>`, if you pass
+``/absolute/path/to/project/app/`` as ``starting_path`` the loader will start
+looking for configuration files at ``project/app``.
+
+.. code-block:: python
+
+    # Code example in project/app/settings.py
+    import os
+
+    from prettyconf import config
+    from prettyconf.loaders import RecursiveSearch
+
+    app_path = os.path.dirname(__file__)
+    config.loaders = [RecursiveSearch(starting_path=app_path)]
+
+By default, the loader will try to look for configuration files until it finds
+valid configuration files **or** it reaches ``root_path``. The ``root_path`` is
+set to the root directory ``/`` initialy.
+
+Consider the following file structure:
+
+.. code-block:: text
+
+    /projects/
+      any_settings.ini
+      project/
+        app/
+          settings.py
+
+You can change this behaviour by setting any parent directory of the
+``starting_path`` as the ``root_path`` when instantiating
+:py:class:`RecursiveSearch<prettyconf.loaders.RecursiveSearch>`:
+
+.. code-block:: python
+
+    # Code example in project/app/settings.py
+    import os
+
+    from prettyconf import Configuration
+    from prettyconf.loaders import RecursiveSearch
+
+    app_path = os.path.dirname(__file__)
+    project_path = os.path.realpath(os.path.join(app_path, '..'))
+    rs = RecursiveSearch(starting_path=app_path, root_path=project_path)
+    config = Configuration(loaders=[rs])
+
+The example above will start looking for files at ``project/app/`` and will stop looking
+for configuration files at ``project/``, actually never looking at ``any_settings.ini``
+and no configuration being loaded at all.
+
+The ``root_path`` must be a parent directory of ``starting_path``:
+
+.. code-block:: python
+
+    # Code example in project/app/settings.py
+    from prettyconf.loaders import RecursiveSearch
+
+    # /baz is not parent of /foo/bar, so this raises an InvalidPath exception here
+    rs = RecursiveSearch(starting_path="/foo/bar", root_path="/baz")

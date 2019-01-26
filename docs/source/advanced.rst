@@ -19,22 +19,26 @@ To make this changes possible you can always create your own
    ``.egg`` or wheel packages.
 
 
-Customizing the configuration file location
-+++++++++++++++++++++++++++++++++++++++++++
+.. _discovery-customization:
 
-By default library will use the directory of the file where ``config()`` was
-called as the start directory to look for a ``.env`` configuration file.
-Consider the following file structure:
+Customizing the configuration discovery
++++++++++++++++++++++++++++++++++++++++
+
+By default the library will use the envrionment and the directory of the file
+where ``config()`` was called as the start directory to look for a ``.env``
+configuration file.  Consider the following file structure:
 
 .. code-block:: text
 
     project/
       app/
         .env
+        config.ini
         settings.py
 
-If you call ``config()`` from ``project/app/settings.py`` the library will look
-for configuration files at ``project/app``.
+If you call ``config()`` from ``project/app/settings.py`` the library will
+inspect the envrionment and then look for configuration files at
+``project/app``.
 
 You can change that behaviour, by customizing configuration loaders to look at
 a different ``path`` when instantiating your ``Configuration()``:
@@ -49,13 +53,13 @@ a different ``path`` when instantiating your ``Configuration()``:
 
     project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
     env_file = f"{project_path}/.env"
-    config = Configuration(loaders=[Environment(), 
-                                    EnvFile(filename=env_file, required=False)])
+    config = Configuration(loaders=[Environment(), EnvFile(filename=env_file)])
 
 The example above will start looking for configuration in the environment and
 then in a ``.env`` file at ``project/`` instead of ``project/app``.
 
-You can also alter this ``loaders`` attribute in ``prettyconf.config`` before use it:
+Because ``config`` is nothing but an already instantiated ``Configuration`` object,
+you can also alter this ``loaders`` attribute in ``prettyconf.config`` before use it:
 
 .. code-block:: python
 
@@ -67,13 +71,11 @@ You can also alter this ``loaders`` attribute in ``prettyconf.config`` before us
 
     project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
     env_file = f"{project_path}/.env"
-    config.loaders = [Environment(), EnvFile(filename=env_file, required=False)]
-
-because ``config`` is nothing but an already instantiated ``Configuration`` object.
-
+    config.loaders = [Environment(), EnvFile(filename=env_file)]
 
 Read more about how loaders can be configured in the :doc:`loaders section<loaders>`.
 
+.. _variable-naming:
 
 Naming conventions for variables
 ++++++++++++++++++++++++++++++++
