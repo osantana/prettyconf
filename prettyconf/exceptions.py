@@ -19,7 +19,3 @@ class UnknownConfiguration(ConfigurationException):
 
 class InvalidConfiguration(ConfigurationException):
     pass
-
-
-class InvalidConfigurationCast(ConfigurationException):
-    pass

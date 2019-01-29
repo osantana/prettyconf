@@ -38,7 +38,7 @@ class Configuration(object):
 
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
-            raise InvalidConfigurationCast("Cast must be callable")
+            raise TypeError("Cast must be callable")
 
         for loader in self.loaders:
             try:
