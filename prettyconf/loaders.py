@@ -5,7 +5,7 @@ import os
 import sys
 from glob import glob
 
-from .exceptions import InvalidConfigurationFile
+from .exceptions import InvalidConfigurationFile, InvalidPath
 
 try:
     from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, MissingSectionHeaderError
@@ -83,6 +83,9 @@ class IniFile(AbstractConfigurationLoader):
         self.parser = ConfigParser(allow_no_value=True)
         self._initialized = False
 
+    def __repr__(self):
+        return 'IniFile("{}")'.format(self.filename)
+
     def _parse(self):
 
         if self._initialized:
@@ -153,6 +156,9 @@ class EnvFile(AbstractConfigurationLoader):
         self.filename = filename
         self.var_format = var_format
         self.configs = None
+
+    def __repr__(self):
+        return 'EnvFile("{}")'.format(self.filename)
 
     @staticmethod
     def _parse_line(line):
