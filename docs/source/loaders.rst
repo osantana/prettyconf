@@ -38,7 +38,8 @@ EnvFile
 
 .. autoclass:: prettyconf.loaders.EnvFile
 
-The ``EnvFile`` loader gets configuration from ``.env`` file.
+The ``EnvFile`` loader gets configuration from ``.env`` file. If the file
+doesn't exist, this loader will be skipped without raising any errors.
 
 .. code-block:: text
 
@@ -67,6 +68,9 @@ IniFile
 +++++++
 
 .. autoclass:: prettyconf.loaders.IniFile
+
+The ``IniFile`` loader gets configuration from ``.ini`` or ``.cfg`` files. If
+the file doesn't exist, this loader will be skipped without raising any errors.
 
 
 CommandLine
