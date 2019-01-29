@@ -4,7 +4,7 @@
 import os
 
 from .base import BaseTestCase
-from prettyconf.loaders import EnvFileConfigurationLoader
+from prettyconf.loaders import EnvFile
 
 
 class EnvFileTestCase(BaseTestCase):
@@ -13,7 +13,7 @@ class EnvFileTestCase(BaseTestCase):
         self.envfile = os.path.join(self.test_files_path, "envfile")
 
     def test_config_file_parsing(self):
-        config = EnvFileConfigurationLoader(self.envfile)
+        config = EnvFile(self.envfile)
 
         self.assertEqual(config["KEY"], "Value")
         self.assertEqual(config["KEY_EMPTY"], "")
@@ -32,15 +32,21 @@ class EnvFileTestCase(BaseTestCase):
         self.assertEqual(config["SINGLE_QUOTE_INSIDE_QUOTE"], "foo 'bar' baz")
 
     def test_missing_invalid_keys_in_config_file_parsing(self):
-        config = EnvFileConfigurationLoader(self.envfile)
+        config = EnvFile(self.envfile)
 
         self.assertNotIn("COMMENTED_KEY", config)
         self.assertNotIn("INVALID_KEY", config)
         self.assertNotIn("OTHER_INVALID_KEY", config)
 
-    def test_list_config_filenames(self):
-        self._create_file(self.test_files_path + "/.env")
-        filenames = EnvFileConfigurationLoader.get_filenames(self.test_files_path)
+    def test_default_var_format(self):
+        config = EnvFile(self.envfile)
 
-        self.assertEqual(len(filenames), 1)
-        self.assertEqual(self.test_files_path + "/.env", filenames[0])
+        self.assertIn("key", config)
+        self.assertEqual("Value", config["key"])
+
+    def test_custom_var_format(self):
+        formatter = lambda x: '_{}'.format(str.lower(x))
+        config = EnvFile(self.envfile, var_format=formatter)
+
+        self.assertIn("VAR", config)
+        self.assertEqual("test", config["VAR"])
