@@ -17,6 +17,7 @@ Contents:
    advanced.rst
    loaders.rst
    faq.rst
+   changelog.rst
 
 
 Indices and tables
