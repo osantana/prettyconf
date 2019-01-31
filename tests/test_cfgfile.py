@@ -1,10 +1,3 @@
-# coding: utf-8
-
-
-from __future__ import unicode_literals
-
-import tempfile
-
 from prettyconf.loaders import IniFile, InvalidConfigurationFile
 
 from .base import BaseTestCase
