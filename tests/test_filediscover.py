@@ -12,7 +12,6 @@ from prettyconf.loaders import RecursiveSearch
 from .base import BaseTestCase
 
 
-# noinspection PyStatementEffect
 class RecursiveSearchTestCase(BaseTestCase):
     def setUp(self):
         super(RecursiveSearchTestCase, self).setUp()

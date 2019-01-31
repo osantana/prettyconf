@@ -45,7 +45,9 @@ class EnvFileTestCase(BaseTestCase):
         self.assertEqual("Value", config["key"])
 
     def test_custom_var_format(self):
-        formatter = lambda x: '_{}'.format(str.lower(x))
+        def formatter(x):
+            return '_{}'.format(str.lower(x))
+
         config = EnvFile(self.envfile, var_format=formatter)
 
         self.assertIn("VAR", config)

@@ -17,7 +17,7 @@ class IniFileTestCase(BaseTestCase):
 
     def test_fail_invalid_settings_file(self):
         with self.assertRaises(InvalidConfigurationFile):
-            IniFile(self.test_files_path + "/invalid_section.ini")['some_value']
+            return IniFile(self.test_files_path + "/invalid_section.ini")['some_value']
 
     def test_config_file_parsing(self):
         config = IniFile(self.inifile)
@@ -45,13 +45,13 @@ class IniFileTestCase(BaseTestCase):
         config = IniFile(self.inifile)
 
         with self.assertRaises(KeyError):
-            IniFile(self.inifile)['some_value']
+            return IniFile(self.inifile)['some_value']
 
     def test_skip_invalid_ini_file(self):
         config = IniFile(self.test_files_path + "/invalid_chars.cfg")
 
         with self.assertRaises(InvalidConfigurationFile):
-            config['some_value']
+            return config['some_value']
 
     def test_default_var_format(self):
         config = IniFile(self.inifile)
@@ -60,7 +60,9 @@ class IniFileTestCase(BaseTestCase):
         self.assertEqual("test", config["_var"])
 
     def test_custom_var_format(self):
-        formatter = lambda x: '_{}'.format(str.lower(x))
+        def formatter(x):
+            return '_{}'.format(str.lower(x))
+
         config = IniFile(self.inifile, var_format=formatter)
 
         self.assertIn("VAR", config)

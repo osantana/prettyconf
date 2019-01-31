@@ -34,7 +34,9 @@ class EnvironmentTestCase(BaseTestCase):
         del os.environ["TEST"]
 
     def test_custom_var_format(self):
-        formatter = lambda x: '_{}'.format(x)
+        def formatter(x):
+            return '_{}'.format(x)
+
         os.environ["_TEST"] = "test"
         config = Environment(var_format=formatter)
 

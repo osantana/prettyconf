@@ -54,6 +54,7 @@ class CommandLine(AbstractConfigurationLoader):
     Extract configuration from an ``argparse`` parser.
     """
 
+    # noinspection PyShadowingNames
     def __init__(self, parser, get_args=get_args):
         """
         :param parser: An `argparse` parser instance to extract variables from.

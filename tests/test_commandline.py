@@ -35,17 +35,19 @@ class CommandLineTestCase(BaseTestCase):
 
     def test_ignores_NOT_SET_values(self):
         with self.assertRaises(KeyError):
-            self.config['var']
+            return self.config['var']
 
     def test_ignores_missing_keys(self):
         with self.assertRaises(KeyError):
-            self.config['var3']
+            return self.config['var3']
 
     def test_does_not_ignore_set_values(self):
         parser = parser_factory()
+
         def test_args():
-            parser = parser_factory()
-            return parser.parse_args(['--var=bar', '-b', 'bar2'])
+            _parser = parser_factory()
+            return _parser.parse_args(['--var=bar', '-b', 'bar2'])
+
         parser.parse_args = test_args
         config = CommandLine(parser=parser)
         self.assertEquals(config['var'], 'bar')
