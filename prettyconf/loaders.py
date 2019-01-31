@@ -164,7 +164,6 @@ class EnvFile(AbstractConfigurationLoader):
     @staticmethod
     def _parse_line(line):
         key = []
-        pos = 0
         comment = ""
 
         # parse key

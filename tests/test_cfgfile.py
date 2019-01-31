@@ -42,8 +42,6 @@ class IniFileTestCase(BaseTestCase):
         # self.assertEqual(config["KEY_EMPTY_WITH_COMMENTS"], "")
 
     def test_skip_missing_key(self):
-        config = IniFile(self.inifile)
-
         with self.assertRaises(KeyError):
             return IniFile(self.inifile)['some_value']
 

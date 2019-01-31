@@ -7,7 +7,6 @@ import shutil
 import tempfile
 
 from prettyconf.exceptions import InvalidPath
-from prettyconf.loaders import IniFile
 from prettyconf.loaders import RecursiveSearch
 from .base import BaseTestCase
 
@@ -32,7 +31,6 @@ class RecursiveSearchTestCase(BaseTestCase):
     def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(self):
         starting_path = self.test_files_path + '/recursive/valid/'
         discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        print(discovery.config_files)
         self.assertEqual(len(discovery.config_files), 2)
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(starting_path + '.env', filenames)
