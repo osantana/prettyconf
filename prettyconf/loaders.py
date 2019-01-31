@@ -1,13 +1,8 @@
 import os
-import sys
+from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
 from .exceptions import InvalidConfigurationFile, InvalidPath
-
-try:
-    from ConfigParser import SafeConfigParser as ConfigParser, NoOptionError, MissingSectionHeaderError
-except ImportError:
-    from configparser import ConfigParser, NoOptionError, MissingSectionHeaderError
 
 
 class NotSet(str):
@@ -91,12 +86,7 @@ class IniFile(AbstractConfigurationLoader):
 
         with open(self.filename) as inifile:
             try:
-                if sys.version_info[0] < 3:
-                    # ConfigParser.readfp is deprecated for Python3, read_file replaces it
-                    # noinspection PyDeprecation
-                    self.parser.readfp(inifile)
-                else:
-                    self.parser.read_file(inifile)
+                self.parser.read_file(inifile)
             except (UnicodeDecodeError, MissingSectionHeaderError):
                 raise InvalidConfigurationFile()
 
