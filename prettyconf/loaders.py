@@ -34,6 +34,9 @@ def get_args(parser):
 
 
 class AbstractConfigurationLoader(object):
+    def __repr__(self):
+        raise NotImplementedError()  # pragma: no cover
+
     def __contains__(self, item):
         raise NotImplementedError()  # pragma: no cover
 
@@ -53,7 +56,11 @@ class CommandLine(AbstractConfigurationLoader):
         :param function get_args: A function to extract args from the parser.
         :type parser: argparse.ArgumentParser
         """
-        self.configs = get_args(parser)
+        self.parser = parser
+        self.configs = get_args(self.parser)
+
+    def __repr__(self):
+        return 'CommandLine(parser={})'.format(self.parser)
 
     def __contains__(self, item):
         return item in self.configs
@@ -63,7 +70,6 @@ class CommandLine(AbstractConfigurationLoader):
 
 
 class IniFile(AbstractConfigurationLoader):
-
     def __init__(self, filename, section="settings", var_format=lambda x: x):
         """
         :param str filename: Path to the ``.ini/.cfg`` file.
@@ -125,6 +131,9 @@ class Environment(AbstractConfigurationLoader):
         :param function var_format: A function to pre-format variable names.
         """
         self.var_format = var_format
+
+    def __repr__(self):
+        return 'Environment(var_format={}>'.format(self.var_format)
 
     def __contains__(self, item):
         return self.var_format(item) in os.environ
@@ -302,6 +311,9 @@ class RecursiveSearch(AbstractConfigurationLoader):
             self._discover()
 
         return self._config_files
+
+    def __repr__(self):
+        return 'RecursiveSearch(starting_path={})'.format(self.starting_path)
 
     def __contains__(self, item):
         for config_file in self.config_files:

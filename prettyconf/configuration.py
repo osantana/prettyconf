@@ -33,6 +33,10 @@ class Configuration(object):
             ]
         self.loaders = loaders
 
+    def __repr__(self):
+        loaders = ', '.join([repr(l) for l in self.loaders])
+        return 'Configuration(loaders=[{}])'.format(loaders)
+
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
             raise TypeError("Cast must be callable")

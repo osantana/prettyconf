@@ -28,6 +28,7 @@ class ConfigTestCase(BaseTestCase):
     def test_basic_config(self):
         os.environ["ENVVAR"] = "Environment Variable Value"
         config = Configuration()
+        self.assertTrue(repr(config).startswith("Configuration(loaders=["))
         self.assertEqual(config("ENVVAR"), "Environment Variable Value")
         self.assertEqual(config("ENVFILE"), "Environment File Value")
         self.assertEqual(config("INIFILE"), "INI File Value")

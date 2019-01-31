@@ -11,6 +11,7 @@ class EnvironmentTestCase(BaseTestCase):
 
         self.assertIn("TEST", config)
         self.assertEqual("test", config["TEST"])
+        self.assertTrue(repr(config).startswith('Environment(var_format='))
 
         del os.environ["TEST"]
 

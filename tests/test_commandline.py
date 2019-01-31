@@ -25,6 +25,7 @@ class CommandLineTestCase(BaseTestCase):
         self.config = CommandLine(parser=parser)
 
     def test_basic_config(self):
+        self.assertTrue(repr(self.config).startswith('CommandLine(parser='))
         self.assertEquals(self.config['var2'], 'foo')
 
     def test_ignores_NOT_SET_values(self):
