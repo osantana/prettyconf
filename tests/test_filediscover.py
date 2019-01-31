@@ -20,9 +20,14 @@ class RecursiveSearchTestCase(BaseTestCase):
     def test_config_file_parsing(self):
         self._create_file(self.test_files_path + "/../.env")
         self._create_file(self.test_files_path + "/../setup.txt")  # invalid settings
-        self._create_file(self.test_files_path + "/../settings.ini", "[settings]")
+        self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nfoo=bar")
         discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
+        self.assertTrue(repr(discovery).startswith("RecursiveSearch(starting_path="))
         self.assertEqual(len(discovery.config_files), 2)  # 2 *valid* files created
+
+        self.assertIn('foo', discovery)
+        self.assertEqual(discovery['foo'], 'bar')
+        self.assertNotIn('not_found', discovery)
 
     def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(self):
         starting_path = self.test_files_path + '/recursive/valid/'
