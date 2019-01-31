@@ -3,8 +3,8 @@
 
 import os
 
-from .base import BaseTestCase
 from prettyconf.loaders import Environment
+from .base import BaseTestCase
 
 
 class EnvironmentTestCase(BaseTestCase):

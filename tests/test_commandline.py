@@ -5,8 +5,7 @@ from __future__ import unicode_literals
 
 import argparse
 
-from prettyconf.loaders import NOT_SET, CommandLine
-
+from prettyconf.loaders import CommandLine, NOT_SET
 from .base import BaseTestCase
 
 

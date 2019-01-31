@@ -6,9 +6,7 @@ import os
 from prettyconf.configuration import Configuration
 from prettyconf.exceptions import UnknownConfiguration
 from prettyconf.loaders import EnvFile, Environment, IniFile
-
 from .base import BaseTestCase
-
 
 ENVFILE_CONTENT = """
 ENVFILE=Environment File Value
@@ -42,7 +40,7 @@ class ConfigTestCase(BaseTestCase):
     def test_customized_loaders(self):
         os.environ["ENVVAR"] = "Environment Variable Value"
         os.environ["ENVVAR2"] = "Foo"
-        loaders=[EnvFile(self.envfile), Environment(), IniFile(self.inifile)]
+        loaders = [EnvFile(self.envfile), Environment(), IniFile(self.inifile)]
         config = Configuration(loaders=loaders)
         self.assertEqual(config("ENVVAR"), "Must be overrided")
         self.assertEqual(config("ENVVAR2"), "Foo")
@@ -54,6 +52,7 @@ class ConfigTestCase(BaseTestCase):
 
     def test_from_import_basic_config(self):
         from prettyconf import config
+
         self.assertIsInstance(config, Configuration)
 
     def test_config_default_values(self):

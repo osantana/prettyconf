@@ -6,9 +6,9 @@ import os
 import shutil
 import tempfile
 
-from prettyconf.loaders import RecursiveSearch
 from prettyconf.exceptions import InvalidPath
 from prettyconf.loaders import IniFile
+from prettyconf.loaders import RecursiveSearch
 from .base import BaseTestCase
 
 

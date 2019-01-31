@@ -9,8 +9,8 @@ from .casts import Boolean, List, Option, Tuple
 from .exceptions import UnknownConfiguration
 from .loaders import Environment, RecursiveSearch
 
-
 MAGIC_FRAME_DEPTH = 2
+
 
 def _caller_path():
     # MAGIC! Get the caller's module path.
