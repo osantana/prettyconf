@@ -243,7 +243,6 @@ class EnvFile(AbstractConfigurationLoader):
 
 
 class RecursiveSearch(AbstractConfigurationLoader):
-
     def __init__(self, starting_path, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg',), IniFile),), root_path="/"):
         """
         :param str starting_path: The path to begin looking for configuration files.

@@ -8,6 +8,11 @@ class IniFileTestCase(BaseTestCase):
         super(IniFileTestCase, self).setUp()
         self.inifile = self.test_files_path + "/config.ini"
 
+    def test_basic_config_object(self):
+        config = IniFile(self.inifile)
+
+        self.assertEqual(repr(config), 'IniFile("{}")'.format(self.inifile))
+
     def test_fail_invalid_settings_file(self):
         with self.assertRaises(InvalidConfigurationFile):
             return IniFile(self.test_files_path + "/invalid_section.ini")['some_value']
@@ -58,3 +63,12 @@ class IniFileTestCase(BaseTestCase):
 
         self.assertIn("VAR", config)
         self.assertEqual("test", config["VAR"])
+
+    def test_fail_missing_envfile_contains(self):
+        config = IniFile("does-not-exist.ini")
+        self.assertNotIn('error', config)
+
+    def test_fail_missing_envfile_get_item(self):
+        config = IniFile("does-not-exist.ini")
+        with self.assertRaises(KeyError):
+            return config['error']

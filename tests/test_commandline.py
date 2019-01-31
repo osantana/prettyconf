@@ -18,7 +18,6 @@ def test_parse_args():
 
 
 class CommandLineTestCase(BaseTestCase):
-
     def setUp(self):
         super(CommandLineTestCase, self).setUp()
         parser = parser_factory()
@@ -47,3 +46,6 @@ class CommandLineTestCase(BaseTestCase):
         config = CommandLine(parser=parser)
         self.assertEquals(config['var'], 'bar')
         self.assertEquals(config['var2'], 'bar2')
+
+    def test_contains_missing_keys(self):
+        self.assertNotIn('var3', self.config)

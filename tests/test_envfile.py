@@ -9,6 +9,11 @@ class EnvFileTestCase(BaseTestCase):
         super(EnvFileTestCase, self).setUp()
         self.envfile = os.path.join(self.test_files_path, "envfile")
 
+    def test_basic_config_object(self):
+        config = EnvFile(self.envfile)
+
+        self.assertEqual(repr(config), 'EnvFile("{}")'.format(self.envfile))
+
     def test_config_file_parsing(self):
         config = EnvFile(self.envfile)
 
@@ -49,3 +54,12 @@ class EnvFileTestCase(BaseTestCase):
 
         self.assertIn("VAR", config)
         self.assertEqual("test", config["VAR"])
+
+    def test_fail_missing_envfile_contains(self):
+        config = EnvFile("does-not-exist.env")
+        self.assertNotIn('error', config)
+
+    def test_fail_missing_envfile_get_item(self):
+        config = EnvFile("does-not-exist.env")
+        with self.assertRaises(KeyError):
+            return config['error']
