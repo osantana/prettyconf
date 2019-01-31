@@ -1,3 +1,11 @@
+2.0.0
+=====
+
+  - Refactor strategy to find configuration files (thanks to @hernantz)
+  - Lots of improvements on documentation
+  - Dropped support for py2
+  - Dropped tox support
+
 1.2.3
 =====
 
