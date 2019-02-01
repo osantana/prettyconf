@@ -33,7 +33,7 @@ def get_args(parser):
     return {key: val for key, val in args if not isinstance(val, NotSet)}
 
 
-class AbstractConfigurationLoader(object):
+class AbstractConfigurationLoader:
     def __repr__(self):
         raise NotImplementedError()  # pragma: no cover
 
@@ -42,6 +42,11 @@ class AbstractConfigurationLoader(object):
 
     def __getitem__(self, item):
         raise NotImplementedError()  # pragma: no cover
+
+
+# noinspection PyAbstractClass
+class AbstractConfigurationFileLoader(AbstractConfigurationLoader):
+    file_filters = ()
 
 
 class CommandLine(AbstractConfigurationLoader):
@@ -69,7 +74,9 @@ class CommandLine(AbstractConfigurationLoader):
         return self.configs[item]
 
 
-class IniFile(AbstractConfigurationLoader):
+class IniFile(AbstractConfigurationFileLoader):
+    file_extensions = ('*.ini', '*.cfg')
+
     def __init__(self, filename, section="settings", var_format=lambda x: x):
         """
         :param str filename: Path to the ``.ini/.cfg`` file.
@@ -86,7 +93,6 @@ class IniFile(AbstractConfigurationLoader):
         return 'IniFile("{}")'.format(self.filename)
 
     def _parse(self):
-
         if self._initialized:
             return
 
@@ -144,7 +150,9 @@ class Environment(AbstractConfigurationLoader):
         return os.environ[self.var_format(item)]
 
 
-class EnvFile(AbstractConfigurationLoader):
+class EnvFile(AbstractConfigurationFileLoader):
+    file_extensions = ('.env',)
+
     def __init__(self, filename='.env', var_format=str.upper):
         """
         :param str filename: Path to the ``.env`` file.
@@ -252,7 +260,8 @@ class EnvFile(AbstractConfigurationLoader):
 
 
 class RecursiveSearch(AbstractConfigurationLoader):
-    def __init__(self, starting_path, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg',), IniFile),), root_path="/"):
+    def __init__(self, starting_path=None, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg',), IniFile),),
+                 root_path="/"):
         """
         :param str starting_path: The path to begin looking for configuration files.
         :param tuple filetypes: tuple of tuples with configuration loaders, order matters.
@@ -261,14 +270,28 @@ class RecursiveSearch(AbstractConfigurationLoader):
         :param str root_path: Configuration lookup will stop at the given path. Defaults to
                               the current user directory
         """
-        self.starting_path = os.path.realpath(os.path.abspath(starting_path))
         self.root_path = os.path.realpath(root_path)
+        self._starting_path = self.root_path
 
-        if not self.starting_path.startswith(self.root_path):
-            raise InvalidPath('Invalid root path given')
+        if starting_path:
+            self.starting_path = starting_path
 
         self.filetypes = filetypes
         self._config_files = None
+
+    @property
+    def starting_path(self):
+        return self._starting_path
+
+    @starting_path.setter
+    def starting_path(self, path):
+        if not path:
+            raise InvalidPath('Invalid starting path')
+
+        path = os.path.realpath(os.path.abspath(path))
+        if not path.startswith(self.root_path):
+            raise InvalidPath('Invalid root path given')
+        self._starting_path = path
 
     @staticmethod
     def get_filenames(path, patterns):
@@ -296,7 +319,7 @@ class RecursiveSearch(AbstractConfigurationLoader):
         self._config_files = []
 
         path = self.starting_path
-        while not self._config_files:
+        while True:
             if os.path.isdir(path):
                 self._config_files += self._scan_path(path)
 

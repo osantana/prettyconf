@@ -20,19 +20,19 @@ class RecursiveSearchTestCase(BaseTestCase):
     def test_config_file_parsing(self):
         self._create_file(self.test_files_path + "/../.env")
         self._create_file(self.test_files_path + "/../setup.txt")  # invalid settings
-        self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nfoo=bar")
+        self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nFOO=bar")
         discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
         self.assertTrue(repr(discovery).startswith("RecursiveSearch(starting_path="))
-        self.assertEqual(len(discovery.config_files), 2)  # 2 *valid* files created
+        self.assertEqual(len(discovery.config_files), 3)  # 2 *valid* files created + prettyconf project itself
 
-        self.assertIn('foo', discovery)
-        self.assertEqual(discovery['foo'], 'bar')
+        self.assertIn('FOO', discovery)
+        self.assertEqual(discovery['FOO'], 'bar')
         self.assertNotIn('not_found', discovery)
 
     def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(self):
         starting_path = self.test_files_path + '/recursive/valid/'
         discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        self.assertEqual(len(discovery.config_files), 2)
+        self.assertEqual(len(discovery.config_files), 6)  # FIXME
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(starting_path + '.env', filenames)
         self.assertIn(starting_path + 'settings.ini', filenames)
@@ -41,7 +41,7 @@ class RecursiveSearchTestCase(BaseTestCase):
         starting_path = self.test_files_path + '/recursive/valid/invalid/'
         valid_path = self.test_files_path + '/recursive/valid/'
         discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        self.assertEqual(len(discovery.config_files), 2)
+        self.assertEqual(len(discovery.config_files), 6)  # FIXME
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(valid_path + '.env', filenames)
         self.assertIn(valid_path + 'settings.ini', filenames)
@@ -58,7 +58,7 @@ class RecursiveSearchTestCase(BaseTestCase):
         root_dir = tempfile.mkdtemp()
         self.tmpdirs.append(root_dir)
 
-        start_path = os.path.join(root_dir, 'some/directories/to/start/looking/for/settings')
+        start_path = os.path.join(root_dir, 'start/here')
         os.makedirs(start_path)
 
         test_file = os.path.realpath(os.path.join(root_dir, 'settings.ini'))
@@ -74,7 +74,7 @@ class RecursiveSearchTestCase(BaseTestCase):
         test_dir = tempfile.mkdtemp()
         self.tmpdirs.append(test_dir)  # Cleanup dir at tearDown
 
-        start_path = os.path.join(test_dir, 'some/dirs/without/config')
+        start_path = os.path.join(test_dir, 'some', 'dirs', 'without', 'config')
         os.makedirs(start_path)
 
         # create a file in the test_dir

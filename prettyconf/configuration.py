@@ -13,7 +13,7 @@ def _caller_path():
     # MAGIC! Get the caller's module path.
     # noinspection PyProtectedMember
     frame = sys._getframe(MAGIC_FRAME_DEPTH)
-    path = os.path.dirname(frame.f_code.co_filename)
+    path = os.path.dirname(os.path.abspath(frame.f_code.co_filename))
     return path
 
 
@@ -26,11 +26,14 @@ class Configuration(object):
     eval = staticmethod(ast.literal_eval)
 
     def __init__(self, loaders=None):
+        self._recursive_search = None
         if loaders is None:
+            self._recursive_search = RecursiveSearch()
             loaders = [
                 Environment(),
-                RecursiveSearch(starting_path=_caller_path())
+                self._recursive_search,
             ]
+
         self.loaders = loaders
 
     def __repr__(self):
@@ -40,6 +43,9 @@ class Configuration(object):
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
             raise TypeError("Cast must be callable")
+
+        if self._recursive_search:
+            self._recursive_search.starting_path = _caller_path()
 
         for loader in self.loaders:
             try:
