@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 class ConfigurationException(Exception):
     pass
 
@@ -18,8 +15,4 @@ class UnknownConfiguration(ConfigurationException):
 
 
 class InvalidConfiguration(ConfigurationException):
-    pass
-
-
-class InvalidConfigurationCast(ConfigurationException):
     pass

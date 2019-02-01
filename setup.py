@@ -1,5 +1,3 @@
-# coding: utf-8
-
 import os
 import re
 
@@ -11,7 +9,7 @@ version = "0.0.0"
 with open(os.path.join(here, "CHANGES.txt")) as changes:
     for line in changes:
         version = line.strip()
-        if re.search('^[0-9]+\.[0-9]+(\.[0-9]+)?$', version):
+        if re.search(r'^[0-9]+\.[0-9]+(\.[0-9]+)?$', version):
             break
 
 

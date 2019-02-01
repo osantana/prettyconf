@@ -1,10 +1,8 @@
-# coding: utf-8
-
-
 from unittest import TestCase
 
-from prettyconf.casts import Boolean, Option, InvalidConfiguration, List, Tuple
 from prettyconf import config
+from prettyconf.casts import Boolean, List, Option, Tuple
+from prettyconf.exceptions import InvalidConfiguration
 
 
 class BooleanCastTestCase(TestCase):

@@ -1,6 +1,3 @@
-# coding: utf-8
-
-
 from .exceptions import InvalidConfiguration
 
 
@@ -87,6 +84,7 @@ class Option(AbstractCast):
             "local": _INSTALLED_APPS + ("baz",)
         }))
     """
+
     def __init__(self, options):
         self.options = options
 

@@ -33,6 +33,31 @@ The ``boolean`` cast converts strings values like ``On|Off``, ``1|0``,
 ``yes|no``, ``true|False`` into Python boolean ``True`` or ``False``.
 
 
+Configuration files discovery
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default library will use the directory of the file where ``config()`` was
+called as the start directory to look for configuration files. Consider the
+following file structure:
+
+.. code-block:: text
+
+    project/
+      settings.ini
+      app/
+        settings.py
+
+If you call ``config()`` from ``project/app/settings.py`` the library will
+start looking for configuration files at ``project/app`` until it finds
+``.env|*.ini|*.cfg`` files.
+
+.. seealso::
+    This behavior is described more deeply on the
+    :py:class:`RecursiveSearch<prettyconf.loaders.RecursiveSearch>` loader.
+    :doc:`Loaders<loaders>` will help you customize how configuration
+    discovery works. Find out more at :ref:`discovery-customization`.
+
+
 Casts
 ~~~~~
 
@@ -87,127 +112,6 @@ Useful third-parties casts
   ``smtp://user@domain.com:pass@smtp.example.com:465/?ssl=True`` with
   parameters used in Django ``EMAIL_*`` configurations.
 
-
-Advanced usage
-~~~~~~~~~~~~~~
-
-Most of the time you can use the ``prettyconf.config`` function to get your
-settings and use the ``prettyconf``'s standard behaviour. But some times
-you need to change this behaviour.
-
-To make this changes possible you can always create your own
-``Configuration()`` instance and change it's default behaviour:
-
-.. code-block:: python
-
-    from prettyconf.configuration import Configuration
-
-    config = Configuration()
-
-.. warning:: ``prettyconf`` will skip configuration files inside ``.zip``,
-   ``.egg`` or wheel packages.
-
-
-Set the starting path
-+++++++++++++++++++++
-
-By default library will use the directory of the file where ``config()`` was
-called as the start directory to look for configuration files. Consider the
-following file structure:
-
-.. code-block:: text
-
-    project/
-      settings.ini
-      app/
-        settings.py
-
-If you call ``config()`` from ``project/app/settings.py`` the library will start looking
-for configuration files at ``project/app``.
-
-You can change that behaviour, by setting a different ``starting_path`` when instantiating
-your ``Configuration()``:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    import os
-
-    from prettyconf.configuration import Configuration
-
-    project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-    config = Configuration(starting_path=project_path)
-
-The example above will start looking for files at ``project/`` instead of ``project/app``.
-
-You can also set ``starting_path`` attribute in ``prettyconf.config`` before use it:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    import os
-
-    from prettyconf import config
-
-    project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-    config.starting_path = project_path
-
-
-Set a different root path
-+++++++++++++++++++++++++
-
-By default, the library will try to look for configuration files until it finds
-valid configuration files **or** it reaches ``root_path``. The default
-``root_path`` is set to the root directory "``/``".
-
-Consider the following file structure:
-
-.. code-block:: text
-
-    /projects/
-      any_settings.ini
-      project/
-        app/
-          settings.py
-
-You can change this behaviour by setting any parent directory of the
-``starting_path`` as the ``root_path`` when instantiating ``Configuration``:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    import os
-
-    from prettyconf.configuration import Configuration
-
-    project_path = os.path.realpath(os.path.join(app_path), '..'))
-    config = Configuration(root_path=project_path)
-
-The example above will start looking for files at ``project/app/`` and will stop looking
-for configuration files at ``project/``, actually never looking at ``any_settings.ini``
-and no configuration being loaded at all.
-
-You can also set ``root_path`` attribute in ``prettyconf.config`` before use it:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    from prettyconf import config
-
-    project_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..'))
-    config.root_path = project_path
-
-The ``root_path`` must be a parent directory of ``starting_path``:
-
-.. code-block:: python
-
-    # Code example in project/app/settings.py
-    from prettyconf import config
-
-    config.starting_path = "/foo/bar"
-    config.root_path = "/baz"  # /baz is not parent of /foo/bar
-
-    MY_CONFIG = config("PROJECT_MY_CONFIG")  # raises an InvalidPath exception here
 
 
 .. _dj-database-url: https://github.com/kennethreitz/dj-database-url

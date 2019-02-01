@@ -1,9 +1,5 @@
-# coding: utf-8
-
-
 import os
 from unittest import TestCase
-
 
 TEST_FILES_DIR = os.path.join(os.path.dirname(__file__), "files")
 

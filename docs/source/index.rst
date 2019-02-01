@@ -14,7 +14,10 @@ Contents:
    introduction.rst
    installation.rst
    usage.rst
+   advanced.rst
+   loaders.rst
    faq.rst
+   changelog.rst
 
 
 Indices and tables

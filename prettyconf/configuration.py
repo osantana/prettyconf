@@ -1,74 +1,20 @@
-# coding: utf-8
-
-
+import ast
 import os
 import sys
-import ast
 
-from .loaders import EnvFileConfigurationLoader, IniFileConfigurationLoader, EnvVarConfigurationLoader
-from .exceptions import InvalidConfigurationFile, InvalidPath, InvalidConfigurationCast, UnknownConfiguration
-from .casts import Boolean, Option, List, Tuple
+from .casts import Boolean, List, Option, Tuple
+from .exceptions import UnknownConfiguration
+from .loaders import Environment, RecursiveSearch
 
-
-MAGIC_FRAME_DEPTH = 3
+MAGIC_FRAME_DEPTH = 2
 
 
-class ConfigurationDiscovery(object):
-    default_filetypes = (EnvFileConfigurationLoader, IniFileConfigurationLoader)
-
-    def __init__(self, starting_path, filetypes=None, root_path="/"):
-        """
-        Setup the configuration file discovery.
-
-        :param starting_path: The path to begin looking for configuration files
-        :param filetypes: tuple with configuration loaders. Defaults to
-                          ``(EnvFileConfigurationLoader, IniFileConfigurationLoader)``
-        :param root_path: Configuration lookup will stop at the given path. Defaults to
-                          the current user directory
-        """
-        self.starting_path = os.path.realpath(os.path.abspath(starting_path))
-        self.root_path = os.path.realpath(root_path)
-
-        if not self.starting_path.startswith(self.root_path):
-            raise InvalidPath('Invalid root path given')
-
-        if filetypes is None:
-            filetypes = self.default_filetypes
-
-        self.filetypes = filetypes
-        self._config_files = None
-
-    def _scan_path(self, path):
-        config_files = []
-
-        for file_type in self.filetypes:
-            for filename in file_type.get_filenames(path):
-                try:
-                    config_files.append(file_type(filename))
-                except InvalidConfigurationFile:
-                    continue
-
-        return config_files
-
-    def _discover(self):
-        self._config_files = []
-
-        path = self.starting_path
-        while not self._config_files:
-            if os.path.isdir(path):
-                self._config_files += self._scan_path(path)
-
-            if path == self.root_path:
-                break
-
-            path = os.path.dirname(path)
-
-    @property
-    def config_files(self):
-        if self._config_files is None:
-            self._discover()
-
-        return self._config_files
+def _caller_path():
+    # MAGIC! Get the caller's module path.
+    # noinspection PyProtectedMember
+    frame = sys._getframe(MAGIC_FRAME_DEPTH)
+    path = os.path.dirname(frame.f_code.co_filename)
+    return path
 
 
 class Configuration(object):
@@ -79,43 +25,25 @@ class Configuration(object):
     option = Option
     eval = staticmethod(ast.literal_eval)
 
-    def __init__(self, configs=None, starting_path=None, root_path="/"):
-        if configs is None:
-            configs = [EnvVarConfigurationLoader()]
-        self.configurations = configs
-        self.starting_path = starting_path
-        self.root_path = root_path
-        self._initialized = False
+    def __init__(self, loaders=None):
+        if loaders is None:
+            loaders = [
+                Environment(),
+                RecursiveSearch(starting_path=_caller_path())
+            ]
+        self.loaders = loaders
 
-    @staticmethod
-    def _caller_path():
-        # MAGIC! Get the caller's module path.
-        # noinspection PyProtectedMember
-        frame = sys._getframe(MAGIC_FRAME_DEPTH)
-        path = os.path.dirname(frame.f_code.co_filename)
-        return path
-
-    def _init_configs(self):
-        if self._initialized:
-            return
-
-        if self.starting_path is None:
-            self.starting_path = self._caller_path()
-
-        discovery = ConfigurationDiscovery(self.starting_path, root_path=self.root_path)
-        self.configurations.extend(discovery.config_files)
-
-        self._initialized = True
+    def __repr__(self):
+        loaders = ', '.join([repr(l) for l in self.loaders])
+        return 'Configuration(loaders=[{}])'.format(loaders)
 
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
-            raise InvalidConfigurationCast("Cast must be callable")
+            raise TypeError("Cast must be callable")
 
-        self._init_configs()
-
-        for configuration in self.configurations:
+        for loader in self.loaders:
             try:
-                return cast(configuration[item])
+                return cast(loader[item])
             except KeyError:
                 continue
 
