@@ -6,6 +6,10 @@ class InvalidConfigurationFile(ConfigurationException):
     pass
 
 
+class MissingSettingsSection(InvalidConfigurationFile):
+    pass
+
+
 class InvalidPath(ConfigurationException):
     pass
 

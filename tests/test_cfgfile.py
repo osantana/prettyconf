@@ -13,8 +13,8 @@ class IniFileTestCase(BaseTestCase):
 
         self.assertEqual(repr(config), 'IniFile("{}")'.format(self.inifile))
 
-    def test_fail_invalid_settings_file(self):
-        with self.assertRaises(InvalidConfigurationFile):
+    def test_fail_no_settings_section_in_ini_file(self):
+        with self.assertRaises(KeyError):
             return IniFile(self.test_files_path + "/invalid_section.ini")['some_value']
 
     def test_config_file_parsing(self):

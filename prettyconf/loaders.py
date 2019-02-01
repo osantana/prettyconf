@@ -2,7 +2,7 @@ import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
-from .exceptions import InvalidConfigurationFile, InvalidPath
+from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 
 
 class NotSet(str):
@@ -103,14 +103,14 @@ class IniFile(AbstractConfigurationFileLoader):
                 raise InvalidConfigurationFile()
 
         if not self.parser.has_section(self.section):
-            raise InvalidConfigurationFile("Missing [{}] section in {}".format(self.section, self.filename))
+            raise MissingSettingsSection("Missing [{}] section in {}".format(self.section, self.filename))
 
         self._initialized = True
 
     def __contains__(self, item):
         try:
             self._parse()
-        except FileNotFoundError:
+        except (FileNotFoundError, InvalidConfigurationFile, MissingSettingsSection):
             return False
 
         return self.parser.has_option(self.section, self.var_format(item))
@@ -118,7 +118,7 @@ class IniFile(AbstractConfigurationFileLoader):
     def __getitem__(self, item):
         try:
             self._parse()
-        except FileNotFoundError:
+        except (FileNotFoundError, MissingSettingsSection):
             raise KeyError("{!r}".format(item))
 
         try:

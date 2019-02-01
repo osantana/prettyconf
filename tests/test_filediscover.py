@@ -87,3 +87,20 @@ class RecursiveSearchTestCase(BaseTestCase):
 
         discovery = RecursiveSearch(start_path, root_path=root_dir)
         self.assertEqual(discovery.config_files, [])
+
+    def test_config_file_fallback_loading(self):
+        self._create_file(self.test_files_path + "/../.env", "SPAM=eggs")
+        self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nFOO=bar")
+        discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
+
+        self.assertEqual(discovery['FOO'], 'bar')
+        self.assertEqual(discovery['SPAM'], 'eggs')
+
+    def test_config_file_fallback_loading_skipping_empty_settings(self):
+        self._create_file(self.test_files_path + "/../.env", "SPAM=eggs\nFOO=bar")
+        self._create_file(self.test_files_path + "/../settings.ini", "[no_settings_session]\nFOO=not_bar")
+
+        discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
+
+        self.assertEqual(discovery['FOO'], 'bar')
+        self.assertEqual(discovery['SPAM'], 'eggs')
