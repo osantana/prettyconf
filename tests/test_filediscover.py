@@ -41,6 +41,7 @@ class RecursiveSearchTestCase(BaseTestCase):
         starting_path = self.test_files_path + '/recursive/valid/invalid/'
         valid_path = self.test_files_path + '/recursive/valid/'
         discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
+        print(discovery.config_files)
         self.assertEqual(len(discovery.config_files), 4)
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(valid_path + '.env', filenames)
