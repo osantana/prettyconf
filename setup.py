@@ -13,6 +13,11 @@ with open(os.path.join(here, "CHANGES.txt")) as changes:
             break
 
 
+def readme():
+    with open("README.rst") as r:
+        return r.read()
+
+
 class VersionCommand(Command):
     user_options = []
 
@@ -30,6 +35,7 @@ setup(
     name='prettyconf',
     version=version,
     description='Separation of settings from code.',
+    long_description=readme(),
     author="Osvaldo Santana Neto", author_email="prettyconf@osantana.me",
     license="MIT",
     packages=['prettyconf'],
