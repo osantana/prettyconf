@@ -23,7 +23,7 @@ class RecursiveSearchTestCase(BaseTestCase):
         self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nFOO=bar")
         discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
         self.assertTrue(repr(discovery).startswith("RecursiveSearch(starting_path="))
-        self.assertEqual(len(discovery.config_files), 3)  # 2 *valid* files created + prettyconf project itself
+        self.assertEqual(len(discovery.config_files), 2)  # 2 *valid* files created
 
         self.assertIn('FOO', discovery)
         self.assertEqual(discovery['FOO'], 'bar')
@@ -32,7 +32,7 @@ class RecursiveSearchTestCase(BaseTestCase):
     def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(self):
         starting_path = self.test_files_path + '/recursive/valid/'
         discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        self.assertEqual(len(discovery.config_files), 6)  # FIXME
+        self.assertEqual(len(discovery.config_files), 4)
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(starting_path + '.env', filenames)
         self.assertIn(starting_path + 'settings.ini', filenames)
@@ -41,7 +41,7 @@ class RecursiveSearchTestCase(BaseTestCase):
         starting_path = self.test_files_path + '/recursive/valid/invalid/'
         valid_path = self.test_files_path + '/recursive/valid/'
         discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        self.assertEqual(len(discovery.config_files), 6)  # FIXME
+        self.assertEqual(len(discovery.config_files), 4)
         filenames = [cfg.filename for cfg in discovery.config_files]
         self.assertIn(valid_path + '.env', filenames)
         self.assertIn(valid_path + 'settings.ini', filenames)

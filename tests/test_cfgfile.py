@@ -46,7 +46,7 @@ class IniFileTestCase(BaseTestCase):
     def test_skip_invalid_ini_file(self):
         config = IniFile(self.test_files_path + "/invalid_chars.cfg")
 
-        with self.assertRaises(InvalidConfigurationFile):
+        with self.assertRaises(KeyError):
             return config['some_value']
 
     def test_default_var_format(self):

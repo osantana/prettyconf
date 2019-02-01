@@ -43,6 +43,9 @@ class AbstractConfigurationLoader:
     def __getitem__(self, item):
         raise NotImplementedError()  # pragma: no cover
 
+    def check(self):
+        return True
+
 
 # noinspection PyAbstractClass
 class AbstractConfigurationFileLoader(AbstractConfigurationLoader):
@@ -107,18 +110,22 @@ class IniFile(AbstractConfigurationFileLoader):
 
         self._initialized = True
 
-    def __contains__(self, item):
+    def check(self):
         try:
             self._parse()
         except (FileNotFoundError, InvalidConfigurationFile, MissingSettingsSection):
             return False
 
+        return super().check()
+
+    def __contains__(self, item):
+        if not self.check():
+            return False
+
         return self.parser.has_option(self.section, self.var_format(item))
 
     def __getitem__(self, item):
-        try:
-            self._parse()
-        except (FileNotFoundError, MissingSettingsSection):
+        if not self.check():
             raise KeyError("{!r}".format(item))
 
         try:
@@ -228,7 +235,6 @@ class EnvFile(AbstractConfigurationFileLoader):
         return key, value
 
     def _parse(self):
-
         if self.configs is not None:
             return
 
@@ -242,18 +248,22 @@ class EnvFile(AbstractConfigurationFileLoader):
 
                 self.configs[key] = value
 
-    def __contains__(self, item):
+    def check(self):
         try:
             self._parse()
         except FileNotFoundError:
             return False
 
+        return super().check()
+
+    def __contains__(self, item):
+        if not self.check():
+            return False
+
         return self.var_format(item) in self.configs
 
     def __getitem__(self, item):
-        try:
-            self._parse()
-        except FileNotFoundError:
+        if not self.check():
             raise KeyError("{!r}".format(item))
 
         return self.configs[self.var_format(item)]
@@ -309,7 +319,10 @@ class RecursiveSearch(AbstractConfigurationLoader):
         for patterns, Loader in self.filetypes:
             for filename in self.get_filenames(path, patterns):
                 try:
-                    config_files.append(Loader(filename=filename))
+                    loader = Loader(filename=filename)
+                    if not loader.check():
+                        continue
+                    config_files.append(loader)
                 except InvalidConfigurationFile:
                     continue
 
