@@ -76,8 +76,8 @@ See the lookup order of configurations below
 .. _contributions: https://github.com/henriquebastos/python-decouple/pull/5
 
 
-How does prettyconf compare to python-dotenv?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How does prettyconf compare to python-dotenv_?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 python-dotenv_ reads the key, value pair from .env file and adds them to
 environment variable. It is good for some tools that simply proxy the env to
