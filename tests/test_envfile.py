@@ -32,6 +32,7 @@ class EnvFileTestCase(BaseTestCase):
         self.assertEqual(config["CACHE_URL"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
         self.assertEqual(config["DOUBLE_QUOTE_INSIDE_QUOTE"], 'foo "bar" baz')
         self.assertEqual(config["SINGLE_QUOTE_INSIDE_QUOTE"], "foo 'bar' baz")
+        self.assertEqual(config["MULTIPLE_LINES"], "multiple lines config")
 
     def test_missing_invalid_keys_in_config_file_parsing(self):
         config = EnvFile(self.envfile)
@@ -48,7 +49,7 @@ class EnvFileTestCase(BaseTestCase):
 
     def test_custom_var_format(self):
         def formatter(x):
-            return '_{}'.format(str.lower(x))
+            return "_{}".format(str.lower(x))
 
         config = EnvFile(self.envfile, var_format=formatter)
 
@@ -57,9 +58,9 @@ class EnvFileTestCase(BaseTestCase):
 
     def test_fail_missing_envfile_contains(self):
         config = EnvFile("does-not-exist.env")
-        self.assertNotIn('error', config)
+        self.assertNotIn("error", config)
 
     def test_fail_missing_envfile_get_item(self):
         config = EnvFile("does-not-exist.env")
         with self.assertRaises(KeyError):
-            return config['error']
+            return config["error"]
