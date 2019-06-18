@@ -13,37 +13,48 @@ SPACES = set(" \n")
 QUOTES = set("'\"")
 
 
-class EnvFileParser:
+class BufferedStreamReader:
     BUFFER_SIZE = 1024
 
     def __init__(self, stream):
         self.stream = stream
         self.buffer = stream.read(self.BUFFER_SIZE)
         self.position = 0
+
+    def read_char(self):
+        if self._is_buffer_depleted():
+            self._fill_buffer()
+            if not self.buffer:
+                return None
+
+        char = self.buffer[self.position]
+        self.position += 1
+        return char
+
+    def _is_buffer_depleted(self):
+        return self.position >= len(self.buffer)
+
+    def _fill_buffer(self):
+        self.buffer = self.stream.read(self.BUFFER_SIZE)
+        self.position = 0
+
+
+class EnvFileParser:
+    def __init__(self, stream):
         self.state = STATE_INITIAL
+        self._stream = BufferedStreamReader(stream)
 
         self._current_key = []
         self._current_value = []
         self._current_quote = ""
         self._key_parsed = False
 
-    def _read_char(self):
-        if self.position >= len(self.buffer):
-            self.buffer = self.stream.read(self.BUFFER_SIZE)
-            if not self.buffer:
-                return None
-            self.position = 0
-
-        char = self.buffer[self.position]
-        self.position += 1
-        return char
-
     def parse_config(self) -> Iterator[Tuple[str, str]]:
         key = self._current_key
         value = self._current_value
 
         while True:
-            char = self._read_char()
+            char = self._stream.read_char()
             if not char:
                 if key or value:
                     yield self._return_current_config()
