@@ -17,5 +17,8 @@ CACHE_URL_QUOTES="cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5"
 CACHE_URL=cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5
 DOUBLE_QUOTE_INSIDE_QUOTE='foo "bar" baz'
 SINGLE_QUOTE_INSIDE_QUOTE="foo 'bar' baz"
+MULTIPLE_LINES=multiple \
+lines \
+config
 
 _var=test

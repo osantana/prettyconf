@@ -3,6 +3,7 @@ from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
+from .parsers import EnvFileParser
 
 
 class NotSet(str):
@@ -13,6 +14,7 @@ class NotSet(str):
     CLI parsers force you to set a default value, and thus, break the discovery
     chain.
     """
+
     pass
 
 
@@ -68,7 +70,7 @@ class CommandLine(AbstractConfigurationLoader):
         self.configs = get_args(self.parser)
 
     def __repr__(self):
-        return 'CommandLine(parser={})'.format(self.parser)
+        return "CommandLine(parser={})".format(self.parser)
 
     def __contains__(self, item):
         return item in self.configs
@@ -78,7 +80,7 @@ class CommandLine(AbstractConfigurationLoader):
 
 
 class IniFile(AbstractConfigurationFileLoader):
-    file_extensions = ('*.ini', '*.cfg')
+    file_extensions = ("*.ini", "*.cfg")
 
     def __init__(self, filename, section="settings", var_format=lambda x: x):
         """
@@ -146,7 +148,7 @@ class Environment(AbstractConfigurationLoader):
         self.var_format = var_format
 
     def __repr__(self):
-        return 'Environment(var_format={}>'.format(self.var_format)
+        return "Environment(var_format={}>".format(self.var_format)
 
     def __contains__(self, item):
         return self.var_format(item) in os.environ
@@ -158,9 +160,9 @@ class Environment(AbstractConfigurationLoader):
 
 
 class EnvFile(AbstractConfigurationFileLoader):
-    file_extensions = ('.env',)
+    file_extensions = (".env",)
 
-    def __init__(self, filename='.env', var_format=str.upper):
+    def __init__(self, filename=".env", var_format=str.upper):
         """
         :param str filename: Path to the ``.env`` file.
         :param function var_format: A function to pre-format variable names.
@@ -172,81 +174,13 @@ class EnvFile(AbstractConfigurationFileLoader):
     def __repr__(self):
         return 'EnvFile("{}")'.format(self.filename)
 
-    @staticmethod
-    def _parse_line(line):
-        key = []
-        comment = ""
-
-        # parse key
-        for pos, char in enumerate(line):
-            if char == "=":
-                break
-
-            if char == "#":
-                comment = char
-                continue
-
-            if comment:
-                continue
-
-            if char.isspace():
-                continue
-
-            key.append(char)
-
-        else:
-            raise ValueError("Invalid line format (key=value)")
-
-        key = "".join(key)
-
-        if not key:
-            return
-
-        # parse value
-        value = []
-        quote = ""
-        started = False
-        for char in line[pos + 1:]:
-            if not char.isspace():
-                started = True
-
-            if not started:
-                continue
-
-            if char == "#" and not quote:
-                break
-
-            if char in "\"'":
-                if not quote:
-                    quote = char
-                    continue
-
-                if quote and quote == char:
-                    quote = ""
-                    continue
-
-                value.append(char)
-                continue
-
-            value.append(char)
-
-        value = "".join(value).rstrip()
-
-        return key, value
-
     def _parse(self):
         if self.configs is not None:
             return
 
         self.configs = {}
         with open(self.filename) as envfile:
-            for line in envfile:
-                try:
-                    key, value = self._parse_line(line.strip())
-                except (ValueError, TypeError):
-                    continue
-
-                self.configs[key] = value
+            self.configs.update(EnvFileParser(envfile).parse_config())
 
     def check(self):
         try:
@@ -270,8 +204,7 @@ class EnvFile(AbstractConfigurationFileLoader):
 
 
 class RecursiveSearch(AbstractConfigurationLoader):
-    def __init__(self, starting_path=None, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg',), IniFile),),
-                 root_path="/"):
+    def __init__(self, starting_path=None, filetypes=((".env", EnvFile), (("*.ini", "*.cfg"), IniFile)), root_path="/"):
         """
         :param str starting_path: The path to begin looking for configuration files.
         :param tuple filetypes: tuple of tuples with configuration loaders, order matters.
@@ -296,11 +229,11 @@ class RecursiveSearch(AbstractConfigurationLoader):
     @starting_path.setter
     def starting_path(self, path):
         if not path:
-            raise InvalidPath('Invalid starting path')
+            raise InvalidPath("Invalid starting path")
 
         path = os.path.realpath(os.path.abspath(path))
         if not path.startswith(self.root_path):
-            raise InvalidPath('Invalid root path given')
+            raise InvalidPath("Invalid root path given")
         self._starting_path = path
 
     @staticmethod
@@ -349,7 +282,7 @@ class RecursiveSearch(AbstractConfigurationLoader):
         return self._config_files
 
     def __repr__(self):
-        return 'RecursiveSearch(starting_path={})'.format(self.starting_path)
+        return "RecursiveSearch(starting_path={})".format(self.starting_path)
 
     def __contains__(self, item):
         for config_file in self.config_files:
