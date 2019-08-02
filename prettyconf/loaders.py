@@ -148,7 +148,7 @@ class Environment(AbstractConfigurationLoader):
         self.var_format = var_format
 
     def __repr__(self):
-        return "Environment(var_format={}>".format(self.var_format)
+        return "Environment(var_format={})".format(self.var_format)
 
     def __contains__(self, item):
         return self.var_format(item) in os.environ
