@@ -183,6 +183,9 @@ class EnvFile(AbstractConfigurationFileLoader):
             self.configs.update(EnvFileParser(envfile).parse_config())
 
     def check(self):
+        if not os.path.isfile(self.filename):
+            return False
+
         try:
             self._parse()
         except FileNotFoundError:
