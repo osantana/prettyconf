@@ -1,44 +1,45 @@
 import os
-
+import pytest
 from prettyconf.loaders import Environment
-from .base import BaseTestCase
 
 
-class EnvironmentTestCase(BaseTestCase):
-    def test_basic_config(self):
-        os.environ["TEST"] = "test"
-        config = Environment()
+def test_basic_config():
+    os.environ["TEST"] = "test"
+    config = Environment()
 
-        self.assertIn("TEST", config)
-        self.assertEqual("test", config["TEST"])
-        self.assertTrue(repr(config).startswith('Environment(var_format='))
+    assert "TEST" in config
+    assert "test" == config["TEST"]
+    assert repr(config).startswith('Environment(var_format=')
 
-        del os.environ["TEST"]
+    del os.environ["TEST"]
 
-    def test_fail_missing_config(self):
-        config = Environment()
 
-        self.assertNotIn("UNKNOWN", config)
-        with self.assertRaises(KeyError):
-            _ = config["UNKNOWN"]
+def test_fail_missing_config():
+    config = Environment()
 
-    def test_default_var_format(self):
-        os.environ["TEST"] = "test"
-        config = Environment()
+    assert "UNKNOWN" not in config
+    with pytest.raises(KeyError):
+        _ = config["UNKNOWN"]
 
-        self.assertIn("test", config)
-        self.assertEqual("test", config["test"])
 
-        del os.environ["TEST"]
+def test_default_var_format():
+    os.environ["TEST"] = "test"
+    config = Environment()
 
-    def test_custom_var_format(self):
-        def formatter(x):
-            return '_{}'.format(x)
+    assert "test" in config
+    assert "test" == config["test"]
 
-        os.environ["_TEST"] = "test"
-        config = Environment(var_format=formatter)
+    del os.environ["TEST"]
 
-        self.assertIn("TEST", config)
-        self.assertEqual("test", config["TEST"])
 
-        del os.environ["_TEST"]
+def test_custom_var_format():
+    def formatter(x):
+        return '_{}'.format(x)
+
+    os.environ["_TEST"] = "test"
+    config = Environment(var_format=formatter)
+
+    assert "TEST" in config
+    assert "test" == config["TEST"]
+
+    del os.environ["_TEST"]
