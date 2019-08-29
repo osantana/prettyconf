@@ -6,7 +6,7 @@ from prettyconf.loaders import IniFile
 def test_basic_config_object(inifile):
     config = IniFile(inifile)
 
-    assert repr(config) == f'IniFile("{inifile}")'
+    assert repr(config) == 'IniFile("{}")'.format(inifile)
 
 
 def test_fail_no_settings_section_in_ini_file(files_path):
