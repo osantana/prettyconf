@@ -27,6 +27,11 @@ def inifile(files_path):
     return os.path.join(files_path, "config.ini")
 
 
+@pytest.fixture
+def envfile(files_path):
+    return os.path.join(files_path, "envfile")
+
+
 def parse_args():
     parser = parser_factory()
     return parser.parse_args([])

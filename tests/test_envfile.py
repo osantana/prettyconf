@@ -1,66 +1,66 @@
-import os
+import pytest
 
 from prettyconf.loaders import EnvFile
-from .base import BaseTestCase
 
 
-class EnvFileTestCase(BaseTestCase):
-    def setUp(self):
-        super(EnvFileTestCase, self).setUp()
-        self.envfile = os.path.join(self.test_files_path, "envfile")
+def test_basic_config_object(envfile):
+    config = EnvFile(envfile)
 
-    def test_basic_config_object(self):
-        config = EnvFile(self.envfile)
+    assert repr(config) == 'EnvFile("{}")'.format(envfile)
 
-        self.assertEqual(repr(config), 'EnvFile("{}")'.format(self.envfile))
 
-    def test_config_file_parsing(self):
-        config = EnvFile(self.envfile)
+def test_config_file_parsing(envfile):
+    config = EnvFile(envfile)
 
-        self.assertEqual(config["KEY"], "Value")
-        self.assertEqual(config["KEY_EMPTY"], "")
-        self.assertEqual(config["KEY_EMPTY_WITH_COMMENTS"], "")
-        self.assertEqual(config["INLINE_COMMENTS"], "Foo")
-        self.assertEqual(config["HASH_CONTENT"], "Foo Bar # Baz %(key)s")
-        self.assertEqual(config["PERCENT_NOT_ESCAPED"], "%%")
-        self.assertEqual(config["NO_INTERPOLATION"], "%(KeyOff)s")
-        self.assertEqual(config["IGNORE_SPACE"], "text")
-        self.assertEqual(config["SINGLE_QUOTE_SPACE"], " text")
-        self.assertEqual(config["DOUBLE_QUOTE_SPACE"], " text")
-        self.assertEqual(config["UPDATED"], "text")
-        self.assertEqual(config["CACHE_URL_QUOTES"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
-        self.assertEqual(config["CACHE_URL"], "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5")
-        self.assertEqual(config["DOUBLE_QUOTE_INSIDE_QUOTE"], 'foo "bar" baz')
-        self.assertEqual(config["SINGLE_QUOTE_INSIDE_QUOTE"], "foo 'bar' baz")
-        self.assertEqual(config["MULTIPLE_LINES"], "multiple lines config")
+    assert config["KEY"] == "Value"
+    assert config["KEY_EMPTY"] == ""
+    assert config["KEY_EMPTY_WITH_COMMENTS"] == ""
+    assert config["INLINE_COMMENTS"] == "Foo"
+    assert config["HASH_CONTENT"] == "Foo Bar # Baz %(key)s"
+    assert config["PERCENT_NOT_ESCAPED"] == "%%"
+    assert config["NO_INTERPOLATION"] == "%(KeyOff)s"
+    assert config["IGNORE_SPACE"] == "text"
+    assert config["SINGLE_QUOTE_SPACE"] == " text"
+    assert config["DOUBLE_QUOTE_SPACE"] == " text"
+    assert config["UPDATED"] == "text"
+    assert config["CACHE_URL_QUOTES"] == "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5"
+    assert config["CACHE_URL"] == "cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5"
+    assert config["DOUBLE_QUOTE_INSIDE_QUOTE"] == 'foo "bar" baz'
+    assert config["SINGLE_QUOTE_INSIDE_QUOTE"] == "foo 'bar' baz"
+    assert config["MULTIPLE_LINES"] == "multiple lines config"
 
-    def test_missing_invalid_keys_in_config_file_parsing(self):
-        config = EnvFile(self.envfile)
 
-        self.assertNotIn("COMMENTED_KEY", config)
-        self.assertNotIn("INVALID_KEY", config)
-        self.assertNotIn("OTHER_INVALID_KEY", config)
+def test_missing_invalid_keys_in_config_file_parsing(envfile):
+    config = EnvFile(envfile)
 
-    def test_default_var_format(self):
-        config = EnvFile(self.envfile)
+    assert "COMMENTED_KEY" not in config
+    assert "INVALID_KEY" not in config
+    assert "OTHER_INVALID_KEY" not in config
 
-        self.assertIn("key", config)
-        self.assertEqual("Value", config["key"])
 
-    def test_custom_var_format(self):
-        def formatter(x):
-            return "_{}".format(str.lower(x))
+def test_default_var_format(envfile):
+    config = EnvFile(envfile)
 
-        config = EnvFile(self.envfile, var_format=formatter)
+    assert "key" in config
+    assert "Value" == config["key"]
 
-        self.assertIn("VAR", config)
-        self.assertEqual("test", config["VAR"])
 
-    def test_fail_missing_envfile_contains(self):
-        config = EnvFile("does-not-exist.env")
-        self.assertNotIn("error", config)
+def test_custom_var_format(envfile):
+    def formatter(x):
+        return "_{}".format(str.lower(x))
 
-    def test_fail_missing_envfile_get_item(self):
-        config = EnvFile("does-not-exist.env")
-        with self.assertRaises(KeyError):
-            return config["error"]
+    config = EnvFile(envfile, var_format=formatter)
+
+    assert "VAR" in config
+    assert "test" == config["VAR"]
+
+
+def test_fail_missing_envfile_contains():
+    config = EnvFile("does-not-exist.env")
+    assert "error" not in config
+
+
+def test_fail_missing_envfile_get_item():
+    config = EnvFile("does-not-exist.env")
+    with pytest.raises(KeyError):
+        return config["error"]
