@@ -104,3 +104,13 @@ class RecursiveSearchTestCase(BaseTestCase):
 
         self.assertEqual(discovery['FOO'], 'bar')
         self.assertEqual(discovery['SPAM'], 'eggs')
+
+    def test_env_dir_wont_break_loader(self):
+        env_directory = os.path.join(self.test_files_path, "..", ".env")
+        os.makedirs(env_directory, exist_ok=True)
+        try:
+            discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
+        finally:
+            os.removedirs(env_directory)
+
+        self.assertTrue('FOO' not in discovery)
