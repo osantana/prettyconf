@@ -1,12 +1,15 @@
 test:
 	python setup.py pytest
 
+lint:
+	flake8 prettyconf tests
+
 clean:
 	-find . -iname "*.py[ocd]" -delete
 	-find . -iname "__pycache__" -exec rm -rf {} \;
 	-rm -rf dist
 
-release: clean test
+release: clean lint test
 	git tag `python setup.py -q version`
 	git push origin `python setup.py -q version`
 	rm -rf dist/*

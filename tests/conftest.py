@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+
 import pytest
 
 from prettyconf.loaders import CommandLine
@@ -60,8 +61,8 @@ def create_file():
 
     yield _create_fixture_file
 
-    for filename in remove_list:
-        os.remove(filename)
+    for file in remove_list:
+        os.remove(file)
 
 
 @pytest.fixture
@@ -76,6 +77,7 @@ def create_dir():
     yield _create_tempdir
 
     shutil.rmtree(tempdir)
+
 
 @pytest.fixture
 def env_config(files_path):
