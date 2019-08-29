@@ -1,5 +1,5 @@
 test:
-	python setup.py test
+	python setup.py pytest
 
 clean:
 	-find . -iname "*.py[ocd]" -delete

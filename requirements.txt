@@ -1,4 +1,7 @@
 pytest
+pytest-cov
+pytest-runner
 Sphinx
 sphinx-rtd-theme
 twine
+coveralls

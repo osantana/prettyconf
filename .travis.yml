@@ -38,14 +38,13 @@ before_install:
 
 install:
   - pip install --upgrade pip
-  - pip install nose coveralls testfixtures
-  - pip install --editable .
+  - pip install -r requirements.txt
 
 before_script:
   - bash .ci/pre.${TRAVIS_OS_NAME}.sh
 
 script:
-  - nosetests --with-coverage --cover-package=prettyconf
+  - make test
 
 after_success:
   - coveralls
