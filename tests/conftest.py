@@ -1,5 +1,6 @@
 import os
-
+import shutil
+import tempfile
 import pytest
 
 from prettyconf.loaders import CommandLine
@@ -44,10 +45,37 @@ def command_line_config():
     return CommandLine(parser=parser)
 
 
-def _create_file(filename, content):
+def _create_file(filename, content=""):
     with open(filename, "a") as file_:
         file_.write(content)
 
+
+@pytest.fixture
+def create_file():
+    remove_list = []
+
+    def _create_fixture_file(filename, content=""):
+        _create_file(filename, content)
+        remove_list.append(filename)
+
+    yield _create_fixture_file
+
+    for filename in remove_list:
+        os.remove(filename)
+
+
+@pytest.fixture
+def create_dir():
+    tempdir = tempfile.mkdtemp()
+
+    def _create_tempdir(path=""):
+        full_path = os.path.join(tempdir, path)
+        os.makedirs(full_path, exist_ok=True)
+        return tempdir, full_path
+
+    yield _create_tempdir
+
+    shutil.rmtree(tempdir)
 
 @pytest.fixture
 def env_config(files_path):
