@@ -1,116 +1,107 @@
 import os
-import shutil
-import tempfile
+
+import pytest
 
 from prettyconf.exceptions import InvalidPath
 from prettyconf.loaders import RecursiveSearch
-from .base import BaseTestCase
 
 
-class RecursiveSearchTestCase(BaseTestCase):
-    def setUp(self):
-        super(RecursiveSearchTestCase, self).setUp()
-        self.tmpdirs = []
+def test_config_file_parsing(create_file, files_path):
+    create_file(files_path + "/../.env")
+    create_file(files_path + "/../setup.txt")  # invalid settings
+    create_file(files_path + "/../settings.ini", "[settings]\nFOO=bar")
+    discovery = RecursiveSearch(os.path.dirname(files_path))
 
-    def tearDown(self):
-        super(RecursiveSearchTestCase, self).tearDown()
-        for tmpdir in self.tmpdirs:
-            shutil.rmtree(tmpdir, ignore_errors=True)
+    assert repr(discovery).startswith("RecursiveSearch(starting_path=")
+    assert len(discovery.config_files) == 2  # 2 *valid* files created
 
-    def test_config_file_parsing(self):
-        self._create_file(self.test_files_path + "/../.env")
-        self._create_file(self.test_files_path + "/../setup.txt")  # invalid settings
-        self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nFOO=bar")
-        discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
-        self.assertTrue(repr(discovery).startswith("RecursiveSearch(starting_path="))
-        self.assertEqual(len(discovery.config_files), 2)  # 2 *valid* files created
+    assert 'FOO' in discovery
+    assert discovery['FOO'] == 'bar'
+    assert 'not_found' not in discovery
 
-        self.assertIn('FOO', discovery)
-        self.assertEqual(discovery['FOO'], 'bar')
-        self.assertNotIn('not_found', discovery)
 
-    def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(self):
-        starting_path = self.test_files_path + '/recursive/valid/'
-        discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        self.assertEqual(len(discovery.config_files), 3)
-        filenames = [cfg.filename for cfg in discovery.config_files]
-        self.assertIn(starting_path + '.env', filenames)
-        self.assertIn(starting_path + 'settings.ini', filenames)
+def test_should_not_look_for_parent_directory_when_it_finds_valid_configurations(files_path):
+    starting_path = files_path + '/recursive/valid/'
+    discovery = RecursiveSearch(starting_path, root_path=files_path)
+    assert len(discovery.config_files) == 3
 
-    def test_should_look_for_parent_directory_when_it_finds_invalid_configurations(self):
-        starting_path = self.test_files_path + '/recursive/valid/invalid/'
-        valid_path = self.test_files_path + '/recursive/valid/'
-        discovery = RecursiveSearch(starting_path, root_path=self.test_files_path)
-        self.assertEqual(len(discovery.config_files), 3)
-        filenames = [cfg.filename for cfg in discovery.config_files]
-        self.assertIn(valid_path + '.env', filenames)
-        self.assertIn(valid_path + 'settings.ini', filenames)
+    filenames = [cfg.filename for cfg in discovery.config_files]
+    assert starting_path + '.env' in filenames
+    assert starting_path + 'settings.ini' in filenames
 
-    def test_default_root_path_should_default_to_root_directory(self):
-        discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
-        assert discovery.root_path == "/"
 
-    def test_root_path_should_be_parent_of_starting_path(self):
-        with self.assertRaises(InvalidPath):
-            RecursiveSearch('/foo', root_path='/foo/bar/baz/')
+def test_should_look_for_parent_directory_when_it_finds_invalid_configurations(files_path):
+    starting_path = files_path + '/recursive/valid/invalid/'
+    valid_path = files_path + '/recursive/valid/'
+    discovery = RecursiveSearch(starting_path, root_path=files_path)
+    assert len(discovery.config_files) == 3
 
-    def test_use_configuration_from_root_path_when_no_other_was_found(self):
-        root_dir = tempfile.mkdtemp()
-        self.tmpdirs.append(root_dir)
+    filenames = [cfg.filename for cfg in discovery.config_files]
+    assert valid_path + '.env' in filenames
+    assert valid_path + 'settings.ini' in filenames
 
-        start_path = os.path.join(root_dir, 'start/here')
-        os.makedirs(start_path)
 
-        test_file = os.path.realpath(os.path.join(root_dir, 'settings.ini'))
-        with open(test_file, 'a') as file_:
-            file_.write('[settings]')
-        self.files.append(test_file)  # Required to removed it at tearDown
+def test_default_root_path_should_default_to_root_directory(files_path):
+    discovery = RecursiveSearch(os.path.dirname(files_path))
+    assert discovery.root_path == "/"
 
-        discovery = RecursiveSearch(start_path, root_path=root_dir)
-        filenames = [cfg.filename for cfg in discovery.config_files]
-        self.assertEqual([test_file], filenames)
 
-    def test_lookup_should_stop_at_root_path(self):
-        test_dir = tempfile.mkdtemp()
-        self.tmpdirs.append(test_dir)  # Cleanup dir at tearDown
+def test_root_path_should_be_parent_of_starting_path():
+    with pytest.raises(InvalidPath):
+        RecursiveSearch('/foo', root_path='/foo/bar/baz/')
 
-        start_path = os.path.join(test_dir, 'some', 'dirs', 'without', 'config')
-        os.makedirs(start_path)
 
-        # create a file in the test_dir
-        test_file = os.path.realpath(os.path.join(test_dir, 'settings.ini'))
-        with open(test_file, 'a') as file_:
-            file_.write('[settings]')
-        self.files.append(test_file)  # Required to removed it at tearDown
+def test_use_configuration_from_root_path_when_no_other_was_found(create_dir):
+    root_dir, start_path = create_dir("start/here")
 
-        root_dir = os.path.join(test_dir, 'some', 'dirs')  # No settings here
+    test_file = os.path.realpath(os.path.join(root_dir, 'settings.ini'))
+    with open(test_file, 'a') as file_:
+        file_.write('[settings]')
 
-        discovery = RecursiveSearch(start_path, root_path=root_dir)
-        self.assertEqual(discovery.config_files, [])
+    discovery = RecursiveSearch(start_path, root_path=root_dir)
+    filenames = [cfg.filename for cfg in discovery.config_files]
+    assert [test_file] == filenames
 
-    def test_config_file_fallback_loading(self):
-        self._create_file(self.test_files_path + "/../.env", "SPAM=eggs")
-        self._create_file(self.test_files_path + "/../settings.ini", "[settings]\nFOO=bar")
-        discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
 
-        self.assertEqual(discovery['FOO'], 'bar')
-        self.assertEqual(discovery['SPAM'], 'eggs')
+def test_lookup_should_stop_at_root_path(create_dir):
+    test_dir, start_path = create_dir("some/dirs/without/config")
 
-    def test_config_file_fallback_loading_skipping_empty_settings(self):
-        self._create_file(self.test_files_path + "/../.env", "SPAM=eggs\nFOO=bar")
-        self._create_file(self.test_files_path + "/../settings.ini", "[no_settings_session]\nFOO=not_bar")
+    # create a file in the test_dir
+    test_file = os.path.realpath(os.path.join(test_dir, 'settings.ini'))
+    with open(test_file, 'a') as file_:
+        file_.write('[settings]')
 
-        discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
+    root_dir = os.path.join(test_dir, 'some', 'dirs')  # No settings here
 
-        self.assertEqual(discovery['FOO'], 'bar')
-        self.assertEqual(discovery['SPAM'], 'eggs')
+    discovery = RecursiveSearch(start_path, root_path=root_dir)
+    assert discovery.config_files == []
 
-    def test_env_dir_wont_break_loader(self):
-        env_directory = os.path.join(self.test_files_path, "..", ".env")
-        os.makedirs(env_directory, exist_ok=True)
-        try:
-            discovery = RecursiveSearch(os.path.dirname(self.test_files_path))
-        finally:
-            os.removedirs(env_directory)
 
-        self.assertTrue('FOO' not in discovery)
+def test_config_file_fallback_loading(create_file, files_path):
+    create_file(files_path + "/../.env", "SPAM=eggs")
+    create_file(files_path + "/../settings.ini", "[settings]\nFOO=bar")
+    discovery = RecursiveSearch(os.path.dirname(files_path))
+
+    assert discovery['FOO'] == 'bar'
+    assert discovery['SPAM'] == 'eggs'
+
+
+def test_config_file_fallback_loading_skipping_empty_settings(create_file, files_path):
+    create_file(files_path + "/../.env", "SPAM=eggs\nFOO=bar")
+    create_file(files_path + "/../settings.ini", "[no_settings_session]\nFOO=not_bar")
+
+    discovery = RecursiveSearch(os.path.dirname(files_path))
+
+    assert discovery['FOO'] == 'bar'
+    assert discovery['SPAM'] == 'eggs'
+
+
+def test_env_dir_wont_break_loader(files_path):
+    env_directory = os.path.join(files_path, "..", ".env")
+    os.makedirs(env_directory, exist_ok=True)
+    try:
+        discovery = RecursiveSearch(os.path.dirname(files_path))
+    finally:
+        os.removedirs(env_directory)
+
+    assert 'FOO' not in discovery
