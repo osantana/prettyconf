@@ -197,3 +197,28 @@ The ``root_path`` must be a parent directory of ``starting_path``:
 
     # /baz is not parent of /foo/bar, so this raises an InvalidPath exception here
     rs = RecursiveSearch(starting_path="/foo/bar", root_path="/baz")
+
+
+AwsParameterStore
++++++++++++++++++
+
+.. autoclass:: prettyconf.loaders.AwsParameterStore
+
+The ``AwsParameterStore`` loader gets configuration from the AWS Parameter Store,
+part of AWS Systems Manager. The loader will be skipped if the parameter store is 
+unreachable (connectivity, unavailability, access permissions).
+The loader respects parameter hierarchies, performing non-recursive discoveries.
+The loader accepts AWS access secrets and region when instantiated, otherwise, it 
+will use system-wide defaults (if available).
+The AWS parameter store supports three parameter types: ``String``, ``StringList`` 
+and ``SecureString``. All types are read as strings, however, decryption of 
+``SecureStrings`` is not handled by the loader.
+
+.. code-block:: python
+
+    from prettyconf import config
+    from prettyconf.loaders import AwsParameterStore
+
+
+    config.loaders = [AwsParameterStore(path='/api')]
+    config('debug')  # will look for a parameter named "/api/debug" in the store

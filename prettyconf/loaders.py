@@ -2,6 +2,9 @@ import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
+import boto3
+import botocore
+
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 from .parsers import EnvFileParser
 
@@ -148,7 +151,7 @@ class Environment(AbstractConfigurationLoader):
         self.var_format = var_format
 
     def __repr__(self):
-        return "Environment(var_format={}>".format(self.var_format)
+        return "Environment(var_format={})".format(self.var_format)
 
     def __contains__(self, item):
         return self.var_format(item) in os.environ
@@ -301,3 +304,62 @@ class RecursiveSearch(AbstractConfigurationLoader):
                 continue
         else:
             raise KeyError("{!r}".format(item))
+
+
+class AwsParameterStore(AbstractConfigurationLoader):
+    def __init__(self, path="/", aws_access_key_id=None, aws_secret_access_key=None, region_name="us-east-1"):
+        self.path = path
+        self.aws_access_key_id = aws_access_key_id
+        self.aws_secret_access_key = aws_secret_access_key
+        self.region_name = region_name
+        self._fetched = False
+        self._parameters = {}
+
+    def _store_parameters(self, parameters):
+        for parameter in parameters:
+            self._parameters[parameter["Name"].split("/")[-1]] = parameter["Value"]
+
+    def _fetch_parameters(self):
+        if self._fetched:
+            return
+
+        client = boto3.client(
+            service_name="ssm",
+            aws_access_key_id=self.aws_access_key_id,
+            aws_secret_access_key=self.aws_secret_access_key,
+            region_name=self.region_name,
+        )
+
+        response = client.get_parameters_by_path(Path=self.path)
+        next_token = response.get("NextToken")
+        self._store_parameters(response["Parameters"])
+
+        while next_token:
+            response = client.get_parameters_by_path(Path=self.path, NextToken=next_token)
+            next_token = response.get("NextToken")
+            self._store_parameters(response["Parameters"])
+
+        self._fetched = True
+
+    def check(self):
+        try:
+            self._fetch_parameters()
+        except (botocore.exceptions.BotoCoreError, botocore.exceptions.ClientError):
+            return False
+
+        return super().check()
+
+    def __repr__(self):
+        return "AwsParameterStore(path={} region={})".format(self.path, self.region_name)
+
+    def __contains__(self, item):
+        if not self.check():
+            return False
+
+        return item in self._parameters
+
+    def __getitem__(self, item):
+        if not self.check():
+            raise KeyError("{!r}".format(item))
+
+        return self._parameters[item]

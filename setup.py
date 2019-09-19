@@ -39,6 +39,7 @@ setup(
     author="Osvaldo Santana Neto", author_email="prettyconf@osantana.me",
     license="MIT",
     packages=['prettyconf'],
+    install_requires=['boto3'],
     platforms='any',
     classifiers=[
         'Development Status :: 5 - Production/Stable',
@@ -49,8 +50,6 @@ setup(
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
