@@ -1,3 +1,5 @@
+import importlib
+import sys
 from unittest import mock
 
 import pytest
@@ -41,6 +43,24 @@ PARAMETER_RESPONSE_LAST_PAGE = {
         },
     ],
 }
+
+
+@pytest.fixture
+def missing_boto():
+    loaders = sys.modules['prettyconf.loaders']
+
+    sys.modules['boto3'] = None
+    importlib.reload(loaders)
+
+    yield
+
+    sys.modules.pop('boto3')
+    importlib.reload(loaders)
+
+
+def test_parameter_store_boto_not_available(missing_boto):
+    with pytest.raises(RuntimeError):
+        AwsParameterStore()
 
 
 @mock.patch("prettyconf.loaders.boto3")
