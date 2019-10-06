@@ -46,19 +46,15 @@ PARAMETER_RESPONSE_LAST_PAGE = {
 
 
 @pytest.fixture
-def missing_boto():
-    loaders = sys.modules['prettyconf.loaders']
-
+def boto_not_installed():
     sys.modules['boto3'] = None
-    importlib.reload(loaders)
-
+    importlib.reload(sys.modules['prettyconf.loaders'])
     yield
-
     sys.modules.pop('boto3')
-    importlib.reload(loaders)
+    importlib.reload(sys.modules['prettyconf.loaders'])
 
 
-def test_parameter_store_boto_not_available(missing_boto):
+def test_create_loader_boto_not_installed(boto_not_installed):
     with pytest.raises(RuntimeError):
         AwsParameterStore()
 
