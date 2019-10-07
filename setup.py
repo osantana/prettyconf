@@ -39,7 +39,7 @@ setup(
     author="Osvaldo Santana Neto", author_email="prettyconf@osantana.me",
     license="MIT",
     packages=['prettyconf'],
-    install_requires=['boto3'],
+    extras_require={'aws': ['boto3']},
     platforms='any',
     classifiers=[
         'Development Status :: 5 - Production/Stable',

@@ -2,8 +2,11 @@ import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
 from glob import glob
 
-import boto3
-import botocore
+try:
+    import boto3
+    import botocore
+except ImportError:
+    boto3 = None
 
 from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
 from .parsers import EnvFileParser
@@ -308,6 +311,11 @@ class RecursiveSearch(AbstractConfigurationLoader):
 
 class AwsParameterStore(AbstractConfigurationLoader):
     def __init__(self, path="/", aws_access_key_id=None, aws_secret_access_key=None, region_name="us-east-1"):
+        if not boto3:
+            raise RuntimeError(
+                'AwsParameterStore requires [aws] feature. Please install it: "pip install prettyconf[aws]"'
+            )
+
         self.path = path
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
