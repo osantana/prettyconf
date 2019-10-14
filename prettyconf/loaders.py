@@ -310,7 +310,7 @@ class RecursiveSearch(AbstractConfigurationLoader):
 
 
 class AwsParameterStore(AbstractConfigurationLoader):
-    def __init__(self, path="/", aws_access_key_id=None, aws_secret_access_key=None, region_name="us-east-1"):
+    def __init__(self, path="/", aws_access_key_id=None, aws_secret_access_key=None, region_name="us-east-1", endpoint_url=None):
         if not boto3:
             raise RuntimeError(
                 'AwsParameterStore requires [aws] feature. Please install it: "pip install prettyconf[aws]"'
@@ -320,6 +320,7 @@ class AwsParameterStore(AbstractConfigurationLoader):
         self.aws_access_key_id = aws_access_key_id
         self.aws_secret_access_key = aws_secret_access_key
         self.region_name = region_name
+        self.endpoint_url = endpoint_url
         self._fetched = False
         self._parameters = {}
 
@@ -336,6 +337,7 @@ class AwsParameterStore(AbstractConfigurationLoader):
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.region_name,
+            endpoint_url=self.endpoint_url,
         )
 
         response = client.get_parameters_by_path(Path=self.path)
