@@ -3,6 +3,7 @@ coveralls
 pytest
 pytest-cov
 pytest-runner
+flake8
 Sphinx
 sphinx-rtd-theme
 twine
