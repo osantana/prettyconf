@@ -1,3 +1,12 @@
+2.1.0
+=====
+
+  - Add (optional) support for AWSParameterStore. To enable it install
+    ``prettyconf[aws]`` (thanks @ronaldotd)
+  - Replace nosetest -> pytest
+  - Implemented new .env parser with multiline support (thanks @jaysonsantos)
+  - Update and improve ``casts`` session documentation (thanks @hernantz)
+
 2.0.1
 =====
 
