@@ -49,7 +49,7 @@ class Configuration(object):
         # Look for a sensible default cast if one is not provided
         if callable(cast):
             cast = cast
-        elif callable(default) or default is NOT_SET:
+        elif callable(default) or default is NOT_SET or default is None:
             cast = identity
         elif isinstance(default, bool):
             cast = self.boolean
