@@ -4,7 +4,7 @@ import sys
 
 from .casts import Boolean, List, Option, Tuple
 from .exceptions import UnknownConfiguration
-from .loaders import Environment, RecursiveSearch
+from .loaders import Environment, RecursiveSearch, NOT_SET
 
 MAGIC_FRAME_DEPTH = 2
 
@@ -15,6 +15,11 @@ def _caller_path():
     frame = sys._getframe(MAGIC_FRAME_DEPTH)
     path = os.path.dirname(os.path.abspath(frame.f_code.co_filename))
     return path
+
+
+def identity(val):
+    """Default noop cast"""
+    return val
 
 
 class Configuration(object):
@@ -40,8 +45,17 @@ class Configuration(object):
         loaders = ', '.join([repr(l) for l in self.loaders])
         return 'Configuration(loaders=[{}])'.format(loaders)
 
-    def __call__(self, item, cast=lambda v: v, **kwargs):
-        if not callable(cast):
+    def __call__(self, item, default=NOT_SET, cast=None):
+        # Look for a sensible default cast if one is not provided
+        if callable(cast):
+            cast = cast
+        elif callable(default) or default is NOT_SET:
+            cast = identity
+        elif isinstance(default, bool):
+            cast = self.boolean
+        elif cast is None:
+            cast = type(default)
+        else:
             raise TypeError("Cast must be callable")
 
         if self._recursive_search:
@@ -53,7 +67,10 @@ class Configuration(object):
             except KeyError:
                 continue
 
-        if 'default' not in kwargs:
+        if default is NOT_SET:
             raise UnknownConfiguration("Configuration '{}' not found".format(item))
 
-        return cast(kwargs["default"])
+        if callable(default):
+            default = default()
+
+        return cast(default)
