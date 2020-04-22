@@ -8,8 +8,8 @@ class AbstractCast(object):
 
 class Boolean(AbstractCast):
     default_values = {
-        "1": True, "true": True, "yes": True, "y": True, "on": True,
-        "0": False, "false": False, "no": False, "n": False, "off": False,
+        "1": True, "true": True, "yes": True, "y": True, "on": True, "t": True,
+        "0": False, "false": False, "no": False, "n": False, "off": False, "f": False
     }
 
     def __init__(self, values=None):

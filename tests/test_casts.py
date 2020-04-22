@@ -18,6 +18,8 @@ from prettyconf.exceptions import InvalidConfiguration
     ("on", True),
     ("ON", True),
     ("On", True),
+    ("t", True),
+    (True, True),
     (0, False),
     ("0", False),
     ("false", False),
@@ -32,6 +34,8 @@ from prettyconf.exceptions import InvalidConfiguration
     ("Off", False),
     ("OFF", False),
     ("OfF", False),
+    ("f", False),
+    (False, False),
 ])
 def test_basic_boolean_cast_values(value, result):
     boolean = Boolean()
