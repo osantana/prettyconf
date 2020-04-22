@@ -5,7 +5,7 @@ Buitin Casts
 ~~~~~~~~~~~~
 
 #. ``config.boolean`` - converts values like ``On|Off``, ``1|0``, ``yes|no``,
-   ``true|false`` into booleans.
+   ``true|false``, ``t|f`` into booleans.
 #. ``config.eval`` - safely evaluate strings with Python literals to Python
    objects (alias to Python's ``ast.literal_eval``).
 #. ``config.list`` - converts comma separated strings into lists.
