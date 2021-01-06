@@ -1,19 +1,17 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@0.2.1
+  python: circleci/python@1.3.2
 
 jobs:
   lint-and-test:
     executor: python/default
     steps:
       - checkout
-#      - python/load-cache
-      - python/install-deps
-#      - python/save-cache
+      - python/install-packages
       - run:
-          command: flake8 prettyconf tests
           name: Lint
+          command: make lint
       - run:
           command: make test
           name: Test
