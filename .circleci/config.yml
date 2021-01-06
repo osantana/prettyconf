@@ -9,6 +9,7 @@ jobs:
     steps:
       - checkout
       - python/install-packages
+        pkg-manager: pip
       - run:
           name: Lint
           command: make lint
