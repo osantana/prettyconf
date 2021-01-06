@@ -12,10 +12,21 @@ jobs:
           pkg-manager: pip
       - run:
           name: Lint
-          command: make lint
+          command: flake8 prettyconf tests
       - run:
-          command: make test
           name: Test
+          command: |
+            . venv/bin/activate
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+      - run:
+          name: Coverage
+          command: coveralls
+      - python/dist
 
 workflows:
   main:
