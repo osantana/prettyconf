@@ -1,5 +1,5 @@
 test:
-	python setup.py pytest
+	pytest
 
 lint:
 	flake8 prettyconf tests

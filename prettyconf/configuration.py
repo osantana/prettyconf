@@ -37,7 +37,7 @@ class Configuration(object):
         self.loaders = loaders
 
     def __repr__(self):
-        loaders = ', '.join([repr(l) for l in self.loaders])
+        loaders = ', '.join([repr(loader) for loader in self.loaders])
         return '{}(loaders=[{}])'.format(self.__class__.__name__, loaders)
 
     def __call__(self, item, cast=lambda v: v, **kwargs):

@@ -1,0 +1,33 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.3.2
+
+jobs:
+  lint-and-test:
+    executor: python/default
+    steps:
+      - checkout
+      - python/install-packages:
+          pkg-manager: pip
+      - run:
+          name: Lint
+          command: flake8 prettyconf tests
+      - run:
+          name: Test
+          command: |
+            mkdir test-results
+            pytest --junitxml=test-results/junit.xml
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+      - python/dist
+      - run:
+          name: Coverage
+          command: coveralls
+
+workflows:
+  main:
+    jobs:
+      - lint-and-test
