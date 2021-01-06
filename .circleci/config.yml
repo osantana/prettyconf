@@ -12,7 +12,7 @@ jobs:
       - python/install-deps
       - python/save-cache
       - run:
-          command: make lint
+          command: flake8 prettyconf tests
           name: Lint
       - run:
           command: make test
