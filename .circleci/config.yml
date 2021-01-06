@@ -23,6 +23,9 @@ jobs:
       - store_artifacts:
           path: test-results
       - python/dist
+      - run:
+          name: Coverage
+          command: coveralls
 
 workflows:
   main:
