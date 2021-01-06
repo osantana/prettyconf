@@ -101,5 +101,5 @@ class JSON(AbstractCast):
     def __call__(self, value):
         try:
             return json.loads(value)
-        except json.JSONDecodeError:
-            raise InvalidConfiguration('Invalid option {!r}'.format(value))
+        except json.JSONDecodeError as ex:
+            raise InvalidConfiguration('Invalid option {!r}'.format(value)) from ex
