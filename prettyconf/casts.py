@@ -103,3 +103,5 @@ class JSON(AbstractCast):
             return json.loads(value)
         except json.JSONDecodeError as ex:
             raise InvalidConfiguration('Invalid option {!r}'.format(value)) from ex
+        except TypeError:
+            return value

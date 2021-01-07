@@ -111,6 +111,8 @@ def test_if_cast_is_unbounded():
     ('["obj1", "obj2"]', ['obj1', 'obj2']),
     ('{"key": "value"}', {'key': 'value'}),
     ('null', None),
+    (['already decoded object in default argument'],
+     ['already decoded object in default argument']),
 ])
 def test_basic_json_cast_values(value, result):
     json = JSON()
