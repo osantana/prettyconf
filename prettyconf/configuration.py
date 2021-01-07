@@ -2,7 +2,7 @@ import ast
 import os
 import sys
 
-from .casts import Boolean, List, Option, Tuple
+from .casts import Boolean, JSON, List, Option, Tuple
 from .exceptions import UnknownConfiguration
 from .loaders import Environment, RecursiveSearch
 
@@ -24,6 +24,7 @@ class Configuration(object):
     tuple = Tuple()
     option = Option
     eval = staticmethod(ast.literal_eval)
+    json = JSON()
 
     def __init__(self, loaders=None):
         self._recursive_search = None

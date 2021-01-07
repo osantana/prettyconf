@@ -1,7 +1,7 @@
 import pytest
 
 from prettyconf import config
-from prettyconf.casts import Boolean, List, Option, Tuple
+from prettyconf.casts import Boolean, JSON, List, Option, Tuple
 from prettyconf.exceptions import InvalidConfiguration
 
 
@@ -104,3 +104,20 @@ def test_fail_invalid_option_config():
 
 def test_if_cast_is_unbounded():
     assert config.eval("None") is None
+
+
+@pytest.mark.parametrize('value,result', [
+    ('"string"', 'string'),
+    ('["obj1", "obj2"]', ['obj1', 'obj2']),
+    ('{"key": "value"}', {'key': 'value'}),
+    ('null', None),
+])
+def test_basic_json_cast_values(value, result):
+    json = JSON()
+    assert json(value) == result
+
+
+def test_fail_invalid_json_config():
+    json = JSON()
+    with pytest.raises(InvalidConfiguration):
+        json('invalid')

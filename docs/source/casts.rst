@@ -10,6 +10,7 @@ Buitin Casts
    objects (alias to Python's ``ast.literal_eval``).
 #. ``config.list`` - converts comma separated strings into lists.
 #. ``config.tuple`` - converts comma separated strings into tuples.
+#. ``config.json`` - unserialize a string with JSON object into Python.
 #. ``config.option`` - get a return value based on specific options:
 
 .. code-block:: python

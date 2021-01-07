@@ -1,3 +1,5 @@
+import json
+
 from .exceptions import InvalidConfiguration
 
 
@@ -93,3 +95,11 @@ class Option(AbstractCast):
             return self.options[value]
         except KeyError:
             raise InvalidConfiguration("Invalid option {!r}".format(value))
+
+
+class JSON(AbstractCast):
+    def __call__(self, value):
+        try:
+            return json.loads(value)
+        except json.JSONDecodeError as ex:
+            raise InvalidConfiguration('Invalid option {!r}'.format(value)) from ex
