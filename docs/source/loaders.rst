@@ -53,7 +53,7 @@ doesn't exist, this loader will be skipped without raising any errors.
     from prettyconf.loaders import EnvFile
 
 
-    config.loaders = [EnvFile(file='.env', required=True, var_format=str.upper)]
+    config.loaders = [EnvFile(filename='.env', var_format=str.upper)]
     config('debug')  # will look for a `DEBUG` variable
 
 
