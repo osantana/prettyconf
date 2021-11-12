@@ -32,6 +32,14 @@ occurs. By default it is ``str.upper()``.
     config.loaders = [Environment(var_format=str.upper)]
     config('debug')  # will look for a `DEBUG` variable
 
+Since the environment is a global dictionary, it is a good practice to namespace
+your settings by using a unique prefix like ``MY_APP_``.
+
+.. code-block:: python
+
+    config.loaders = [Environment(var_format=lambda x: f'MY_APP_{x.upper()}')]
+    config('debug')  # will look for a `MY_APP_DEBUG` variable
+
 
 EnvFile
 +++++++
