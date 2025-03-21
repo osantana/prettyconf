@@ -1,0 +1,38 @@
+name: Tests
+
+on:
+  pull_request:
+    paths-ignore:
+      - "docs/**"
+  push:
+    branches:
+      - master
+    paths-ignore:
+      - "docs/**"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: Run tests on ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Setup Hatch
+        run: pipx install hatch
+
+      - name: Run tests
+        run: |
+          hatch env run -e all -i py=${{ matrix.python-version }} test
