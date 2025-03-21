@@ -1,0 +1,20 @@
+include = ["**/*.toml"]
+
+[formatting]
+align_comments = true
+allowed_blank_lines = 1
+array_auto_collapse = false
+array_auto_expand = true
+array_trailing_comma = true
+column_width = 110
+compact_arrays = true
+reorder_arrays = true
+reorder_keys = true
+trailing_newline = true
+
+[[rule]]
+include = ["**/pyproject.toml"]
+keys = ["project"]
+
+[rule.formatting]
+reorder_keys = false
