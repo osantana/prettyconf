@@ -1,7 +1,7 @@
 prettyconf
 ==========
 
-|Build Status| |Coverage Status| |Docs| |Codacy| |Landscape|
+|Coverage Status| |Docs| |Codacy|
 
 Pretty Conf is a Python library created to make easy the separation of
 configuration and code following the recomendations of `12 Factor`_'s topic
@@ -21,13 +21,9 @@ You can find ``prettyconf`` documentation at `Read the Docs`_ website.
 .. _`Read the Docs`: http://prettyconf.readthedocs.org/
 .. _`python-decouple`: https://github.com/henriquebastos/python-decouple
 
-.. |Build Status| image:: https://circleci.com/gh/osantana/prettyconf.svg?style=svg
-    :target: https://circleci.com/gh/osantana/prettyconf
 .. |Coverage Status| image:: https://coveralls.io/repos/osantana/prettyconf/badge.svg?branch=master
    :target: https://coveralls.io/r/osantana/prettyconf?branch=master
 .. |Docs| image:: https://readthedocs.org/projects/prettyconf/badge/?version=latest
    :target: https://readthedocs.org/projects/prettyconf/?badge=latest
-.. |Codacy| image:: https://api.codacy.com/project/badge/grade/65576e834eb74d529921d8625347a5a1
-    :target: https://www.codacy.com/app/osantana/prettyconf
-.. |Landscape| image:: https://landscape.io/github/osantana/prettyconf/master/landscape.svg?style=flat
-   :target: https://landscape.io/github/osantana/prettyconf/master
+.. |Codacy| image:: https://app.codacy.com/project/badge/Grade/e5caa8df7068427b829fb1f9760de3bc
+    :target: https://app.codacy.com/gh/osantana/prettyconf/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade
