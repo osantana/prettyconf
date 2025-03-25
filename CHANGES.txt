@@ -1,3 +1,13 @@
+2.3.0
+=====
+
+  - Modernize the project (thanks @hartungstenio)
+  - Add support for Python 3.10, 3.11, 3.12 and 3.13
+  - Update the codebase to use python>=3.9 features
+  - Replace hatch with uv
+  - Add support for CI/CD with GitHub Actions
+  - Update README.rst badges
+
 2.2.1
 =====
 
@@ -142,4 +152,3 @@
 ===
 
   - First version
-

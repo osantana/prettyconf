@@ -92,7 +92,7 @@ def test_fail_missing_config(mock_boto):
 
     assert 'DATABASE_URL' not in config
     with pytest.raises(KeyError):
-        config['DATABASE_URL']
+        assert config['DATABASE_URL']
 
 
 @mock.patch('prettyconf.loaders.boto3')
@@ -102,4 +102,4 @@ def test_parameter_store_access_fail(mock_boto):
 
     assert 'DATABASE_URL' not in config
     with pytest.raises(KeyError):
-        config['DATABASE_URL']
+        assert config['DATABASE_URL']
