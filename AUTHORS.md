@@ -8,3 +8,4 @@
 - [Osvaldo Santana Neto](https://github.com/osantana)
 - [Roel Adriaans](https://github.com/RoelAdriaans)
 - [Ronaldo Duarte](https://github.com/ronaldotd)
+- [Christian Hartung](https://github.com/hartungstenio)
