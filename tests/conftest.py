@@ -5,6 +5,7 @@ import tempfile
 import pytest
 
 from prettyconf.loaders import CommandLine
+
 from .factory import parser_factory
 
 ENVFILE_CONTENT = """
@@ -21,17 +22,17 @@ ENVFILE=Must be overrided
 
 @pytest.fixture
 def files_path():
-    return os.path.join(os.path.dirname(__file__), "files")
+    return os.path.join(os.path.dirname(__file__), 'files')
 
 
 @pytest.fixture
 def inifile(files_path):
-    return os.path.join(files_path, "config.ini")
+    return os.path.join(files_path, 'config.ini')
 
 
 @pytest.fixture
 def envfile(files_path):
-    return os.path.join(files_path, "envfile")
+    return os.path.join(files_path, 'envfile')
 
 
 def parse_args():
@@ -46,8 +47,8 @@ def command_line_config():
     return CommandLine(parser=parser)
 
 
-def _create_file(filename, content=""):
-    with open(filename, "a") as file_:
+def _create_file(filename, content=''):
+    with open(filename, 'a') as file_:
         file_.write(content)
 
 
@@ -55,7 +56,7 @@ def _create_file(filename, content=""):
 def create_file():
     remove_list = []
 
-    def _create_fixture_file(filename, content=""):
+    def _create_fixture_file(filename, content=''):
         _create_file(filename, content)
         remove_list.append(filename)
 
@@ -69,7 +70,7 @@ def create_file():
 def create_dir():
     tempdir = tempfile.mkdtemp()
 
-    def _create_tempdir(path=""):
+    def _create_tempdir(path=''):
         full_path = os.path.join(tempdir, path)
         os.makedirs(full_path, exist_ok=True)
         return tempdir, full_path
@@ -81,7 +82,7 @@ def create_dir():
 
 @pytest.fixture
 def env_config(files_path):
-    envfile = files_path + "/../.env"
+    envfile = files_path + '/../.env'
     _create_file(envfile, ENVFILE_CONTENT)
 
     yield envfile
@@ -91,7 +92,7 @@ def env_config(files_path):
 
 @pytest.fixture
 def ini_config(files_path):
-    inifile = files_path + "/../settings.ini"
+    inifile = files_path + '/../settings.ini'
     _create_file(inifile, INIFILE_CONTENT)
 
     yield inifile

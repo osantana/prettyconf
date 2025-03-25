@@ -76,7 +76,7 @@ class CommandLine(AbstractConfigurationLoader):
         self.configs = get_args(self.parser)
 
     def __repr__(self):
-        return "CommandLine(parser={})".format(self.parser)
+        return f'CommandLine(parser={self.parser})'
 
     def __contains__(self, item):
         return item in self.configs
@@ -86,9 +86,9 @@ class CommandLine(AbstractConfigurationLoader):
 
 
 class IniFile(AbstractConfigurationFileLoader):
-    file_extensions = ("*.ini", "*.cfg")
+    file_extensions = ('*.ini', '*.cfg')
 
-    def __init__(self, filename, section="settings", var_format=lambda x: x):
+    def __init__(self, filename, section='settings', var_format=lambda x: x):
         """
         :param str filename: Path to the ``.ini/.cfg`` file.
         :param str section: Section name inside the config file.
@@ -101,7 +101,7 @@ class IniFile(AbstractConfigurationFileLoader):
         self._initialized = False
 
     def __repr__(self):
-        return 'IniFile("{}")'.format(self.filename)
+        return f'IniFile("{self.filename}")'
 
     def _parse(self):
         if self._initialized:
@@ -110,11 +110,11 @@ class IniFile(AbstractConfigurationFileLoader):
         with open(self.filename) as inifile:
             try:
                 self.parser.read_file(inifile)
-            except (UnicodeDecodeError, MissingSectionHeaderError):
-                raise InvalidConfigurationFile()
+            except (UnicodeDecodeError, MissingSectionHeaderError) as ex:
+                raise InvalidConfigurationFile() from ex
 
         if not self.parser.has_section(self.section):
-            raise MissingSettingsSection("Missing [{}] section in {}".format(self.section, self.filename))
+            raise MissingSettingsSection(f'Missing [{self.section}] section in {self.filename}')
 
         self._initialized = True
 
@@ -134,12 +134,12 @@ class IniFile(AbstractConfigurationFileLoader):
 
     def __getitem__(self, item):
         if not self.check():
-            raise KeyError("{!r}".format(item))
+            raise KeyError(f'{item!r}')
 
         try:
             return self.parser.get(self.section, self.var_format(item))
-        except NoOptionError:
-            raise KeyError("{!r}".format(item))
+        except NoOptionError as ex:
+            raise KeyError(f'{item!r}') from ex
 
 
 class Environment(AbstractConfigurationLoader):
@@ -154,7 +154,7 @@ class Environment(AbstractConfigurationLoader):
         self.var_format = var_format
 
     def __repr__(self):
-        return "Environment(var_format={})".format(self.var_format)
+        return f'Environment(var_format={self.var_format})'
 
     def __contains__(self, item):
         return self.var_format(item) in os.environ
@@ -166,9 +166,9 @@ class Environment(AbstractConfigurationLoader):
 
 
 class EnvFile(AbstractConfigurationFileLoader):
-    file_extensions = (".env",)
+    file_extensions = ('.env',)
 
-    def __init__(self, filename=".env", var_format=str.upper):
+    def __init__(self, filename='.env', var_format=str.upper):
         """
         :param str filename: Path to the ``.env`` file.
         :param function var_format: A function to pre-format variable names.
@@ -178,7 +178,7 @@ class EnvFile(AbstractConfigurationFileLoader):
         self.configs = None
 
     def __repr__(self):
-        return 'EnvFile("{}")'.format(self.filename)
+        return f'EnvFile("{self.filename}")'
 
     def _parse(self):
         if self.configs is not None:
@@ -207,13 +207,13 @@ class EnvFile(AbstractConfigurationFileLoader):
 
     def __getitem__(self, item):
         if not self.check():
-            raise KeyError("{!r}".format(item))
+            raise KeyError(f'{item!r}')
 
         return self.configs[self.var_format(item)]
 
 
 class RecursiveSearch(AbstractConfigurationLoader):
-    def __init__(self, starting_path=None, filetypes=((".env", EnvFile), (("*.ini", "*.cfg"), IniFile)), root_path="/"):
+    def __init__(self, starting_path=None, filetypes=(('.env', EnvFile), (('*.ini', '*.cfg'), IniFile)), root_path='/'):
         """
         :param str starting_path: The path to begin looking for configuration files.
         :param tuple filetypes: tuple of tuples with configuration loaders, order matters.
@@ -238,17 +238,17 @@ class RecursiveSearch(AbstractConfigurationLoader):
     @starting_path.setter
     def starting_path(self, path):
         if not path:
-            raise InvalidPath("Invalid starting path")
+            raise InvalidPath('Invalid starting path')
 
         path = os.path.realpath(os.path.abspath(path))
         if not path.startswith(self.root_path):
-            raise InvalidPath("Invalid root path given")
+            raise InvalidPath('Invalid root path given')
         self._starting_path = path
 
     @staticmethod
     def get_filenames(path, patterns):
         filenames = []
-        if type(patterns) is str:
+        if isinstance(patterns, str):
             patterns = (patterns,)
 
         for pattern in patterns:
@@ -291,7 +291,7 @@ class RecursiveSearch(AbstractConfigurationLoader):
         return self._config_files
 
     def __repr__(self):
-        return "RecursiveSearch(starting_path={})".format(self.starting_path)
+        return f'RecursiveSearch(starting_path={self.starting_path})'
 
     def __contains__(self, item):
         for config_file in self.config_files:
@@ -306,11 +306,18 @@ class RecursiveSearch(AbstractConfigurationLoader):
             except KeyError:
                 continue
         else:
-            raise KeyError("{!r}".format(item))
+            raise KeyError(f'{item!r}')
 
 
 class AwsParameterStore(AbstractConfigurationLoader):
-    def __init__(self, path="/", aws_access_key_id=None, aws_secret_access_key=None, region_name="us-east-1", endpoint_url=None):
+    def __init__(
+        self,
+        path='/',
+        aws_access_key_id=None,
+        aws_secret_access_key=None,
+        region_name='us-east-1',
+        endpoint_url=None,
+    ):
         if not boto3:
             raise RuntimeError(
                 'AwsParameterStore requires [aws] feature. Please install it: "pip install prettyconf[aws]"'
@@ -326,14 +333,14 @@ class AwsParameterStore(AbstractConfigurationLoader):
 
     def _store_parameters(self, parameters):
         for parameter in parameters:
-            self._parameters[parameter["Name"].split("/")[-1]] = parameter["Value"]
+            self._parameters[parameter['Name'].split('/')[-1]] = parameter['Value']
 
     def _fetch_parameters(self):
         if self._fetched:
             return
 
         client = boto3.client(
-            service_name="ssm",
+            service_name='ssm',
             aws_access_key_id=self.aws_access_key_id,
             aws_secret_access_key=self.aws_secret_access_key,
             region_name=self.region_name,
@@ -341,13 +348,13 @@ class AwsParameterStore(AbstractConfigurationLoader):
         )
 
         response = client.get_parameters_by_path(Path=self.path)
-        next_token = response.get("NextToken")
-        self._store_parameters(response["Parameters"])
+        next_token = response.get('NextToken')
+        self._store_parameters(response['Parameters'])
 
         while next_token:
             response = client.get_parameters_by_path(Path=self.path, NextToken=next_token)
-            next_token = response.get("NextToken")
-            self._store_parameters(response["Parameters"])
+            next_token = response.get('NextToken')
+            self._store_parameters(response['Parameters'])
 
         self._fetched = True
 
@@ -360,7 +367,7 @@ class AwsParameterStore(AbstractConfigurationLoader):
         return super().check()
 
     def __repr__(self):
-        return "AwsParameterStore(path={} region={})".format(self.path, self.region_name)
+        return f'AwsParameterStore(path={self.path} region={self.region_name})'
 
     def __contains__(self, item):
         if not self.check():
@@ -370,6 +377,6 @@ class AwsParameterStore(AbstractConfigurationLoader):
 
     def __getitem__(self, item):
         if not self.check():
-            raise KeyError("{!r}".format(item))
+            raise KeyError(f'{item!r}')
 
         return self._parameters[item]

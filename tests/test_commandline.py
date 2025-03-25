@@ -1,6 +1,7 @@
 import pytest
 
 from prettyconf.loaders import CommandLine
+
 from .factory import parser_factory
 
 

@@ -2,7 +2,7 @@ import ast
 import os
 import sys
 
-from .casts import Boolean, JSON, List, Option, Tuple
+from .casts import JSON, Boolean, List, Option, Tuple
 from .exceptions import UnknownConfiguration
 from .loaders import Environment, RecursiveSearch
 
@@ -17,7 +17,7 @@ def _caller_path():
     return path
 
 
-class Configuration(object):
+class Configuration:
     # Shortcut for standard casts
     boolean = Boolean()
     list = List()
@@ -39,11 +39,11 @@ class Configuration(object):
 
     def __repr__(self):
         loaders = ', '.join([repr(loader) for loader in self.loaders])
-        return '{}(loaders=[{}])'.format(self.__class__.__name__, loaders)
+        return f'{self.__class__.__name__}(loaders=[{loaders}])'
 
     def __call__(self, item, cast=lambda v: v, **kwargs):
         if not callable(cast):
-            raise TypeError("Cast must be callable")
+            raise TypeError('Cast must be callable')
 
         if self._recursive_search:
             self._recursive_search.starting_path = _caller_path()
@@ -55,6 +55,6 @@ class Configuration(object):
                 continue
 
         if 'default' not in kwargs:
-            raise UnknownConfiguration("Configuration '{}' not found".format(item))
+            raise UnknownConfiguration(f"Configuration '{item}' not found")
 
-        return cast(kwargs["default"])
+        return cast(kwargs['default'])

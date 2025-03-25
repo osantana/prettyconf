@@ -3,15 +3,25 @@ import json
 from .exceptions import InvalidConfiguration
 
 
-class AbstractCast(object):
+class AbstractCast:
     def __call__(self, value):
         raise NotImplementedError()  # pragma: no cover
 
 
 class Boolean(AbstractCast):
     default_values = {
-        "1": True, "true": True, "yes": True, "y": True, "on": True, "t": True,
-        "0": False, "false": False, "no": False, "n": False, "off": False, "f": False
+        '1': True,
+        'true': True,
+        'yes': True,
+        'y': True,
+        'on': True,
+        't': True,
+        '0': False,
+        'false': False,
+        'no': False,
+        'n': False,
+        'off': False,
+        'f': False,
     }
 
     def __init__(self, values=None):
@@ -22,19 +32,19 @@ class Boolean(AbstractCast):
     def __call__(self, value):
         try:
             return self.values[str(value).lower()]
-        except KeyError:
-            raise InvalidConfiguration("Error casting value {!r} to boolean".format(value))
+        except KeyError as ex:
+            raise InvalidConfiguration(f'Error casting value {value!r} to boolean') from ex
 
 
 class List(AbstractCast):
-    def __init__(self, delimiter=",", quotes="\"'"):
+    def __init__(self, delimiter=',', quotes='"\''):
         self.delimiter = delimiter
         self.quotes = quotes
 
     def _parse(self, string):
         elements = []
         element = []
-        quote = ""
+        quote = ''
         for char in string:
             # open quote
             if char in self.quotes and not quote:
@@ -44,7 +54,7 @@ class List(AbstractCast):
 
             # close quote
             if char in self.quotes and char == quote:
-                quote = ""
+                quote = ''
                 element.append(char)
                 continue
 
@@ -53,7 +63,7 @@ class List(AbstractCast):
                 continue
 
             if char == self.delimiter:
-                elements.append("".join(element))
+                elements.append(''.join(element))
                 element = []
                 continue
 
@@ -61,7 +71,7 @@ class List(AbstractCast):
 
         # remaining element
         if element:
-            elements.append("".join(element))
+            elements.append(''.join(element))
 
         return self.cast(e.strip() for e in elements)
 
@@ -93,8 +103,8 @@ class Option(AbstractCast):
     def __call__(self, value):
         try:
             return self.options[value]
-        except KeyError:
-            raise InvalidConfiguration("Invalid option {!r}".format(value))
+        except KeyError as ex:
+            raise InvalidConfiguration(f'Invalid option {value!r}') from ex
 
 
 class JSON(AbstractCast):
@@ -102,6 +112,6 @@ class JSON(AbstractCast):
         try:
             return json.loads(value)
         except json.JSONDecodeError as ex:
-            raise InvalidConfiguration('Invalid option {!r}'.format(value)) from ex
+            raise InvalidConfiguration(f'Invalid option {value!r}') from ex
         except TypeError:
             return value

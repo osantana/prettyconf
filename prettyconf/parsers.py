@@ -1,16 +1,17 @@
-from typing import Union, Tuple, Iterator
+from collections.abc import Iterator
+from typing import Union
 
-STATE_INITIAL = "initial"
-STATE_PARSING_KEY = "parsing_key"
-STATE_PARSING_VALUE = "parsing_value"
-STATE_PARSING_VALUE_ESCAPE = "parsing_value_escape"
-STATE_PARSING_COMMENT = "parsing_comment"
+STATE_INITIAL = 'initial'
+STATE_PARSING_KEY = 'parsing_key'
+STATE_PARSING_VALUE = 'parsing_value'
+STATE_PARSING_VALUE_ESCAPE = 'parsing_value_escape'
+STATE_PARSING_COMMENT = 'parsing_comment'
 
-COMMENT = "#"
-END_OF_LINE = "\n"
-ESCAPE_CHAR = "\\"
-SPACES = set(" \n")
-QUOTES = set("'\"")
+COMMENT = '#'
+END_OF_LINE = '\n'
+ESCAPE_CHAR = '\\'
+SPACES = set(' \n')
+QUOTES = set('\'"')
 
 
 class BufferedStreamReader:
@@ -46,10 +47,10 @@ class EnvFileParser:
 
         self._current_key = []
         self._current_value = []
-        self._current_quote = ""
+        self._current_quote = ''
         self._key_parsed = False
 
-    def parse_config(self) -> Iterator[Tuple[str, str]]:
+    def parse_config(self) -> Iterator[tuple[str, str]]:
         key = self._current_key
         value = self._current_value
 
@@ -94,7 +95,7 @@ class EnvFileParser:
 
         return False
 
-    def _finish_comment(self, char) -> Union[bool, Tuple[str, str]]:
+    def _finish_comment(self, char) -> Union[bool, tuple[str, str]]:
         if not (self.state == STATE_PARSING_COMMENT and char == END_OF_LINE):
             return False
 
@@ -113,7 +114,7 @@ class EnvFileParser:
             return True
 
         if self._current_quote == char:
-            self._current_quote = ""
+            self._current_quote = ''
             return True
 
         self._current_value.append(char)
@@ -137,7 +138,7 @@ class EnvFileParser:
         if self.state != STATE_PARSING_KEY:
             return False
 
-        if char == "=":
+        if char == '=':
             self.state = STATE_PARSING_VALUE
             self._key_parsed = True
             return True
@@ -149,7 +150,7 @@ class EnvFileParser:
         self._current_key.append(char)
         return True
 
-    def _parse_value(self, char) -> Union[bool, Tuple[str, str]]:
+    def _parse_value(self, char) -> Union[bool, tuple[str, str]]:
         if self.state != STATE_PARSING_VALUE:
             return False
 
@@ -157,7 +158,7 @@ class EnvFileParser:
             self.state = STATE_PARSING_VALUE_ESCAPE
             return True
 
-        if char == " " and not (self._current_value or self._current_quote):
+        if char == ' ' and not (self._current_value or self._current_quote):
             return True
 
         if char == END_OF_LINE:
@@ -180,8 +181,8 @@ class EnvFileParser:
         self._current_value.extend([ESCAPE_CHAR, char])
         return True
 
-    def _return_current_config(self) -> Tuple[str, str]:
-        key, value = "".join(self._current_key), "".join(self._current_value)
+    def _return_current_config(self) -> tuple[str, str]:
+        key, value = ''.join(self._current_key), ''.join(self._current_value)
         self._reset_state()
         return key.rstrip(), value.rstrip()
 
