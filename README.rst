@@ -21,8 +21,8 @@ You can find ``prettyconf`` documentation at `Read the Docs`_ website.
 .. _`Read the Docs`: http://prettyconf.readthedocs.org/
 .. _`python-decouple`: https://github.com/henriquebastos/python-decouple
 
-.. |Coverage Status| image:: https://coveralls.io/repos/osantana/prettyconf/badge.svg?branch=master
-   :target: https://coveralls.io/r/osantana/prettyconf?branch=master
+.. |Coverage Status| image:: https://coveralls.io/repos/osantana/prettyconf/badge.svg?branch=main
+   :target: https://coveralls.io/r/osantana/prettyconf?branch=main
 .. |Docs| image:: https://readthedocs.org/projects/prettyconf/badge/?version=latest
    :target: https://readthedocs.org/projects/prettyconf/?badge=latest
 .. |Codacy| image:: https://app.codacy.com/project/badge/Grade/e5caa8df7068427b829fb1f9760de3bc
