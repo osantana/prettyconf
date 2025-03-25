@@ -1,13 +1,10 @@
-[build-system]
-build-backend = "hatchling.build"
-requires = ["hatch-vcs", "hatchling"]
-
 [project]
 name = "prettyconf"
-dynamic = ["version"]
+version = "2.3.0"
 description = "Separation of settings from code."
 readme = "README.rst"
-license = { file = "LICENSE.txt" }
+license = "MIT"
+license-files = ["LICENSE.txt", "AUTHORS.md"]
 authors = [{ name = "Osvaldo Santana Neto", email = "prettyconf@osantana.me" }]
 keywords = ["asyncio", "dispatcher", "message", "microservices", "tasks"]
 classifiers = [
@@ -15,7 +12,6 @@ classifiers = [
     "Framework :: Django",
     "Framework :: Flask",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -32,43 +28,38 @@ requires-python = ">=3.9"
 dependencies = []
 
 [project.optional-dependencies]
-aws = ["boto3"]
+aws = ["boto3>=1.28.0,<2.0.0"]
+
+[dependency-groups]
+dev = [
+    "pytest>=7.4.0,<8.0.0",
+    "pytest-cov>=4.0.0,<5.0.0",
+    "pytest-runner>=6.0.0,<7.0.0",
+    "Sphinx>=7.2.0,<8.0.0",
+    "sphinx-rtd-theme>=1.3.0,<2.0.0",
+    "coveralls>=3.3.0,<4.0.0",
+    "ruff>=0.0.290,<0.1.0"
+]
 
 [project.urls]
-Source = "http://github.com/osantana/prettyconf"
-Download = "http://github.com/osantana/prettyconf/releases"
+Source = "https://github.com/osantana/prettyconf"
+Download = "https://github.com/osantana/prettyconf/releases"
 
-[tool.hatch.build.targets.sdist]
-exclude = ["/.github", "/docs"]
+[tool.ruff]
+target-version = "py39"
+line-length = 120
 
-[tool.hatch.build.targets.wheel]
-packages = ["prettyconf"]
+[tool.ruff.format]
+line-ending = "lf"
+quote-style = "single"
 
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.envs.default]
-dependencies = [
-    "Sphinx",
-    "boto3",
-    "coveralls",
-    "flake8",
-    "pytest",
-    "pytest-cov",
-    "pytest-runner",
-    "sphinx-rtd-theme",
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "I", # isort
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "UP", # pyupgrade
 ]
-features = ["aws"]
-
-[tool.hatch.envs.default.scripts]
-cov = ["cov-report", "test-cov"]
-cov-report = ["- coverage combine", "coverage report"]
-test = "pytest {args:tests}"
-test-cov = "coverage run -m pytest {args:tests}"
-
-[[tool.hatch.envs.all.matrix]]
-python = ["3.10", "3.11", "3.12", "3.13", "3.9"]
-
-[tool.pytest.ini_options]
-addopts = ["--cov=prettyconf", "-v"]
-testpaths = ["tests"]
