@@ -1,0 +1,74 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatch-vcs", "hatchling"]
+
+[project]
+name = "prettyconf"
+dynamic = ["version"]
+description = "Separation of settings from code."
+readme = "README.rst"
+license = { file = "LICENSE.txt" }
+authors = [{ name = "Osvaldo Santana Neto", email = "prettyconf@osantana.me" }]
+keywords = ["asyncio", "dispatcher", "message", "microservices", "tasks"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Framework :: Django",
+    "Framework :: Flask",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python",
+    "Topic :: Software Development :: Libraries",
+]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.optional-dependencies]
+aws = ["boto3"]
+
+[project.urls]
+Source = "http://github.com/osantana/prettyconf"
+Download = "http://github.com/osantana/prettyconf/releases"
+
+[tool.hatch.build.targets.sdist]
+exclude = ["/.github", "/docs"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["prettyconf"]
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.envs.default]
+dependencies = [
+    "Sphinx",
+    "boto3",
+    "coveralls",
+    "flake8",
+    "pytest",
+    "pytest-cov",
+    "pytest-runner",
+    "sphinx-rtd-theme",
+]
+features = ["aws"]
+
+[tool.hatch.envs.default.scripts]
+cov = ["cov-report", "test-cov"]
+cov-report = ["- coverage combine", "coverage report"]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+
+[[tool.hatch.envs.all.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13", "3.9"]
+
+[tool.pytest.ini_options]
+addopts = ["--cov=prettyconf", "-v"]
+testpaths = ["tests"]
