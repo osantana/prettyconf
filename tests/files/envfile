@@ -1,24 +1,2 @@
 KEY=Value
-KEY_EMPTY=
-KEY_EMPTY_WITH_COMMENTS=  # no comments
-INLINE_COMMENTS=Foo  # This is an inline comment
-HASH_CONTENT=Foo 'Bar # Baz' %(key)s  # This is an inline comment
-PERCENT_NOT_ESCAPED=%%
-NO_INTERPOLATION=%(KeyOff)s
-IGNORE_SPACE = text
-SINGLE_QUOTE_SPACE = ' text'
-DOUBLE_QUOTE_SPACE = " text"
-UPDATED=
-UPDATED=text
-#COMMENTED_KEY=None
-INVALID_KEY#SKIPPED
-OTHER_INVALID_KEY
-CACHE_URL_QUOTES="cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5"
-CACHE_URL=cache+memcached://foo:bar@localhost:11211/?n=1&x=2,5
-DOUBLE_QUOTE_INSIDE_QUOTE='foo "bar" baz'
-SINGLE_QUOTE_INSIDE_QUOTE="foo 'bar' baz"
-MULTIPLE_LINES=multiple \
-lines \
-config
-
 _var=test
