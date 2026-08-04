@@ -1,3 +1,15 @@
+3.0.1
+=====
+
+  - Fix the ``base64`` cast accepting malformed padding on Python 3.10 and
+    3.11. CPython only rejects it consistently from 3.12 on, so ``YWJj===``
+    decoded fine on some interpreters and raised on others. The cast now
+    validates the length itself and behaves the same on every supported
+    version.
+  - Add a ``make test-all`` target, which runs the test suite against every
+    supported python version, and a ``make check-versions`` check that fails
+    when the CI matrix drifts from the classifiers in ``pyproject.toml``.
+
 3.0.0
 =====
 

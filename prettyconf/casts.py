@@ -146,7 +146,10 @@ class Base64(AbstractCast, Generic[ContentT]):
 
     def _decode(self, value) -> Any:
         try:
-            content = base64.b64decode(self._join_lines(value), validate=True)
+            data = self._join_lines(value)
+            if len(data) % 4:
+                raise binascii.Error('Invalid base64 padding')
+            content = base64.b64decode(data, validate=True)
         except (binascii.Error, TypeError, AttributeError) as ex:
             raise InvalidConfigurationError('Value is not a valid base64 encoded file') from ex
 

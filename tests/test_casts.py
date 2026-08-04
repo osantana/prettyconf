@@ -176,8 +176,16 @@ def test_base64_cast_repr():
     assert repr(Base64('utf-8')) == "Base64(encoding='utf-8')"
 
 
-@pytest.mark.parametrize('value', ['not base64!', 'YWJj===', 42, None])
+@pytest.mark.parametrize('value', ['not base64!', 42, None])
 def test_fail_invalid_base64(value):
+    with pytest.raises(InvalidConfigurationError):
+        Base64()(value)
+
+
+@pytest.mark.parametrize('value', ['YWJj=', 'YWJj==', 'YWJj===', 'YWJ'])
+def test_fail_base64_with_malformed_padding(value):
+    # CPython only rejects these consistently from 3.12 on, so the cast checks
+    # the length itself to behave the same on every supported version.
     with pytest.raises(InvalidConfigurationError):
         Base64()(value)
 

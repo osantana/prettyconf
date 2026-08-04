@@ -49,6 +49,7 @@ The remaining targets are listed by ``make help``:
 
 ============================ ==================================================
 ``make test``                run the test suite (``ARGS="-k name"`` to filter)
+``make test-all``            run the test suite on every supported python
 ``make coverage``            run the test suite with a coverage report
 ``make lint``                check the code with ruff
 ``make format``              reformat and auto-fix the code with ruff
