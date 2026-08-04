@@ -1,5 +1,4 @@
 from collections.abc import Iterator
-from typing import Union
 
 STATE_INITIAL = 'initial'
 STATE_PARSING_KEY = 'parsing_key'
@@ -51,7 +50,7 @@ class EnvFileParser:
         self._key_parsed = False
         self._previous_char = ''
 
-    def parse_config(self) -> Iterator[tuple[str, str]]:
+    def parse_config(self) -> Iterator[tuple[str, str]]:  # noqa: C901 - character-by-character state machine
         key = self._current_key
         value = self._current_value
 
@@ -101,7 +100,7 @@ class EnvFileParser:
         self.state = STATE_PARSING_COMMENT
         return True
 
-    def _finish_comment(self, char) -> Union[bool, tuple[str, str]]:
+    def _finish_comment(self, char) -> bool | tuple[str, str]:
         if not (self.state == STATE_PARSING_COMMENT and char == END_OF_LINE):
             return False
 
@@ -156,7 +155,7 @@ class EnvFileParser:
         self._current_key.append(char)
         return True
 
-    def _parse_value(self, char) -> Union[bool, tuple[str, str]]:
+    def _parse_value(self, char) -> bool | tuple[str, str]:
         if self.state != STATE_PARSING_VALUE:
             return False
 

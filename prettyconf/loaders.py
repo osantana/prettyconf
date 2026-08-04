@@ -1,14 +1,14 @@
 import os
 from configparser import ConfigParser, MissingSectionHeaderError, NoOptionError
-from glob import glob
+from pathlib import Path
 
 try:
     import boto3
-    import botocore
+    import botocore.exceptions
 except ImportError:
-    boto3 = None
+    boto3 = None  # ty: ignore[invalid-assignment]
 
-from .exceptions import InvalidConfigurationFile, InvalidPath, MissingSettingsSection
+from .exceptions import InvalidConfigurationFileError, InvalidPathError, MissingSettingsSectionError
 from .parsers import EnvFileParser
 
 
@@ -21,7 +21,7 @@ class NotSet(str):
     chain.
     """
 
-    pass
+    __slots__ = ()
 
 
 NOT_SET = NotSet()
@@ -43,13 +43,13 @@ def get_args(parser):
 
 class AbstractConfigurationLoader:
     def __repr__(self):
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
     def __contains__(self, item):
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
     def __getitem__(self, item):
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
     def check(self):
         return True
@@ -107,21 +107,21 @@ class IniFile(AbstractConfigurationFileLoader):
         if self._initialized:
             return
 
-        with open(self.filename) as inifile:
+        with Path(self.filename).open() as inifile:
             try:
                 self.parser.read_file(inifile)
             except (UnicodeDecodeError, MissingSectionHeaderError) as ex:
-                raise InvalidConfigurationFile() from ex
+                raise InvalidConfigurationFileError from ex
 
         if not self.parser.has_section(self.section):
-            raise MissingSettingsSection(f'Missing [{self.section}] section in {self.filename}')
+            raise MissingSettingsSectionError(f'Missing [{self.section}] section in {self.filename}')
 
         self._initialized = True
 
     def check(self):
         try:
             self._parse()
-        except (FileNotFoundError, InvalidConfigurationFile, MissingSettingsSection):
+        except (FileNotFoundError, InvalidConfigurationFileError, MissingSettingsSectionError):
             return False
 
         return super().check()
@@ -175,21 +175,23 @@ class EnvFile(AbstractConfigurationFileLoader):
         """
         self.filename = filename
         self.var_format = var_format
-        self.configs = None
+        self.configs = {}
+        self._initialized = False
 
     def __repr__(self):
         return f'EnvFile("{self.filename}")'
 
     def _parse(self):
-        if self.configs is not None:
+        if self._initialized:
             return
 
-        self.configs = {}
-        with open(self.filename) as envfile:
+        with Path(self.filename).open() as envfile:
             self.configs.update(EnvFileParser(envfile).parse_config())
 
+        self._initialized = True
+
     def check(self):
-        if not os.path.isfile(self.filename):
+        if not Path(self.filename).is_file():
             return False
 
         try:
@@ -218,11 +220,11 @@ class RecursiveSearch(AbstractConfigurationLoader):
         :param str starting_path: The path to begin looking for configuration files.
         :param tuple filetypes: tuple of tuples with configuration loaders, order matters.
                                 Defaults to
-                                ``(('*.env', EnvFile), (('*.ini', *.cfg',), IniFile)``
+                                ``(('.env', EnvFile), (('*.ini', '*.cfg'), IniFile))``
         :param str root_path: Configuration lookup will stop at the given path. Defaults to
-                              the current user directory
+                              the root directory ``/``
         """
-        self.root_path = os.path.realpath(root_path)
+        self.root_path = str(Path(root_path).resolve())
         self._starting_path = self.root_path
 
         if starting_path:
@@ -238,12 +240,12 @@ class RecursiveSearch(AbstractConfigurationLoader):
     @starting_path.setter
     def starting_path(self, path):
         if not path:
-            raise InvalidPath('Invalid starting path')
+            raise InvalidPathError('Invalid starting path')
 
-        path = os.path.realpath(os.path.abspath(path))
-        if not path.startswith(self.root_path):
-            raise InvalidPath('Invalid root path given')
-        self._starting_path = path
+        resolved_path = Path(path).resolve()
+        if not resolved_path.is_relative_to(self.root_path):
+            raise InvalidPathError('Invalid root path given')
+        self._starting_path = str(resolved_path)
 
     @staticmethod
     def get_filenames(path, patterns):
@@ -252,20 +254,20 @@ class RecursiveSearch(AbstractConfigurationLoader):
             patterns = (patterns,)
 
         for pattern in patterns:
-            filenames += glob(os.path.join(path, pattern))
+            filenames += [str(filename) for filename in Path(path).glob(pattern)]
         return filenames
 
     def _scan_path(self, path):
         config_files = []
 
-        for patterns, Loader in self.filetypes:
+        for patterns, loader_class in self.filetypes:
             for filename in self.get_filenames(path, patterns):
                 try:
-                    loader = Loader(filename=filename)
+                    loader = loader_class(filename=filename)
                     if not loader.check():
                         continue
                     config_files.append(loader)
-                except InvalidConfigurationFile:
+                except InvalidConfigurationFileError:
                     continue
 
         return config_files
@@ -273,15 +275,16 @@ class RecursiveSearch(AbstractConfigurationLoader):
     def _discover(self):
         self._config_files = []
 
-        path = self.starting_path
+        path = Path(self.starting_path)
+        root_path = Path(self.root_path)
         while True:
-            if os.path.isdir(path):
+            if path.is_dir():
                 self._config_files += self._scan_path(path)
 
-            if path == self.root_path:
+            if path == root_path:
                 break
 
-            path = os.path.dirname(path)
+            path = path.parent
 
     @property
     def config_files(self):
@@ -294,19 +297,15 @@ class RecursiveSearch(AbstractConfigurationLoader):
         return f'RecursiveSearch(starting_path={self.starting_path})'
 
     def __contains__(self, item):
-        for config_file in self.config_files:
-            if item in config_file:
-                return True
-        return False
+        return any(item in config_file for config_file in self.config_files)
 
     def __getitem__(self, item):
         for config_file in self.config_files:
             try:
                 return config_file[item]
-            except KeyError:
+            except KeyError:  # noqa: PERF203 - the discovery chain is driven by the lookup failures
                 continue
-        else:
-            raise KeyError(f'{item!r}')
+        raise KeyError(f'{item!r}')
 
 
 class AwsParameterStore(AbstractConfigurationLoader):

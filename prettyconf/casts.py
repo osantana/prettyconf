@@ -1,15 +1,22 @@
+import base64
+import binascii
 import json
+from collections.abc import Mapping
+from typing import Any, ClassVar, Generic, TypeVar, overload
 
-from .exceptions import InvalidConfiguration
+from .exceptions import InvalidConfigurationError
+
+T = TypeVar('T')
+ContentT = TypeVar('ContentT', bytes, str)
 
 
 class AbstractCast:
     def __call__(self, value):
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError  # pragma: no cover
 
 
 class Boolean(AbstractCast):
-    default_values = {
+    default_values: ClassVar[dict[str, bool]] = {
         '1': True,
         'true': True,
         'yes': True,
@@ -25,18 +32,18 @@ class Boolean(AbstractCast):
     }
 
     def __init__(self, values=None):
-        self.values = self.default_values
+        self.values = dict(self.default_values)
         if isinstance(values, dict):
             self.values.update(values)
 
-    def __call__(self, value):
+    def __call__(self, value) -> bool:
         try:
             return self.values[str(value).lower()]
         except KeyError as ex:
-            raise InvalidConfiguration(f'Error casting value {value!r} to boolean') from ex
+            raise InvalidConfigurationError('Value is not a valid boolean') from ex
 
 
-class List(AbstractCast):
+class DelimitedSequence(AbstractCast):
     def __init__(self, delimiter=',', quotes='"\''):
         self.delimiter = delimiter
         self.quotes = quotes
@@ -73,21 +80,20 @@ class List(AbstractCast):
         if element:
             elements.append(''.join(element))
 
-        return self.cast(e.strip() for e in elements)
-
-    def cast(self, sequence):
-        return list(sequence)
-
-    def __call__(self, value):
-        return self._parse(value)
+        return [e.strip() for e in elements]
 
 
-class Tuple(List):
-    def cast(self, sequence):
-        return tuple(sequence)
+class List(DelimitedSequence):
+    def __call__(self, value) -> list[str]:
+        return list(self._parse(value))
 
 
-class Option(AbstractCast):
+class Tuple(DelimitedSequence):
+    def __call__(self, value) -> tuple[str, ...]:
+        return tuple(self._parse(value))
+
+
+class Option(AbstractCast, Generic[T]):
     """
     Example::
         _INSTALLED_APPS = ("foo", "bar")
@@ -97,21 +103,60 @@ class Option(AbstractCast):
         }))
     """
 
-    def __init__(self, options):
+    def __init__(self, options: Mapping[str, T]):
         self.options = options
 
-    def __call__(self, value):
+    def __call__(self, value) -> T:
         try:
             return self.options[value]
         except KeyError as ex:
-            raise InvalidConfiguration(f'Invalid option {value!r}') from ex
+            choices = ', '.join(repr(option) for option in self.options)
+            raise InvalidConfigurationError(f'Value is not one of the valid options: {choices}') from ex
 
 
 class JSON(AbstractCast):
-    def __call__(self, value):
+    def __call__(self, value) -> Any:
         try:
             return json.loads(value)
         except json.JSONDecodeError as ex:
-            raise InvalidConfiguration(f'Invalid option {value!r}') from ex
+            raise InvalidConfigurationError('Value is not valid JSON') from ex
         except TypeError:
             return value
+
+
+class Base64(AbstractCast, Generic[ContentT]):
+    @overload
+    def __init__(self: 'Base64[bytes]', encoding: None = None) -> None: ...
+
+    @overload
+    def __init__(self: 'Base64[str]', encoding: str) -> None: ...
+
+    def __init__(self, encoding=None):
+        self.encoding = encoding
+
+    def __repr__(self):
+        return f'Base64(encoding={self.encoding!r})'
+
+    @staticmethod
+    def _join_lines(value):
+        if isinstance(value, bytes):
+            return b''.join(value.split())
+
+        return ''.join(value.split())
+
+    def _decode(self, value) -> Any:
+        try:
+            content = base64.b64decode(self._join_lines(value), validate=True)
+        except (binascii.Error, TypeError, AttributeError) as ex:
+            raise InvalidConfigurationError('Value is not a valid base64 encoded file') from ex
+
+        if self.encoding is None:
+            return content
+
+        try:
+            return content.decode(self.encoding)
+        except (UnicodeDecodeError, LookupError) as ex:
+            raise InvalidConfigurationError(f'Base64 encoded file is not valid {self.encoding}') from ex
+
+    def __call__(self, value) -> ContentT:
+        return self._decode(value)

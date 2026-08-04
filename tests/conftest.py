@@ -1,12 +1,17 @@
-import os
+import importlib.util
 import shutil
 import tempfile
+from pathlib import Path
 
 import pytest
 
 from prettyconf.loaders import CommandLine
 
 from .factory import parser_factory
+
+collect_ignore = []
+if importlib.util.find_spec('botocore') is None:
+    collect_ignore.append('test_parameterstore.py')
 
 ENVFILE_CONTENT = """
 ENVFILE=Environment File Value
@@ -22,17 +27,17 @@ ENVFILE=Must be overrided
 
 @pytest.fixture
 def files_path():
-    return os.path.join(os.path.dirname(__file__), 'files')
+    return Path(__file__).parent / 'files'
 
 
 @pytest.fixture
 def inifile(files_path):
-    return os.path.join(files_path, 'config.ini')
+    return files_path / 'config.ini'
 
 
 @pytest.fixture
 def envfile(files_path):
-    return os.path.join(files_path, 'envfile')
+    return files_path / 'envfile'
 
 
 def parse_args():
@@ -48,7 +53,7 @@ def command_line_config():
 
 
 def _create_file(filename, content=''):
-    with open(filename, 'a') as file_:
+    with Path(filename).open('a') as file_:
         file_.write(content)
 
 
@@ -58,21 +63,21 @@ def create_file():
 
     def _create_fixture_file(filename, content=''):
         _create_file(filename, content)
-        remove_list.append(filename)
+        remove_list.append(Path(filename))
 
     yield _create_fixture_file
 
     for file in remove_list:
-        os.remove(file)
+        file.unlink()
 
 
 @pytest.fixture
 def create_dir():
-    tempdir = tempfile.mkdtemp()
+    tempdir = Path(tempfile.mkdtemp())
 
     def _create_tempdir(path=''):
-        full_path = os.path.join(tempdir, path)
-        os.makedirs(full_path, exist_ok=True)
+        full_path = tempdir / path
+        full_path.mkdir(parents=True, exist_ok=True)
         return tempdir, full_path
 
     yield _create_tempdir
@@ -82,19 +87,19 @@ def create_dir():
 
 @pytest.fixture
 def env_config(files_path):
-    envfile = files_path + '/../.env'
+    envfile = files_path.parent / '.env'
     _create_file(envfile, ENVFILE_CONTENT)
 
     yield envfile
 
-    os.remove(envfile)
+    envfile.unlink()
 
 
 @pytest.fixture
 def ini_config(files_path):
-    inifile = files_path + '/../settings.ini'
+    inifile = files_path.parent / 'settings.ini'
     _create_file(inifile, INIFILE_CONTENT)
 
     yield inifile
 
-    os.remove(inifile)
+    inifile.unlink()

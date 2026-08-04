@@ -1,12 +1,21 @@
+import base64
+import textwrap
+
 import pytest
 
 from prettyconf import config
-from prettyconf.casts import JSON, Boolean, List, Option, Tuple
-from prettyconf.exceptions import InvalidConfiguration
+from prettyconf.casts import JSON, Base64, Boolean, List, Option, Tuple
+from prettyconf.exceptions import InvalidConfigurationError
+
+PRIVATE_KEY = textwrap.dedent("""\
+    -----BEGIN PRIVATE KEY-----
+    MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg
+    -----END PRIVATE KEY-----
+    """)
 
 
 @pytest.mark.parametrize(
-    'value,result',
+    ('value', 'result'),
     [
         (1, True),
         ('1', True),
@@ -57,7 +66,7 @@ def test_more_valid_boolean_values():
 def test_fail_invalid_boolean_cast():
     boolean = Boolean()
 
-    with pytest.raises(InvalidConfiguration):
+    with pytest.raises(InvalidConfigurationError):
         boolean(42)
 
 
@@ -101,7 +110,7 @@ def test_fail_invalid_option_config():
     }
     option = Option(choices)
 
-    with pytest.raises(InvalidConfiguration):
+    with pytest.raises(InvalidConfigurationError):
         option('unknown')
 
 
@@ -110,7 +119,7 @@ def test_if_cast_is_unbounded():
 
 
 @pytest.mark.parametrize(
-    'value,result',
+    ('value', 'result'),
     [
         ('"string"', 'string'),
         ('["obj1", "obj2"]', ['obj1', 'obj2']),
@@ -126,5 +135,99 @@ def test_basic_json_cast_values(value, result):
 
 def test_fail_invalid_json_config():
     json = JSON()
-    with pytest.raises(InvalidConfiguration):
+    with pytest.raises(InvalidConfigurationError):
         json('invalid')
+
+
+def test_base64_cast_returns_bytes():
+    encoded = base64.b64encode(PRIVATE_KEY.encode()).decode()
+
+    assert Base64()(encoded) == PRIVATE_KEY.encode()
+
+
+def test_base64_cast_decodes_with_an_encoding():
+    encoded = base64.b64encode(PRIVATE_KEY.encode()).decode()
+
+    assert Base64('utf-8')(encoded) == PRIVATE_KEY
+
+
+def test_base64_cast_accepts_binary_content():
+    content = bytes(range(256))
+    encoded = base64.b64encode(content).decode()
+
+    assert Base64()(encoded) == content
+
+
+def test_base64_cast_joins_wrapped_lines():
+    content = PRIVATE_KEY.encode()
+    wrapped = '\n'.join(textwrap.wrap(base64.b64encode(content).decode(), 76))
+
+    assert '\n' in wrapped
+    assert Base64()(wrapped) == content
+
+
+def test_base64_cast_accepts_bytes_input():
+    encoded = base64.b64encode(PRIVATE_KEY.encode())
+
+    assert Base64()(encoded) == PRIVATE_KEY.encode()
+
+
+def test_base64_cast_repr():
+    assert repr(Base64('utf-8')) == "Base64(encoding='utf-8')"
+
+
+@pytest.mark.parametrize('value', ['not base64!', 'YWJj===', 42, None])
+def test_fail_invalid_base64(value):
+    with pytest.raises(InvalidConfigurationError):
+        Base64()(value)
+
+
+def test_fail_base64_that_is_not_text():
+    encoded = base64.b64encode(b'\xff\xfe binary').decode()
+
+    with pytest.raises(InvalidConfigurationError):
+        Base64('utf-8')(encoded)
+
+
+def test_base64_error_never_leaks_the_secret():
+    secret = base64.b64encode(PRIVATE_KEY.encode()).decode() + '!!!'
+
+    with pytest.raises(InvalidConfigurationError) as error:
+        Base64()(secret)
+
+    assert 'PRIVATE KEY' not in str(error.value)
+    assert secret not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    ('cast', 'value'),
+    [
+        (Boolean(), 'super-secret'),
+        (Option({'production': 1}), 'super-secret'),
+        (JSON(), 'super-secret'),
+        (Base64(), 'super-secret'),
+        (Base64('utf-8'), base64.b64encode(b'\xff\xfe').decode()),
+    ],
+)
+def test_no_cast_puts_the_rejected_value_in_its_error_message(cast, value):
+    with pytest.raises(InvalidConfigurationError) as error:
+        cast(value)
+
+    assert 'super-secret' not in str(error.value)
+    assert value not in str(error.value)
+
+
+def test_option_cast_error_lists_the_valid_choices():
+    option = Option({'production': 1, 'local': 2})
+
+    with pytest.raises(InvalidConfigurationError) as error:
+        option('unknown')
+
+    assert "'production'" in str(error.value)
+    assert "'local'" in str(error.value)
+
+
+def test_base64_cast_shortcut(monkeypatch):
+    monkeypatch.setenv('CREDENTIALS', base64.b64encode(b'{"type": "service_account"}').decode())
+
+    assert config('CREDENTIALS', cast=config.base64) == b'{"type": "service_account"}'

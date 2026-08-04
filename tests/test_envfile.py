@@ -87,7 +87,7 @@ def test_default_var_format(envfile):
     config = EnvFile(envfile)
 
     assert 'key' in config
-    assert 'Value' == config['key']
+    assert config['key'] == 'Value'
 
 
 def test_custom_var_format(envfile):
@@ -97,7 +97,7 @@ def test_custom_var_format(envfile):
     config = EnvFile(envfile, var_format=formatter)
 
     assert 'VAR' in config
-    assert 'test' == config['VAR']
+    assert config['VAR'] == 'test'
 
 
 def test_fail_missing_envfile_contains():
