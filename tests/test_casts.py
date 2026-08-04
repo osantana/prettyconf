@@ -182,12 +182,16 @@ def test_fail_invalid_base64(value):
         Base64()(value)
 
 
-@pytest.mark.parametrize('value', ['YWJj=', 'YWJj==', 'YWJj===', 'YWJ'])
-def test_fail_base64_with_malformed_padding(value):
-    # CPython only rejects these consistently from 3.12 on, so the cast checks
-    # the length itself to behave the same on every supported version.
+@pytest.mark.parametrize('value', ['YWJj=', 'YWJj==', 'YWJj===', 'YWJ', 'YW=j', '====', 'YWJjZB==', 'YWJj\u00ff'])
+def test_fail_base64_that_is_not_canonically_encoded(value):
     with pytest.raises(InvalidConfigurationError):
         Base64()(value)
+
+
+def test_base64_accepts_what_it_produces():
+    for content in [b'', b'a', b'ab', b'abc', b'abcd', bytes(range(256))]:
+        encoded = base64.b64encode(content).decode()
+        assert Base64()(encoded) == content
 
 
 def test_fail_base64_that_is_not_text():
