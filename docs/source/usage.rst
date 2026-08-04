@@ -10,11 +10,12 @@ You can import and use ``prettyconf`` in your Python code:
     MY_CONFIG = config("PROJECT_MY_CONFIG")
 
 If ``PROJECT_MY_CONFIG`` is not defined in an environment variable neither in a
-``.env`` (or ``*.cfg``) file, ``prettyconf`` will raise a
-``UnknownConfiguration`` exception.
+``.env`` (or ``*.cfg``) file, ``prettyconf`` will raise an
+``UnknownConfigurationError`` exception.
 
-.. warning:: ``prettyconf`` will skip configuration files inside ``.zip``,
-   ``.egg`` or wheel packages.
+.. warning:: ``prettyconf`` looks for configuration files on the filesystem, so
+   it will not find files packed inside an archive, such as a zipapp or a
+   wheel that is never unpacked.
 
 In these cases you could define a default configuration value:
 
@@ -35,6 +36,29 @@ The ``boolean`` cast converts strings values like ``On|Off``, ``1|0``,
 .. seealso::
     Find out more about other casts or how to write
     your own at :doc:`Casts<casts>`.
+
+
+.. _type-checking:
+
+Type checking
+~~~~~~~~~~~~~
+
+``prettyconf`` ships a ``py.typed`` marker, and ``config()`` infers its return
+type from the ``cast`` you pass, so a type checker knows what each setting is:
+
+.. code-block:: python
+
+    NAME = config("NAME")                                  # str
+    TIMEOUT = config("TIMEOUT", default=None)              # str | None
+    DEBUG = config("DEBUG", default=False, cast=config.boolean)  # bool
+    HOSTS = config("HOSTS", cast=config.list)              # list[str]
+    PORT = config("PORT", cast=int)                        # int
+
+Any callable works as a ``cast``, and its return type is what you get back, so
+custom casts are inferred too. Without a ``cast``, the value comes back as
+``str``, or as ``str | T`` when you pass a ``default`` of type ``T``.
+
+.. versionadded:: 3.0.0
 
 
 Configuration files discovery

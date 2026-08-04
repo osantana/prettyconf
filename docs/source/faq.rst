@@ -14,10 +14,10 @@ look similar to the code below:
     else:
         print(False)
 
-But this code have some issues:
+But this code has some issues:
 
 #. If *envvar* ``DEBUG=False`` this code will print ``True`` because
-   ``os.environ.get("DEBUG", False)`` will return an string `'False'` instead
+   ``os.environ.get("DEBUG", False)`` will return the string `'False'` instead
    of a boolean `False`. And a non-empty string has a ``True`` boolean value.
 #. We can't (dis|en)able debug with *envvars* ``DEBUG=yes|no``, ``DEBUG=1|0``,
    ``DEBUG=True|False``.
@@ -26,20 +26,22 @@ But this code have some issues:
    file that will be used if `DEBUG` *envvar* is not defined.
 
 
-Is prettyconf tied to Django_ or Flask_?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Is prettyconf tied to Django_, Flask_ or FastAPI_?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 No, prettyconf was designed to be framework agnostic, be it for the web or cli
-applications.
+applications. It works the same way in a Django ``settings.py``, in a Flask
+application factory or in a FastAPI startup module.
 
 .. _`Django`: https://www.djangoproject.com/
-.. _`Flask`: http://flask.pocoo.org/
+.. _`Flask`: https://flask.palletsprojects.com/
+.. _`FastAPI`: https://fastapi.tiangolo.com/
 
 
 What is the difference between prettyconf and python-decouple_?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-There is no subtantial difference between both libraries. ``prettyconf`` is
+There is no substantial difference between both libraries. ``prettyconf`` is
 highly inspired in ``python-decouple`` and provides almost the same API.
 
 The implementation of ``prettyconf`` is more extensible and flexible to make
@@ -88,5 +90,5 @@ because it is designed to discover configuration from diferent sources, the
 environment being just one of them.
 
 .. _`python-dotenv`: https://github.com/theskumar/python-dotenv
-.. _`pipenv`: https://pipenv.readthedocs.io/en/latest/advanced/#automatic-loading-of-env
-.. _`docker-compose`: https://docs.docker.com/compose/env-file/
+.. _`pipenv`: https://pipenv.pypa.io/en/latest/shell.html#automatic-loading-of-env
+.. _`docker-compose`: https://docs.docker.com/compose/how-tos/environment-variables/

@@ -7,7 +7,7 @@ settings and use the ``prettyconf``'s standard behaviour. But some times
 you need to change this behaviour.
 
 To make this changes possible you can always create your own
-``Configuration()`` instance and change it's default behaviour:
+``Configuration()`` instance and change its default behaviour:
 
 .. code-block:: python
 
@@ -15,8 +15,9 @@ To make this changes possible you can always create your own
 
     config = Configuration()
 
-.. warning:: ``prettyconf`` will skip configuration files inside ``.zip``,
-   ``.egg`` or wheel packages.
+.. warning:: ``prettyconf`` looks for configuration files on the filesystem, so
+   it will not find files packed inside an archive, such as a zipapp or a
+   wheel that is never unpacked.
 
 
 .. _discovery-customization:
@@ -24,7 +25,7 @@ To make this changes possible you can always create your own
 Customizing the configuration discovery
 +++++++++++++++++++++++++++++++++++++++
 
-By default the library will use the envrionment and the directory of the file
+By default the library will use the environment and the directory of the file
 where ``config()`` was called as the start directory to look for a ``.env``
 configuration file.  Consider the following file structure:
 
@@ -37,7 +38,7 @@ configuration file.  Consider the following file structure:
         settings.py
 
 If you call ``config()`` from ``project/app/settings.py`` the library will
-inspect the envrionment and then look for configuration files at
+inspect the environment and then look for configuration files at
 ``project/app``.
 
 You can change that behaviour, by customizing configuration loaders to look at
@@ -59,7 +60,7 @@ The example above will start looking for configuration in the environment and
 then in a ``.env`` file at ``project/`` instead of ``project/app``.
 
 Because ``config`` is nothing but an already instantiated ``Configuration`` object,
-you can also alter this ``loaders`` attribute in ``prettyconf.config`` before use it:
+you can also alter this ``loaders`` attribute in ``prettyconf.config`` before using it:
 
 .. code-block:: python
 
@@ -80,7 +81,7 @@ Read more about how loaders can be configured in the :doc:`loaders section<loade
 Naming conventions for variables
 ++++++++++++++++++++++++++++++++
 
-There happen to be some formating conventions for configuration paramenters
+There happen to be some formatting conventions for configuration parameters
 based on where they are set. For example, it is common to name environment
 variables in uppercase:
 
@@ -97,13 +98,13 @@ in lower case:
     debug=yes
     other_config=10
 
-command line argments have yet another conventions:
+command line arguments have yet another convention:
 
 .. code-block:: sh
 
     $ ./app.py --debug=yes --another-config=10
 
-Prettyconf let's you follow these aesthetics patterns by setting a
+Prettyconf lets you follow these aesthetic patterns by setting a
 ``var_format`` function when instantiating the :doc:`loaders<loaders>`.
 
 By default, the :py:class:`Environment<prettyconf.loaders.Environment>` is
@@ -113,7 +114,7 @@ env variables.
 .. code-block:: python
 
     from prettyconf import Configuration
-    from prettyconf.loaders import Environment 
+    from prettyconf.loaders import Environment
 
     config = Configuration(loaders=[Environment(var_format=str.upper)])
     debug = config('debug', default=False, cast=config.boolean)  # lookups for DEBUG=[yes|no]
@@ -138,18 +139,22 @@ that it has to keep looking down the loaders chain for a specific config.
     class YamlFile(AbstractConfigurationLoader):
         def __init__(self, filename):
             self.filename = filename
-            self.config = None
+            self.config = {}
+            self._initialized = False
 
         def _parse(self):
-            if self.config is not None:
+            if self._initialized:
                 return
-            with open(self.filename, 'r') as f:
-                self.config = yaml.load(f)
+
+            with open(self.filename) as yamlfile:
+                self.config = yaml.safe_load(yamlfile)
+
+            self._initialized = True
 
         def __contains__(self, item):
             try:
                 self._parse()
-            except:
+            except (OSError, yaml.YAMLError):
                 return False
 
             return item in self.config
@@ -157,9 +162,9 @@ that it has to keep looking down the loaders chain for a specific config.
         def __getitem__(self, item):
             try:
                 self._parse()
-            except:
+            except (OSError, yaml.YAMLError) as ex:
                 # KeyError tells prettyconf to keep looking elsewhere!
-                raise KeyError("{!r}".format(item))
+                raise KeyError(f"{item!r}") from ex
 
             return self.config[item]
 
