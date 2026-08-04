@@ -1,3 +1,78 @@
+3.0.0
+=====
+
+  Backward incompatible changes:
+
+  - Rewrite the ``.env`` parser to follow shell/bash rules. A ``#`` now only
+    starts a comment at the beginning of a line or after whitespace, so
+    ``PASSWORD=abc#123`` reads as ``abc#123`` instead of ``abc``. A backslash
+    now escapes the next character and is dropped from the value, so
+    ``VALUE=a\#b`` reads as ``a#b`` instead of ``a``. Quoting state no longer
+    leaks from one variable into the next. **This changes values silently**:
+    review any ``.env`` entry containing ``#`` or ``\`` before upgrading.
+  - Drop support for Python 3.9. The minimum supported version is now 3.10.
+  - ``default`` is now an explicit keyword-only argument instead of being read
+    from ``**kwargs``. Passing an unexpected keyword argument raises
+    ``TypeError`` instead of being silently ignored.
+  - ``config.option`` is now a factory function rather than the ``Option`` class
+    itself, so the option type survives the attribute access.
+  - ``Tuple`` is no longer a subclass of ``List``; both now derive from
+    ``DelimitedSequence``, and the undocumented ``List.cast()`` hook is gone.
+  - Casts no longer put the value they rejected in their error message, which
+    leaked secrets into tracebacks and logs. The message now names the
+    configuration that failed and why, and ``Option`` lists the valid choices
+    instead of the rejected value.
+  - A ``KeyError`` raised by a cast is no longer mistaken for "this loader does
+    not have the variable". Only a ``KeyError`` from a loader moves the lookup
+    down the chain, as the documentation always described.
+
+  Deprecations:
+
+  - Every exception was renamed to carry the ``Error`` suffix
+    (``ConfigurationError``, ``InvalidConfigurationError``, ``InvalidPathError``,
+    ``UnknownConfigurationError``, ``InvalidConfigurationFileError`` and
+    ``MissingSettingsSectionError``). The old names are aliases of the new ones,
+    so existing ``except`` clauses keep working; importing them now emits a
+    ``DeprecationWarning`` and they will be removed in a future release.
+
+  Other changes:
+
+  - ``config()`` now infers its return type from the ``cast`` argument, so
+    ``config("DEBUG", cast=config.boolean)`` is typed as ``bool`` and
+    ``config("PORT", cast=int)`` as ``int``. The package ships a ``py.typed``
+    marker, so the annotations reach the type checkers of anyone installing it
+  - Add a ``config.base64`` cast, which decodes a whole file encoded as a single
+    base64 string, so credentials that only exist as files (a ``.json`` service
+    account, a ``.p8`` signing key) fit in one configuration variable. It
+    returns ``bytes``, or ``str`` when built as ``Base64("utf-8")``
+  - Add support for Python 3.14
+  - Fix ``Boolean(values)`` mutating the class-wide ``default_values``
+    dictionary, which leaked custom values into every other instance
+  - Document the exception hierarchy, which was not documented at all
+  - Document the ``.env`` file syntax: comments, quoting, escaping and line
+    continuation, including what changed in this release
+  - Mention FastAPI alongside Django and Flask in the documentation and in the
+    package classifiers, and fix the package keywords, which described a
+    different project entirely
+  - Fix the Read the Docs build, which pointed at a ``conf.py`` path that does
+    not exist, and install the package itself so the API docs are generated
+  - Modernize the Sphinx configuration and drop the 2015 ``sphinx-quickstart``
+    boilerplate, including the duplicated ``docs/Makefile`` and ``docs/make.bat``
+    now that ``make docs`` builds the documentation
+  - Document the development workflow and the installation requirements in the
+    README
+  - Fix the documented ``config.option`` example, the ``RecursiveSearch``
+    default arguments, the custom loader example, and several dead links
+  - Rewrite the Makefile around uv (setup, update-deps, fix-lock, lint,
+    format, typecheck, test, coverage, docs, build, release)
+  - Declare an explicit build backend (hatchling)
+  - Track the latest version of every development dependency
+  - Add type checking with ``ty``
+  - Enable a much stricter set of ruff rules
+  - Replace ``os.path`` with ``pathlib`` across the discovery chain
+  - Skip the parameter store tests when the optional ``aws`` feature is not
+    installed, instead of failing to collect the test suite
+
 2.3.0
 =====
 
