@@ -139,16 +139,20 @@ class Base64(AbstractCast, Generic[ContentT]):
 
     @staticmethod
     def _join_lines(value):
-        if isinstance(value, bytes):
-            return b''.join(value.split())
+        if isinstance(value, str):
+            value = value.encode('ascii')
 
-        return ''.join(value.split())
+        return b''.join(value.split())
 
     def _decode(self, value) -> Any:
         try:
-            content = base64.b64decode(self._join_lines(value), validate=True)
-        except (binascii.Error, TypeError, AttributeError) as ex:
+            data = self._join_lines(value)
+            content = base64.b64decode(data, validate=True)
+        except (binascii.Error, TypeError, AttributeError, UnicodeEncodeError) as ex:
             raise InvalidConfigurationError('Value is not a valid base64 encoded file') from ex
+
+        if base64.b64encode(content) != data:
+            raise InvalidConfigurationError('Value is not canonically encoded base64')
 
         if self.encoding is None:
             return content

@@ -11,6 +11,10 @@ VERSION = $(shell $(UV) version --short)
 SRC = prettyconf
 TEST = tests
 DOCS = docs
+CI_WORKFLOW = .github/workflows/tests.yml
+
+# The supported interpreters are declared once, in the package classifiers.
+PYTHON_VERSIONS = $(shell sed -n 's/.*Programming Language :: Python :: \(3\.[0-9][0-9]*\)".*/\1/p' pyproject.toml)
 
 # Run any target against another interpreter with `make test PYTHON=3.10`. Each
 # version gets its own virtualenv, so switching back and forth does not rebuild
@@ -54,7 +58,7 @@ fix-lock: .make/ensure-uv ## regenerate and stage the uv lock file
 	@git add uv.lock
 
 .PHONY: lint
-lint: $(SETUP) ## run linters on all files
+lint: $(SETUP) check-versions ## run linters on all files
 	$(RUFF) check $(SRC) $(TEST)
 	$(RUFF) format --check $(SRC) $(TEST)
 
@@ -70,6 +74,22 @@ typecheck: $(SETUP) ## run type checking with ty
 .PHONY: test
 test: $(SETUP) ## run all tests (use ARGS="..." to pass extra arguments to pytest)
 	$(PYTEST) -v $(TEST) $(ARGS)
+
+.PHONY: test-all
+test-all: ## run the test suite against every supported python version
+	@for version in $(PYTHON_VERSIONS); do \
+		echo "--- python $$version ---"; \
+		$(MAKE) --no-print-directory test PYTHON=$$version ARGS="$(ARGS)" || exit 1; \
+	done
+
+.PHONY: check-versions
+check-versions: ## fail when the CI matrix drifts from the supported python classifiers
+	@declared=$$(echo $(PYTHON_VERSIONS) | xargs); \
+	matrix=$$(sed -n 's/^ *python-version: *\[\(.*\)\] *$$/\1/p' $(CI_WORKFLOW) | tr -d '"' | tr ',' ' ' | xargs); \
+	if [ "$$declared" != "$$matrix" ]; then \
+		echo "$(CI_WORKFLOW) tests [$$matrix], but pyproject.toml declares support for [$$declared]"; \
+		exit 1; \
+	fi
 
 .PHONY: coverage
 coverage: $(SETUP) ## run all tests with coverage report
