@@ -1,6 +1,6 @@
 [project]
 name = "prettyconf"
-version = "3.0.0"
+version = "3.0.1"
 description = "Separation of settings from code."
 readme = "README.rst"
 license = "MIT"

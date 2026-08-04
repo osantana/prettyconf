@@ -10,6 +10,9 @@
   - Add a ``make test-all`` target, which runs the test suite against every
     supported python version, and a ``make check-versions`` check that fails
     when the CI matrix drifts from the classifiers in ``pyproject.toml``.
+  - Fix the release workflow passing an empty python version to ``setup-uv``,
+    and declaring job permissions that dropped the ``contents: read`` needed by
+    the checkout step.
 
 3.0.0
 =====
