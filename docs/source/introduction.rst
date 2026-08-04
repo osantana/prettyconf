@@ -2,8 +2,9 @@ What's prettyconf
 -----------------
 
 Prettyconf is a framework agnostic python library created to make easy the
-separation of configuration and code following the recomendations of `12
-Factor`_'s topic about configs.
+separation of configuration and code following the recommendations of `12
+Factor`_'s topic about configs. It works the same way under Django_, Flask_,
+FastAPI_ or a plain command line script.
 
 
 Motivation
@@ -36,4 +37,7 @@ This raises the need to consolidate configuration in a single source of truth
 to avoid having config management scattered all over the codebase.
 
 
-.. _`12 Factor`: http://12factor.net/
+.. _`12 Factor`: https://12factor.net/
+.. _`Django`: https://www.djangoproject.com/
+.. _`Flask`: https://flask.palletsprojects.com/
+.. _`FastAPI`: https://fastapi.tiangolo.com/

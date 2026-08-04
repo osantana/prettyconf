@@ -1,5 +1,4 @@
 from collections.abc import Iterator
-from typing import Union
 
 STATE_INITIAL = 'initial'
 STATE_PARSING_KEY = 'parsing_key'
@@ -49,8 +48,9 @@ class EnvFileParser:
         self._current_value = []
         self._current_quote = ''
         self._key_parsed = False
+        self._previous_char = ''
 
-    def parse_config(self) -> Iterator[tuple[str, str]]:
+    def parse_config(self) -> Iterator[tuple[str, str]]:  # noqa: C901 - character-by-character state machine
         key = self._current_key
         value = self._current_value
 
@@ -61,13 +61,18 @@ class EnvFileParser:
                     yield self._return_current_config()
                 break
 
-            if self._process_initial(char):
+            previous, self._previous_char = self._previous_char, char
+
+            if self._parse_escaped_value(char):
+                continue
+
+            if self._process_initial(char, previous):
                 continue
 
             if self._process_quotes(char):
                 continue
 
-            if self._start_comment(char):
+            if self._start_comment(char, previous):
                 continue
 
             parsed_value = self._finish_comment(char)
@@ -85,17 +90,17 @@ class EnvFileParser:
                     yield parsed_value
                 continue
 
-            if self._parse_escaped_value(char):
-                continue
+    def _start_comment(self, char, previous):
+        if char != COMMENT or self._current_quote:
+            return False
 
-    def _start_comment(self, char):
-        if char == COMMENT and (not self._current_quote or self.state == STATE_INITIAL):
-            self.state = STATE_PARSING_COMMENT
-            return True
+        if previous and previous not in SPACES:
+            return False
 
-        return False
+        self.state = STATE_PARSING_COMMENT
+        return True
 
-    def _finish_comment(self, char) -> Union[bool, tuple[str, str]]:
+    def _finish_comment(self, char) -> bool | tuple[str, str]:
         if not (self.state == STATE_PARSING_COMMENT and char == END_OF_LINE):
             return False
 
@@ -120,11 +125,11 @@ class EnvFileParser:
         self._current_value.append(char)
         return True
 
-    def _process_initial(self, char):
+    def _process_initial(self, char, previous):
         if self.state != STATE_INITIAL:
             return False
 
-        if self._start_comment(char):
+        if self._start_comment(char, previous):
             return True
 
         if char in SPACES:
@@ -150,7 +155,7 @@ class EnvFileParser:
         self._current_key.append(char)
         return True
 
-    def _parse_value(self, char) -> Union[bool, tuple[str, str]]:
+    def _parse_value(self, char) -> bool | tuple[str, str]:
         if self.state != STATE_PARSING_VALUE:
             return False
 
@@ -172,13 +177,11 @@ class EnvFileParser:
             return False
 
         if char == END_OF_LINE:
-            # resume value parsing on the next line
             self.state = STATE_PARSING_VALUE
             return True
 
-        # That was a literal \
         self.state = STATE_PARSING_VALUE
-        self._current_value.extend([ESCAPE_CHAR, char])
+        self._current_value.append(char)
         return True
 
     def _return_current_config(self) -> tuple[str, str]:
@@ -190,4 +193,5 @@ class EnvFileParser:
         self.state = STATE_INITIAL
         self._current_key.clear()
         self._current_value.clear()
+        self._current_quote = ''
         self._key_parsed = False

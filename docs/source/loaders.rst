@@ -2,14 +2,14 @@ Configuration Loaders
 ---------------------
 
 Loaders are in charge of loading configuration from various sources, like
-``.ini`` files or *environment* variables. Loaders are ment to chained, so that
-prettyconf checks one by one for a given configuration variable.
+``.ini`` files or *environment* variables. Loaders are meant to be chained, so
+that prettyconf checks one by one for a given configuration variable.
 
 Prettyconf comes with some loaders already included in ``prettyconf.loaders``.
 
 .. seealso::
     Some loaders include a ``var_format`` callable argument, see
-    :ref:`variable-naming` to read more about it's purpose.
+    :ref:`variable-naming` to read more about its purpose.
 
 
 
@@ -56,6 +56,23 @@ doesn't exist, this loader will be skipped without raising any errors.
     config.loaders = [EnvFile(filename='.env', var_format=str.upper)]
     config('debug')  # will look for a `DEBUG` variable
 
+
+The file syntax follows the same rules a shell would apply:
+
+.. code-block:: text
+
+    # a comment on its own line
+    DEBUG=1              # and a trailing comment, introduced by a spaced `#`
+    PASSWORD=abc#123     # not a comment: `#` glued to the value is kept
+    ESCAPED=a\#b         # a backslash escapes the next character: `a#b`
+    QUOTED="spam eggs"   # quotes preserve spaces and are stripped
+    MULTILINE=first\
+    second               # a trailing backslash continues the value
+
+.. versionchanged:: 3.0.0
+    Comments and escaping used to be handled differently: any unquoted ``#``
+    started a comment, and a backslash was kept in the value. Values such as
+    ``PASSWORD=abc#123`` were truncated at the ``#``.
 
 .. note::
     You might want to use dump-env_, a utility to create ``.env`` files.
@@ -195,7 +212,7 @@ The ``root_path`` must be a parent directory of ``starting_path``:
     # Code example in project/app/settings.py
     from prettyconf.loaders import RecursiveSearch
 
-    # /baz is not parent of /foo/bar, so this raises an InvalidPath exception here
+    # /baz is not parent of /foo/bar, so this raises an InvalidPathError exception here
     rs = RecursiveSearch(starting_path="/foo/bar", root_path="/baz")
 
 

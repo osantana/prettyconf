@@ -1,15 +1,16 @@
 [project]
 name = "prettyconf"
-version = "2.3.0"
+version = "3.0.0"
 description = "Separation of settings from code."
 readme = "README.rst"
 license = "MIT"
 license-files = ["LICENSE.txt", "AUTHORS.md"]
 authors = [{ name = "Osvaldo Santana Neto", email = "prettyconf@osantana.me" }]
-keywords = ["asyncio", "dispatcher", "message", "microservices", "tasks"]
+keywords = ["12factor", "configuration", "dotenv", "env", "environment", "settings"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Framework :: Django",
+    "Framework :: FastAPI",
     "Framework :: Flask",
     "Intended Audience :: Developers",
     "Natural Language :: English",
@@ -19,45 +20,98 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: Python",
     "Topic :: Software Development :: Libraries",
 ]
-requires-python = ">=3.9"
-dependencies = []
+requires-python = ">=3.10"
 
 [project.optional-dependencies]
 aws = ["boto3>=1.28.0,<2.0.0"]
 
 [dependency-groups]
 dev = [
-    "pytest>=7.4.0,<8.0.0",
-    "pytest-cov>=4.0.0,<5.0.0",
-    "pytest-runner>=6.0.0,<7.0.0",
-    "coveralls>=3.3.0,<4.0.0",
-    "ruff>=0.0.290,<0.1.0"
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "ty",
+    "typing-extensions", # assert_type on Python 3.10; only used by tests/typing_examples.py
+    "boto3-stubs[ssm]",
 ]
 
 [project.urls]
 Source = "https://github.com/osantana/prettyconf"
 Download = "https://github.com/osantana/prettyconf/releases"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["prettyconf"]
+
+[tool.hatch.build.targets.sdist]
+include = ["prettyconf", "tests", "docs", "CHANGES.txt", "README.rst"]
+
 [tool.ruff]
-target-version = "py39"
+target-version = "py310"
 line-length = 120
+extend-exclude = ["docs"] # sphinx boilerplate, not ours to lint
 
 [tool.ruff.format]
 line-ending = "lf"
 quote-style = "single"
 
 [tool.ruff.lint]
+# Not enabled on purpose:
+#   Q     - the formatter already owns quoting style
+#   EM    - exception messages are short enough to stay inline
+#   TRY   - raise-vanilla-args conflicts with the exception hierarchy
 select = [
-    "E", # pycodestyle errors
-    "W", # pycodestyle warnings
-    "F", # pyflakes
-    "I", # isort
+    "A", # flake8-builtins
+    "ARG", # flake8-unused-arguments
     "B", # flake8-bugbear
+    "BLE", # flake8-blind-except
     "C4", # flake8-comprehensions
+    "C90", # mccabe
+    "DTZ", # flake8-datetimez
+    "E", # pycodestyle errors
+    "ERA", # eradicate
+    "F", # pyflakes
+    "FBT", # flake8-boolean-trap
+    "FURB", # refurb
+    "G", # flake8-logging-format
+    "I", # isort
+    "ICN", # flake8-import-conventions
+    "INP", # flake8-no-pep420
+    "ISC", # flake8-implicit-str-concat
+    "LOG", # flake8-logging
+    "N", # pep8-naming
+    "PERF", # perflint
+    "PIE", # flake8-pie
+    "PL", # pylint
+    "PT", # flake8-pytest-style
+    "PTH", # flake8-use-pathlib
+    "PYI", # flake8-pyi
+    "RET", # flake8-return
+    "RSE", # flake8-raise
+    "RUF", # ruff-specific rules
+    "S", # flake8-bandit
+    "SIM", # flake8-simplify
+    "SLF", # flake8-self
+    "SLOT", # flake8-slots
+    "T20", # flake8-print
+    "TC", # flake8-type-checking
+    "TID", # flake8-tidy-imports
     "UP", # pyupgrade
+    "W", # pycodestyle warnings
+    "YTT", # flake8-2020
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "ARG001", # fixtures are requested for their side effects
+    "PLR2004", # comparing against literals is the point of a test
+    "S101", # pytest tests assert
 ]

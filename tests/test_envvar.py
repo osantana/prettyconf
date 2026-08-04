@@ -10,7 +10,7 @@ def test_basic_config():
     config = Environment()
 
     assert 'TEST' in config
-    assert 'test' == config['TEST']
+    assert config['TEST'] == 'test'
     assert repr(config).startswith('Environment(var_format=')
 
     del os.environ['TEST']
@@ -29,7 +29,7 @@ def test_default_var_format():
     config = Environment()
 
     assert 'test' in config
-    assert 'test' == config['test']
+    assert config['test'] == 'test'
 
     del os.environ['TEST']
 
@@ -42,6 +42,6 @@ def test_custom_var_format():
     config = Environment(var_format=formatter)
 
     assert 'TEST' in config
-    assert 'test' == config['TEST']
+    assert config['TEST'] == 'test'
 
     del os.environ['_TEST']
