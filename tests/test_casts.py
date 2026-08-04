@@ -55,11 +55,11 @@ def test_basic_boolean_cast_values(value, result):
 
 
 def test_more_valid_boolean_values():
-    boolean = Boolean({'sim': True, 'não': False})
+    boolean = Boolean({'enabled': True, 'disabled': False})
 
-    assert boolean('sim')
+    assert boolean('enabled')
     assert boolean('yes')
-    assert not boolean('não')
+    assert not boolean('disabled')
     assert not boolean('no')
 
 
