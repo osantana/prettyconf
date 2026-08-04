@@ -63,6 +63,13 @@ def test_more_valid_boolean_values():
     assert not boolean('no')
 
 
+def test_custom_boolean_values_do_not_leak_into_other_instances():
+    Boolean({'enabled': True})
+
+    assert 'enabled' not in Boolean.default_values
+    assert 'enabled' not in Boolean().values
+
+
 def test_fail_invalid_boolean_cast():
     boolean = Boolean()
 
