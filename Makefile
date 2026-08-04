@@ -1,18 +1,104 @@
-test:
-	pytest
+SHELL := /bin/bash
 
-lint:
-	flake8 prettyconf tests
+UV := uv
 
-clean:
-	-find . -iname "*.py[ocd]" -delete
-	-find . -iname "__pycache__" -exec rm -rf {} \;
-	-rm -rf dist
+RUFF = $(UV) run ruff
+TY = $(UV) run ty
+PYTEST = $(UV) run pytest
+SPHINX = $(UV) run --with-requirements $(DOCS)/requirements.txt sphinx-build
+VERSION = $(shell $(UV) version --short)
 
-release: clean lint test
-	git tag `python setup.py -q version`
-	git push origin `python setup.py -q version`
-	rm -rf dist/*
-	python setup.py sdist
-	twine check dist/*
-	twine upload dist/*
+SRC = prettyconf
+TEST = tests
+DOCS = docs
+
+# Run any target against another interpreter with `make test PYTHON=3.10`. Each
+# version gets its own virtualenv, so switching back and forth does not rebuild
+# the default environment. The setup stamp lives inside the virtualenv on
+# purpose: removing the virtualenv has to invalidate it, or the next run would
+# silently reuse an environment that was never synced.
+VENV = $(if $(PYTHON),.venv$(subst .,,$(PYTHON)),.venv)
+SETUP = $(VENV)/.make-setup
+export UV_PROJECT_ENVIRONMENT := $(VENV)
+ifdef PYTHON
+export UV_PYTHON := $(PYTHON)
+endif
+
+.DEFAULT_GOAL := help
+
+# Targets
+.make/ensure-uv:
+	@$(UV) --version > /dev/null 2>&1 || ./bin/install-uv.sh
+	@mkdir -p .make/ && touch .make/ensure-uv
+
+uv.lock: .make/ensure-uv pyproject.toml
+	$(UV) lock --no-upgrade
+	touch uv.lock  # force update even when not changed
+
+$(SETUP): uv.lock
+	$(UV) sync --locked --all-extras
+	@touch $(SETUP)
+
+# Development
+.PHONY: setup
+setup: $(SETUP) ## install all requirements and prepare the environment for local development
+
+.PHONY: update-deps
+update-deps: $(SETUP) ## update all dependencies to their latest versions
+	$(UV) lock -U
+	$(UV) sync -U --all-extras
+
+.PHONY: fix-lock
+fix-lock: .make/ensure-uv ## regenerate and stage the uv lock file
+	$(UV) lock
+	@git add uv.lock
+
+.PHONY: lint
+lint: $(SETUP) ## run linters on all files
+	$(RUFF) check $(SRC) $(TEST)
+	$(RUFF) format --check $(SRC) $(TEST)
+
+.PHONY: format
+format: $(SETUP) ## run formatters on all files
+	$(RUFF) format $(SRC) $(TEST)
+	$(RUFF) check $(SRC) $(TEST) --fix
+
+.PHONY: typecheck
+typecheck: $(SETUP) ## run type checking with ty
+	$(TY) check $(SRC) $(TEST)/typing_examples.py
+
+.PHONY: test
+test: $(SETUP) ## run all tests (use ARGS="..." to pass extra arguments to pytest)
+	$(PYTEST) -v $(TEST) $(ARGS)
+
+.PHONY: coverage
+coverage: $(SETUP) ## run all tests with coverage report
+	$(PYTEST) -v --cov=$(SRC) --cov-report=term --cov-report=xml --cov-report=term-missing $(TEST) $(ARGS)
+
+.PHONY: docs
+docs: $(SETUP) ## build the HTML documentation into docs/build/html
+	$(SPHINX) -b html $(DOCS)/source $(DOCS)/build/html
+
+.PHONY: build
+build: $(SETUP) ## build the sdist and the wheel into dist/
+	rm -rf dist
+	$(UV) build
+
+.PHONY: release
+release: lint test build ## tag the current version and publish the GitHub release (CI uploads to PyPI)
+	git tag -a "$(VERSION)" -m "Release $(VERSION)"
+	git push origin "$(VERSION)"
+	gh release create "$(VERSION)" --title "$(VERSION)" --generate-notes
+
+.PHONY: clean
+clean: ## remove all makefile targets and build artifacts
+	rm -f .make/[a-z]* .venv*/.make-setup
+	rm -rf dist build coverage.xml .coverage .ruff_cache .pytest_cache $(DOCS)/build
+	# a stale egg-info shadows the installed metadata and reports the wrong version
+	rm -rf $(SRC).egg-info
+	-find . -name "__pycache__" -type d -prune -exec rm -rf {} +
+	-find . -name "*.py[co]" -delete
+
+.PHONY: help
+help: ## show this help text
+	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-14s\033[0m %s\n", $$1, $$2}'

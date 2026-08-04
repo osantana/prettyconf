@@ -2,8 +2,13 @@
 *.py[co]
 __pycache__
 .idea
+.make/
+.pytest_cache/
+.ruff_cache/
 .tox
+.venv*/
 .coverage
+coverage.xml
 dist/
 build/
 README.html

@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ "3.9", "3.10", "3.11", "3.12", "3.13" ]
+        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
 
     steps:
       - uses: actions/checkout@v4
@@ -32,13 +32,16 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install the project
-        run: uv sync --all-extras --dev
+        run: make setup
 
       - name: Run lint
-        run: uv run ruff check .
+        run: make lint
+
+      - name: Run type checking
+        run: make typecheck
 
       - name: Run tests
-        run: uv run pytest --cov=prettyconf tests
+        run: make coverage
 
       - name: Coveralls
         uses: coverallsapp/github-action@v2
