@@ -1,7 +1,7 @@
 from typing_extensions import assert_type
 
 from prettyconf import config
-from prettyconf.casts import Base64
+from prettyconf.casts import Base64, Secret, SecretValue
 
 
 def _without_cast(fallback: int) -> None:
@@ -22,6 +22,13 @@ def _with_builtin_casts() -> None:
 def _with_callable_casts() -> None:
     assert_type(config('PORT', cast=int), int)
     assert_type(config('NUMBERS', cast=lambda value: [int(v) for v in value.split(';')]), list[int])
+
+
+def _with_secret_casts() -> None:
+    assert_type(config('API_KEY', cast=config.secret), SecretValue[str])
+    assert_type(config('CREDENTIALS', cast=Secret(config.base64)), SecretValue[bytes])
+    assert_type(config('PORT', cast=Secret(int)), SecretValue[int])
+    assert_type(config('PORT', cast=Secret(int)).reveal(), int)
 
 
 def _with_option_cast() -> None:
