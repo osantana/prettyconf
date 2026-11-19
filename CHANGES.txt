@@ -1,13 +1,13 @@
 3.1.0
 =====
 
-  - Add a ``Secret`` cast, which wraps any other cast and returns a
+  - Add the ``config.secret()`` cast, which wraps any other cast and returns a
     ``SecretValue`` that shows as ``***`` in ``repr``, ``str`` and logs, and only
-    hands the value over through ``reveal()``. ``config.secret`` covers the plain
-    string case and ``Secret(config.base64)``, ``Secret(config.json)`` or
-    ``Secret(int)`` cover the rest. A ``SecretValue`` is not a string on
-    purpose: serializing or concatenating it raises ``TypeError`` instead of
-    leaking the secret.
+    hands the value over through ``reveal()``. ``config.secret()`` covers the
+    plain string case and ``config.secret(config.base64)``,
+    ``config.secret(config.json)`` or ``config.secret(int)`` cover the rest. A
+    ``SecretValue`` is not a string on purpose: serializing or concatenating it
+    raises ``TypeError`` instead of leaking the secret.
 
 3.0.1
 =====

@@ -37,11 +37,25 @@ class Configuration:
     eval = staticmethod(ast.literal_eval)
     json = JSON()
     base64 = Base64()  # Base64('utf-8') decodes to str instead
-    secret = Secret()  # Secret(config.base64) wraps another cast instead
 
     @staticmethod
     def option(options: Mapping[str, T]) -> Option[T]:
         return Option(options)
+
+    @overload
+    @staticmethod
+    def secret() -> Secret[str]: ...
+
+    @overload
+    @staticmethod
+    def secret(cast: Callable[..., T]) -> Secret[T]: ...
+
+    @staticmethod
+    def secret(cast=None):
+        if cast is not None and not callable(cast):
+            raise TypeError('config.secret takes a cast: use cast=config.secret() for a plain secret')
+
+        return Secret(cast)
 
     def __init__(self, loaders=None):
         self._recursive_search = None

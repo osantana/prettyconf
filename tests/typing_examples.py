@@ -25,10 +25,12 @@ def _with_callable_casts() -> None:
 
 
 def _with_secret_casts() -> None:
-    assert_type(config('API_KEY', cast=config.secret), SecretValue[str])
-    assert_type(config('CREDENTIALS', cast=Secret(config.base64)), SecretValue[bytes])
+    assert_type(config('API_KEY', cast=config.secret()), SecretValue[str])
+    assert_type(config('API_KEY', cast=config.secret(str)), SecretValue[str])
+    assert_type(config('CREDENTIALS', cast=config.secret(config.base64)), SecretValue[bytes])
+    assert_type(config('PORT', cast=config.secret(int)), SecretValue[int])
+    assert_type(config('PORT', cast=config.secret(int)).reveal(), int)
     assert_type(config('PORT', cast=Secret(int)), SecretValue[int])
-    assert_type(config('PORT', cast=Secret(int)).reveal(), int)
 
 
 def _with_option_cast() -> None:

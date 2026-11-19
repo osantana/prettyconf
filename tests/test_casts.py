@@ -314,7 +314,25 @@ def test_secret_cast_repr():
 def test_secret_cast_shortcut(monkeypatch):
     monkeypatch.setenv('API_KEY', 'sk-live-123')
 
-    secret = config('API_KEY', cast=config.secret)
+    secret = config('API_KEY', cast=config.secret())
 
     assert isinstance(secret, SecretValue)
     assert secret.reveal() == 'sk-live-123'
+
+
+def test_secret_cast_shortcut_wraps_another_cast(monkeypatch):
+    monkeypatch.setenv('CREDENTIALS', base64.b64encode(b'private key').decode())
+    monkeypatch.setenv('PIN', '1234')
+
+    assert config('CREDENTIALS', cast=config.secret(config.base64)).reveal() == b'private key'
+    assert config('PIN', cast=config.secret(int)).reveal() == 1234
+    assert config('PIN', cast=config.secret(str)).reveal() == '1234'
+
+
+def test_fail_secret_cast_shortcut_used_without_calling_it(monkeypatch):
+    monkeypatch.setenv('API_KEY', 'sk-live-123')
+
+    with pytest.raises(TypeError) as error:
+        config('API_KEY', cast=config.secret)
+
+    assert 'sk-live-123' not in str(error.value)
