@@ -3,7 +3,7 @@ from pathlib import Path
 from typing_extensions import assert_type
 
 from prettyconf import config
-from prettyconf.casts import Base64
+from prettyconf.casts import Base64, List
 from prettyconf.wrappers import SecretValue
 
 
@@ -20,6 +20,11 @@ def _with_builtin_casts() -> None:
     assert_type(config('HOSTS', cast=config.tuple), tuple[str, ...])
     assert_type(config('CREDENTIALS', cast=config.base64), bytes)
     assert_type(config('CREDENTIALS', cast=Base64('utf-8')), str)
+    assert_type(config('PORT', cast=config.int), int)
+    assert_type(config('PORT', config.int), int)
+    assert_type(config('PORTS', cast=config.list[config.int]), list[int])
+    assert_type(config('FLAGS', cast=config.tuple[config.boolean]), tuple[bool, ...])
+    assert_type(config('HOSTS', cast=List(delimiter=';')), list[str])
 
 
 def _with_callable_casts() -> None:
@@ -35,6 +40,7 @@ def _with_wrappers() -> None:
     assert_type(config('DEBUG', cast=config.boolean, default=False, wrapper=config.secret), SecretValue[bool])
     assert_type(config('DEBUG', cast=config.boolean, wrapper=SecretValue), SecretValue[bool])
     assert_type(config('DEBUG', cast=config.boolean, wrapper=config.secret).reveal(), bool)
+    assert_type(config('PORTS', cast=config.list[config.int], wrapper=config.secret), SecretValue[list[int]])
     assert_type(config('DATA_DIR', wrapper=Path), Path)
 
 

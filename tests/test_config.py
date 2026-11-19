@@ -4,6 +4,7 @@ import os
 import pytest
 
 from prettyconf import config as package_config
+from prettyconf.casts import AbstractCast
 from prettyconf.configuration import Configuration
 from prettyconf.exceptions import InvalidConfigurationError, UnknownConfigurationError
 from prettyconf.loaders import EnvFile, Environment, IniFile
@@ -46,7 +47,63 @@ def test_config_default_values():
 def test_config_cast_value():
     os.environ['INTEGER'] = '42'
     config = Configuration()
-    assert config('INTEGER', cast=int) == 42
+    assert config('INTEGER', cast=config.int) == 42
+
+
+def test_cast_can_be_given_as_the_second_argument():
+    os.environ['INTEGER'] = '42'
+    config = Configuration()
+    assert config('INTEGER', config.int) == 42
+
+
+def test_plain_callable_as_cast_still_works_but_is_deprecated():
+    os.environ['INTEGER'] = '42'
+    config = Configuration()
+
+    with pytest.warns(DeprecationWarning, match=r'config\.int'):
+        assert config('INTEGER', cast=int) == 42
+
+
+def test_deprecation_points_plain_functions_to_the_base_class():
+    os.environ['INTEGER'] = '42'
+    config = Configuration()
+
+    with pytest.warns(DeprecationWarning, match='AbstractCast'):
+        assert config('INTEGER', cast=lambda value: value * 2) == '4242'
+
+
+def test_deprecation_is_reported_at_the_line_that_passed_the_cast():
+    os.environ['INTEGER'] = '42'
+    config = Configuration()
+
+    with pytest.warns(DeprecationWarning, match='deprecated') as caught:
+        config('INTEGER', cast=int)
+
+    assert caught[0].filename == __file__
+
+
+def test_custom_cast_subclass_is_not_deprecated(recwarn):
+    class Doubled(AbstractCast):
+        def __call__(self, value):
+            return value * 2
+
+    os.environ['INTEGER'] = '42'
+    config = Configuration()
+
+    assert config('INTEGER', cast=Doubled()) == '4242'
+    assert config('INTEGER') == '42'
+    assert not recwarn.list
+
+
+def test_cast_error_from_a_number_names_the_configuration_without_leaking(monkeypatch):
+    monkeypatch.setenv('PORT', 'super-secret')
+    config = Configuration()
+
+    with pytest.raises(InvalidConfigurationError) as error:
+        config('PORT', cast=config.int)
+
+    assert 'PORT' in str(error.value)
+    assert 'super-secret' not in str(error.value)
 
 
 def test_fail_invalid_cast_type():

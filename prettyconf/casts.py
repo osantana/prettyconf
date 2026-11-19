@@ -1,18 +1,69 @@
+import ast
 import base64
 import binascii
+import copy
 import json
-from collections.abc import Mapping
+import warnings
+from collections.abc import Callable, Mapping
 from typing import Any, ClassVar, Generic, TypeVar, overload
 
 from .exceptions import InvalidConfigurationError
 
 T = TypeVar('T')
+U = TypeVar('U')
 ContentT = TypeVar('ContentT', bytes, str)
+
+NATIVE_TYPE_REPLACEMENTS = (
+    (bool, 'config.boolean'),
+    (int, 'config.int'),
+    (float, 'config.float'),
+    (list, 'config.list'),
+    (tuple, 'config.tuple'),
+    (dict, 'config.json'),
+)
 
 
 class AbstractCast:
     def __call__(self, value):
         raise NotImplementedError  # pragma: no cover
+
+
+def warn_unless_cast(cast, stacklevel=3):
+    if isinstance(cast, AbstractCast):
+        return
+
+    replacement = 'a subclass of prettyconf.casts.AbstractCast'
+    for native_type, shortcut in NATIVE_TYPE_REPLACEMENTS:
+        if cast is native_type:
+            replacement = shortcut
+
+    warnings.warn(
+        f'Passing {cast!r} as a cast is deprecated and will stop working in a future release. '
+        f'Use {replacement} instead.',
+        DeprecationWarning,
+        stacklevel=stacklevel,
+    )
+
+
+class Integer(AbstractCast):
+    def __call__(self, value) -> int:
+        try:
+            return int(value)
+        except (TypeError, ValueError) as ex:
+            raise InvalidConfigurationError('Value is not a valid integer') from ex
+
+
+class Float(AbstractCast):
+    def __call__(self, value) -> float:
+        try:
+            return float(value)
+        except (TypeError, ValueError) as ex:
+            raise InvalidConfigurationError('Value is not a valid float') from ex
+
+
+class Eval(AbstractCast):
+    def __call__(self, value) -> Any:
+        return ast.literal_eval(value)
 
 
 class Boolean(AbstractCast):
@@ -43,12 +94,19 @@ class Boolean(AbstractCast):
             raise InvalidConfigurationError('Value is not a valid boolean') from ex
 
 
-class DelimitedSequence(AbstractCast):
-    def __init__(self, delimiter=',', quotes='"\''):
+class DelimitedSequence(AbstractCast, Generic[T]):
+    def __init__(self: 'DelimitedSequence[str]', delimiter=',', quotes='"\''):
         self.delimiter = delimiter
         self.quotes = quotes
+        self.cast: Callable[..., Any] = str
 
-    def _parse(self, string):
+    def _with_cast(self, cast) -> Any:
+        warn_unless_cast(cast, stacklevel=4)
+        sequence = copy.copy(self)
+        sequence.cast = cast
+        return sequence
+
+    def _parse(self, string) -> list[Any]:
         elements = []
         element = []
         quote = ''
@@ -80,16 +138,22 @@ class DelimitedSequence(AbstractCast):
         if element:
             elements.append(''.join(element))
 
-        return [e.strip() for e in elements]
+        return [self.cast(e.strip()) for e in elements]
 
 
-class List(DelimitedSequence):
-    def __call__(self, value) -> list[str]:
+class List(DelimitedSequence[T]):
+    def __getitem__(self, cast: Callable[..., U]) -> 'List[U]':
+        return self._with_cast(cast)
+
+    def __call__(self, value) -> list[T]:
         return list(self._parse(value))
 
 
-class Tuple(DelimitedSequence):
-    def __call__(self, value) -> tuple[str, ...]:
+class Tuple(DelimitedSequence[T]):
+    def __getitem__(self, cast: Callable[..., U]) -> 'Tuple[U]':
+        return self._with_cast(cast)
+
+    def __call__(self, value) -> tuple[T, ...]:
         return tuple(self._parse(value))
 
 

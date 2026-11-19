@@ -31,7 +31,7 @@ everywhere and only hands the real value over when you call ``reveal()``.
     from prettyconf import config
 
     API_KEY = config("API_KEY", wrapper=config.secret)
-    PIN = config("PIN", cast=int, wrapper=config.secret)
+    PIN = config("PIN", cast=config.int, wrapper=config.secret)
     CREDENTIALS = config("GOOGLE_CREDENTIALS", cast=config.base64, wrapper=config.secret)
 
     print(API_KEY)            # ***

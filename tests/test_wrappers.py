@@ -59,7 +59,7 @@ def test_wrapper_runs_after_the_cast(monkeypatch):
     config = Configuration()
 
     assert config('CREDENTIALS', cast=config.base64, wrapper=config.secret).reveal() == b'private key'
-    assert config('PIN', cast=int, wrapper=config.secret).reveal() == 1234
+    assert config('PIN', cast=config.int, wrapper=config.secret).reveal() == 1234
     assert config('DEBUG', config.boolean, wrapper=config.secret).reveal() is True
 
 

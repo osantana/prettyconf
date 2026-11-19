@@ -4,7 +4,7 @@ import textwrap
 import pytest
 
 from prettyconf import config
-from prettyconf.casts import JSON, Base64, Boolean, List, Option, Tuple
+from prettyconf.casts import JSON, AbstractCast, Base64, Boolean, Float, Integer, List, Option, Tuple
 from prettyconf.exceptions import InvalidConfigurationError
 
 PRIVATE_KEY = textwrap.dedent("""\
@@ -250,3 +250,69 @@ def test_base64_cast_shortcut(monkeypatch):
     monkeypatch.setenv('CREDENTIALS', base64.b64encode(b'{"type": "service_account"}').decode())
 
     assert config('CREDENTIALS', cast=config.base64) == b'{"type": "service_account"}'
+
+
+@pytest.mark.parametrize(
+    ('cast', 'value', 'result'),
+    [
+        (Integer(), '42', 42),
+        (Integer(), 42, 42),
+        (Float(), '1.5', 1.5),
+        (Float(), '2', 2.0),
+    ],
+)
+def test_number_casts(cast, value, result):
+    assert cast(value) == result
+
+
+@pytest.mark.parametrize(
+    ('cast', 'value'),
+    [
+        (Integer(), 'super-secret'),
+        (Integer(), '1.5'),
+        (Integer(), None),
+        (Float(), 'super-secret'),
+        (Float(), None),
+    ],
+)
+def test_fail_invalid_number_without_leaking_the_value(cast, value):
+    with pytest.raises(InvalidConfigurationError) as error:
+        cast(value)
+
+    assert 'super-secret' not in str(error.value)
+
+
+def test_sequence_casts_convert_their_elements_with_another_cast():
+    assert List()[Integer()]('1, 2, 3') == [1, 2, 3]
+    assert Tuple()[Float()]('1.5, 2') == (1.5, 2.0)
+    assert config.list[config.boolean]('yes, no') == [True, False]
+
+
+def test_sequence_cast_keeps_its_options_when_given_an_element_cast():
+    assert List(delimiter=';')[Integer()]('1; 2') == [1, 2]
+
+
+def test_sequence_cast_shortcut_is_not_changed_by_an_element_cast():
+    assert config.list[config.int]('1, 2') == [1, 2]
+    assert config.list('1, 2') == ['1', '2']
+
+
+def test_fail_invalid_element_in_a_sequence_cast():
+    with pytest.raises(InvalidConfigurationError):
+        List()[Integer()]('1, two')
+
+
+def test_sequence_cast_warns_about_an_element_cast_that_is_not_a_cast():
+    with pytest.warns(DeprecationWarning, match=r'config\.int') as caught:
+        List()[int]
+
+    assert caught[0].filename == __file__
+
+
+def test_every_cast_shortcut_is_a_cast():
+    shortcuts = ['boolean', 'int', 'float', 'list', 'tuple', 'eval', 'json', 'base64']
+
+    for shortcut in shortcuts:
+        assert isinstance(getattr(config, shortcut), AbstractCast)
+
+    assert isinstance(config.option({'production': 1}), AbstractCast)

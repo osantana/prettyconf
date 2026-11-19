@@ -52,11 +52,13 @@ type from the ``cast`` you pass, so a type checker knows what each setting is:
     TIMEOUT = config("TIMEOUT", default=None)              # str | None
     DEBUG = config("DEBUG", default=False, cast=config.boolean)  # bool
     HOSTS = config("HOSTS", cast=config.list)              # list[str]
-    PORT = config("PORT", cast=int)                        # int
+    PORTS = config("PORTS", cast=config.list[config.int])  # list[int]
+    PORT = config("PORT", cast=config.int)                 # int
+    WORKERS = config("WORKERS", config.int)                # int, cast given by position
 
-Any callable works as a ``cast``, and its return type is what you get back, so
-custom casts are inferred too. Without a ``cast``, the value comes back as
-``str``, or as ``str | T`` when you pass a ``default`` of type ``T``.
+The return type of the cast is what you get back, so custom casts are inferred
+too. Without a ``cast``, the value comes back as ``str``, or as ``str | T`` when
+you pass a ``default`` of type ``T``.
 
 .. versionadded:: 3.0.0
 

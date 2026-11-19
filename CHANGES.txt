@@ -2,15 +2,33 @@
 =====
 
   - Add a ``wrapper`` argument to ``config()``, which receives the value after
-    the cast: ``config("PIN", cast=int, wrapper=config.secret)``. A cast decides
-    the type of a setting and a wrapper decides what happens to the value next,
-    so the two are independent.
+    the cast: ``config("PIN", cast=config.int, wrapper=config.secret)``. A cast
+    decides the type of a setting and a wrapper decides what happens to the
+    value next, so the two are independent.
   - Add the ``config.secret`` wrapper, which puts the value in a ``SecretValue``
     that shows as ``***`` in ``repr``, ``str`` and logs, and only hands the value
     over through ``reveal()``. A ``SecretValue`` is not a string on purpose:
     serializing or concatenating it raises ``TypeError`` instead of leaking the
     secret. Type checkers follow the cast through it, so the example above is a
     ``SecretValue[int]``.
+  - Add the ``config.int`` and ``config.float`` casts. Unlike ``cast=int``, they
+    raise ``InvalidConfigurationError`` naming the variable, and never put the
+    rejected value in the message.
+  - ``config.list`` and ``config.tuple`` take an element cast:
+    ``config.list[config.int]`` returns a ``list[int]``, for the type checker
+    and at runtime.
+  - ``config.eval`` is now a cast object like the others, instead of a bare
+    function.
+
+  Deprecations:
+
+  - Passing anything that is not an ``AbstractCast`` instance as a cast emits a
+    ``DeprecationWarning``, and will stop working in the next major release.
+    That covers the native types (``cast=int``, ``cast=bool``, ``cast=list``),
+    plain functions and lambdas. The native types were never reliable casts:
+    ``bool("false")`` is ``True`` and ``list("a,b")`` splits the string into
+    characters. Use the ``config.*`` casts, or inherit from ``AbstractCast`` to
+    write your own.
 
 3.0.1
 =====

@@ -1,10 +1,9 @@
-import ast
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, TypeVar, overload
 
-from .casts import JSON, Base64, Boolean, List, Option, Tuple
+from .casts import JSON, Base64, Boolean, Eval, Float, Integer, List, Option, Tuple, warn_unless_cast
 from .exceptions import InvalidConfigurationError, UnknownConfigurationError
 from .loaders import Environment, RecursiveSearch
 from .wrappers import SecretValue
@@ -24,6 +23,10 @@ class _NotGiven:
 _NOT_GIVEN = _NotGiven()
 
 
+def _unchanged(value):
+    return value
+
+
 def _caller_path():
     # MAGIC! Get the caller's module path.
     # noinspection PyProtectedMember
@@ -34,9 +37,11 @@ def _caller_path():
 class Configuration:
     # Shortcut for standard casts
     boolean = Boolean()
+    int = Integer()
+    float = Float()
     list = List()
     tuple = Tuple()
-    eval = staticmethod(ast.literal_eval)
+    eval = Eval()
     json = JSON()
     base64 = Base64()  # Base64('utf-8') decodes to str instead
 
@@ -90,12 +95,15 @@ class Configuration:
         self, item: str, cast: Callable[..., Any] = ..., *, default: Any = ..., wrapper: Callable[..., W]
     ) -> W: ...
 
-    def __call__(self, item, cast=lambda v: v, *, default=_NOT_GIVEN, wrapper=lambda v: v):
+    def __call__(self, item, cast=_unchanged, *, default=_NOT_GIVEN, wrapper=_unchanged):
         if not callable(cast):
             raise TypeError('Cast must be callable')
 
         if not callable(wrapper):
             raise TypeError('Wrapper must be callable')
+
+        if cast is not _unchanged:
+            warn_unless_cast(cast)
 
         if self._recursive_search:
             self._recursive_search.starting_path = _caller_path()

@@ -6,10 +6,14 @@ Builtin Casts
 
 #. ``config.boolean`` - converts values like ``On|Off``, ``1|0``, ``yes|no``,
    ``true|false``, ``t|f`` into booleans.
+#. ``config.int`` - converts the value into an integer.
+#. ``config.float`` - converts the value into a float.
 #. ``config.eval`` - safely evaluate strings with Python literals to Python
    objects (alias to Python's ``ast.literal_eval``).
-#. ``config.list`` - converts comma separated strings into lists.
-#. ``config.tuple`` - converts comma separated strings into tuples.
+#. ``config.list`` - converts comma separated strings into lists. Give it
+   another cast to convert the elements: ``config.list[config.int]``.
+#. ``config.tuple`` - converts comma separated strings into tuples. It takes an
+   element cast the same way: ``config.tuple[config.float]``.
 #. ``config.json`` - unserialize a string with JSON object into Python.
 #. ``config.base64`` - decodes a whole file encoded as a single base64
    string, see :ref:`base64`.
@@ -76,17 +80,39 @@ end up in your logs.
 Custom casts
 ~~~~~~~~~~~~
 
-You can implement your own custom casting function:
+A cast is an instance of a class that inherits from ``AbstractCast`` and
+implements ``__call__``:
 
 .. code-block:: python
 
-   def number_list(value) -> list[int]:
-       return [int(v) for v in value.split(";")]
+   from prettyconf import config
+   from prettyconf.casts import AbstractCast
+   from prettyconf.exceptions import InvalidConfigurationError
 
-   NUMBERS = config("NUMBERS", default="1;2;3", cast=number_list)
 
-Annotating the return type of your cast is what lets a type checker infer that
-``NUMBERS`` is a ``list[int]``. See :ref:`type-checking`.
+   class Percentage(AbstractCast):
+       def __call__(self, value) -> float:
+           number = config.float(value)
+           if not 0 <= number <= 100:
+               raise InvalidConfigurationError("Value is not between 0 and 100")
+
+           return number / 100
+
+
+   DISCOUNT = config("DISCOUNT", default="10", cast=Percentage())
+
+Annotating the return type of ``__call__`` is what lets a type checker infer
+that ``DISCOUNT`` is a ``float``. See :ref:`type-checking`. Raise
+``InvalidConfigurationError`` saying *why* the value is wrong, and leave the
+value itself out of the message: ``prettyconf`` adds the name of the variable.
+
+.. deprecated:: 3.1.0
+    Passing anything that is not an ``AbstractCast`` instance as a cast, such as
+    ``cast=int``, ``cast=bool`` or a plain function, still works but emits a
+    ``DeprecationWarning``, and will stop working in the next major release.
+    The native types were never reliable casts: ``bool("false")`` is ``True``
+    and ``list("a,b")`` is ``["a", ",", "b"]``. Use ``config.int``,
+    ``config.boolean``, ``config.list`` and friends, or write a subclass.
 
 
 Useful third-parties casts
@@ -105,9 +131,24 @@ strings into that inner structures:
   parameters used in Django ``EMAIL_*`` configurations.
 * `dj-admins-setting`_ - Parses emails lists for the ``ADMINS`` configuration.
 
+These libraries expose plain functions, so wrap the one you need in a cast:
+
+.. code-block:: python
+
+    import dj_database_url
+    from prettyconf import config
+    from prettyconf.casts import AbstractCast
+
+
+    class DatabaseURL(AbstractCast):
+        def __call__(self, value) -> dict:
+            return dj_database_url.parse(value)
+
+
+    DATABASES = {"default": config("DATABASE_URL", cast=DatabaseURL())}
+
 Frameworks that do not impose a settings structure, like Flask_ and FastAPI_,
-usually need nothing more than the builtin casts. A cast is just a callable, so
-anything that turns a string into the value your framework expects will do:
+usually need nothing more than the builtin casts:
 
 .. code-block:: python
 
