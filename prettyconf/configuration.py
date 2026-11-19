@@ -4,7 +4,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, TypeVar, overload
 
-from .casts import JSON, Base64, Boolean, List, Option, Tuple
+from .casts import JSON, Base64, Boolean, List, Option, Secret, Tuple
 from .exceptions import InvalidConfigurationError, UnknownConfigurationError
 from .loaders import Environment, RecursiveSearch
 
@@ -37,6 +37,7 @@ class Configuration:
     eval = staticmethod(ast.literal_eval)
     json = JSON()
     base64 = Base64()  # Base64('utf-8') decodes to str instead
+    secret = Secret()  # Secret(config.base64) wraps another cast instead
 
     @staticmethod
     def option(options: Mapping[str, T]) -> Option[T]:

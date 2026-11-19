@@ -1,7 +1,7 @@
 import base64
 import binascii
 import json
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any, ClassVar, Generic, TypeVar, overload
 
 from .exceptions import InvalidConfigurationError
@@ -164,3 +164,48 @@ class Base64(AbstractCast, Generic[ContentT]):
 
     def __call__(self, value) -> ContentT:
         return self._decode(value)
+
+
+class SecretValue(Generic[T]):
+    __slots__ = ('_value',)
+
+    def __init__(self, value: T):
+        self._value = value
+
+    def __repr__(self):
+        return 'SecretValue(***)'
+
+    def __str__(self):
+        return '***'
+
+    def __bool__(self):
+        return bool(self._value)
+
+    def __eq__(self, other):
+        if isinstance(other, SecretValue):
+            return self._value == other._value
+
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self._value)
+
+    def reveal(self) -> T:
+        return self._value
+
+
+class Secret(AbstractCast, Generic[T]):
+    @overload
+    def __init__(self: 'Secret[str]', cast: None = None) -> None: ...
+
+    @overload
+    def __init__(self: 'Secret[T]', cast: Callable[..., T]) -> None: ...
+
+    def __init__(self, cast=None):
+        self.cast: Callable[..., Any] = str if cast is None else cast
+
+    def __repr__(self):
+        return f'Secret(cast={self.cast!r})'
+
+    def __call__(self, value) -> SecretValue[T]:
+        return SecretValue(self.cast(value))

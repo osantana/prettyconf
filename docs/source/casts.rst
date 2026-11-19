@@ -13,6 +13,8 @@ Builtin Casts
 #. ``config.json`` - unserialize a string with JSON object into Python.
 #. ``config.base64`` - decodes a whole file encoded as a single base64
    string, see :ref:`base64`.
+#. ``config.secret`` - keeps the value out of logs and tracebacks until you ask
+   for it, see :ref:`secret`.
 #. ``config.option`` - get a return value based on specific options:
 
 .. code-block:: python
@@ -71,6 +73,49 @@ the rejected value never appears in the error message, so a broken key does not
 end up in your logs.
 
 .. versionadded:: 3.0.0
+
+
+.. _secret:
+
+Keeping secrets out of logs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A password or an API key read as a plain string ends up wherever the settings
+object is printed: a debug page, a log line, an error tracker. ``config.secret``
+wraps the value in a ``SecretValue``, which shows as ``***`` everywhere and only
+hands the real value over when you call ``reveal()``:
+
+.. code-block:: python
+
+    from prettyconf import config
+
+    API_KEY = config("API_KEY", cast=config.secret)
+
+    print(API_KEY)            # ***
+    repr(API_KEY)             # SecretValue(***)
+    API_KEY.reveal()          # the actual key
+
+``Secret`` is not a cast of its own kind: it wraps another cast, so any value
+can be a secret, whatever its type.
+
+.. code-block:: python
+
+    from prettyconf.casts import Secret
+
+    CREDENTIALS = config("GOOGLE_CREDENTIALS", cast=Secret(config.base64))
+    DATABASE = config("DATABASE", cast=Secret(config.json))
+    PIN = config("PIN", cast=Secret(int))
+
+    CREDENTIALS.reveal()      # bytes
+    PIN.reveal()              # int
+
+A ``SecretValue`` is deliberately not a string. Serializing it with
+``json.dumps`` or concatenating it raises ``TypeError`` instead of quietly
+writing the secret out, and it never compares equal to a plain value. The price
+is that it cannot be handed to a library as it is: pass ``reveal()`` at the
+point where the secret is actually needed.
+
+.. versionadded:: 3.1.0
 
 
 Custom casts
