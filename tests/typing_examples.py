@@ -3,7 +3,7 @@ from pathlib import Path
 from typing_extensions import assert_type
 
 from prettyconf import config
-from prettyconf.casts import Base64, List
+from prettyconf.casts import AbstractCast, Base64, List
 from prettyconf.wrappers import SecretValue
 
 
@@ -25,6 +25,17 @@ def _with_builtin_casts() -> None:
     assert_type(config('PORTS', cast=config.list[config.int]), list[int])
     assert_type(config('FLAGS', cast=config.tuple[config.boolean]), tuple[bool, ...])
     assert_type(config('HOSTS', cast=List(delimiter=';')), list[str])
+
+
+class _Upper(AbstractCast[str]):
+    def __call__(self, value) -> str:
+        return value.upper()
+
+
+def _with_custom_casts() -> None:
+    assert_type(config('NAME', cast=_Upper()), str)
+    assert_type(config('NAMES', cast=config.list[_Upper()]), list[str])
+    assert_type(config('NAME', cast=_Upper(), wrapper=config.secret), SecretValue[str])
 
 
 def _with_callable_casts() -> None:

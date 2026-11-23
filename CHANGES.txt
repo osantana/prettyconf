@@ -23,6 +23,11 @@
     prefix to every name, so ``config["AUTH0_"]("TOKEN")`` reads
     ``AUTH0_TOKEN``. Namespaces can be nested and take the same arguments as
     ``config``.
+  - ``AbstractCast`` is generic on the type the cast returns:
+    ``class Percentage(AbstractCast[float])``. PyCharm now infers the type of
+    ``config.base64``, ``Base64("utf-8")`` and ``config.option(...)``, which it
+    reported as an unsolved type variable since 3.0.0.
+  - Add support for Python 3.15.
 
   Deprecations:
 

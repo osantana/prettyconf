@@ -80,7 +80,7 @@ Custom casts
 ~~~~~~~~~~~~
 
 A cast is an instance of a class that inherits from ``AbstractCast`` and
-implements ``__call__``:
+implements ``__call__``. Put the type it returns between the brackets:
 
 .. code-block:: python
 
@@ -89,7 +89,7 @@ implements ``__call__``:
    from prettyconf.exceptions import InvalidConfigurationError
 
 
-   class Percentage(AbstractCast):
+   class Percentage(AbstractCast[float]):
        def __call__(self, value) -> float:
            number = config.float(value)
            if not 0 <= number <= 100:
@@ -100,8 +100,8 @@ implements ``__call__``:
 
    DISCOUNT = config("DISCOUNT", default="10", cast=Percentage())
 
-Annotate the return type of ``__call__`` and a type checker will know that
-``DISCOUNT`` is a ``float``. See :ref:`type-checking`. When the value is wrong,
+With ``AbstractCast[float]``, type checkers and IDEs know that ``DISCOUNT`` is a
+``float``. See :ref:`type-checking`. When the value is wrong,
 raise ``InvalidConfigurationError`` with the reason and leave the value out of
 the message. ``prettyconf`` adds the name of the variable.
 
@@ -139,7 +139,7 @@ These libraries expose plain functions, so wrap the one you need in a cast:
     from prettyconf.casts import AbstractCast
 
 
-    class DatabaseURL(AbstractCast):
+    class DatabaseURL(AbstractCast[dict]):
         def __call__(self, value) -> dict:
             return dj_database_url.parse(value)
 

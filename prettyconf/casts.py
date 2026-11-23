@@ -1,7 +1,6 @@
 import ast
 import base64
 import binascii
-import copy
 import json
 import warnings
 from collections.abc import Callable, Mapping
@@ -23,8 +22,8 @@ NATIVE_TYPE_REPLACEMENTS = (
 )
 
 
-class AbstractCast:
-    def __call__(self, value):
+class AbstractCast(Generic[T]):
+    def __call__(self, value) -> T:
         raise NotImplementedError  # pragma: no cover
 
 
@@ -45,7 +44,7 @@ def warn_unless_cast(cast, stacklevel=3):
     )
 
 
-class Integer(AbstractCast):
+class Integer(AbstractCast[int]):
     def __call__(self, value) -> int:
         try:
             return int(value)
@@ -53,7 +52,7 @@ class Integer(AbstractCast):
             raise InvalidConfigurationError('Value is not a valid integer') from ex
 
 
-class Float(AbstractCast):
+class Float(AbstractCast[float]):
     def __call__(self, value) -> float:
         try:
             return float(value)
@@ -61,7 +60,7 @@ class Float(AbstractCast):
             raise InvalidConfigurationError('Value is not a valid float') from ex
 
 
-class Eval(AbstractCast):
+class Eval(AbstractCast[Any]):
     def __call__(self, value) -> Any:
         try:
             return ast.literal_eval(value)
@@ -69,7 +68,7 @@ class Eval(AbstractCast):
             raise InvalidConfigurationError('Value is not a valid Python literal') from ex
 
 
-class Boolean(AbstractCast):
+class Boolean(AbstractCast[bool]):
     default_values: ClassVar[dict[str, bool]] = {
         '1': True,
         'true': True,
@@ -97,17 +96,11 @@ class Boolean(AbstractCast):
             raise InvalidConfigurationError('Value is not a valid boolean') from ex
 
 
-class DelimitedSequence(AbstractCast, Generic[T]):
-    def __init__(self: 'DelimitedSequence[str]', delimiter=',', quotes='"\''):
+class DelimitedSequence(AbstractCast[T]):
+    def __init__(self, delimiter=',', quotes='"\''):
         self.delimiter = delimiter
         self.quotes = quotes
         self.cast: Callable[..., Any] = str
-
-    def _with_cast(self, cast) -> Any:
-        warn_unless_cast(cast, stacklevel=4)
-        sequence = copy.copy(self)
-        sequence.cast = cast
-        return sequence
 
     def _parse(self, string) -> list[Any]:
         elements = []
@@ -144,23 +137,43 @@ class DelimitedSequence(AbstractCast, Generic[T]):
         return [self.cast(e.strip()) for e in elements]
 
 
-class List(DelimitedSequence[T]):
-    def __getitem__(self, cast: Callable[..., U]) -> 'List[U]':
-        return self._with_cast(cast)
+class ListOf(DelimitedSequence[list[U]]):
+    def __init__(self, cast: AbstractCast[U], delimiter=',', quotes='"\''):
+        super().__init__(delimiter, quotes)
+        self.cast = cast
 
-    def __call__(self, value) -> list[T]:
+    def __call__(self, value) -> list[U]:
         return list(self._parse(value))
 
 
-class Tuple(DelimitedSequence[T]):
-    def __getitem__(self, cast: Callable[..., U]) -> 'Tuple[U]':
-        return self._with_cast(cast)
+class List(DelimitedSequence[list[str]]):
+    def __getitem__(self, cast: AbstractCast[U]) -> ListOf[U]:
+        warn_unless_cast(cast)
+        return ListOf(cast, self.delimiter, self.quotes)
 
-    def __call__(self, value) -> tuple[T, ...]:
+    def __call__(self, value) -> list[str]:
+        return list(self._parse(value))
+
+
+class TupleOf(DelimitedSequence[tuple[U, ...]]):
+    def __init__(self, cast: AbstractCast[U], delimiter=',', quotes='"\''):
+        super().__init__(delimiter, quotes)
+        self.cast = cast
+
+    def __call__(self, value) -> tuple[U, ...]:
         return tuple(self._parse(value))
 
 
-class Option(AbstractCast, Generic[T]):
+class Tuple(DelimitedSequence[tuple[str, ...]]):
+    def __getitem__(self, cast: AbstractCast[U]) -> TupleOf[U]:
+        warn_unless_cast(cast)
+        return TupleOf(cast, self.delimiter, self.quotes)
+
+    def __call__(self, value) -> tuple[str, ...]:
+        return tuple(self._parse(value))
+
+
+class Option(AbstractCast[T]):
     """
     Example::
         _INSTALLED_APPS = ("foo", "bar")
@@ -181,7 +194,7 @@ class Option(AbstractCast, Generic[T]):
             raise InvalidConfigurationError(f'Value is not one of the valid options: {choices}') from ex
 
 
-class JSON(AbstractCast):
+class JSON(AbstractCast[Any]):
     def __call__(self, value) -> Any:
         try:
             return json.loads(value)
@@ -191,7 +204,7 @@ class JSON(AbstractCast):
             return value
 
 
-class Base64(AbstractCast, Generic[ContentT]):
+class Base64(AbstractCast[ContentT]):
     @overload
     def __init__(self: 'Base64[bytes]', encoding: None = None) -> None: ...
 

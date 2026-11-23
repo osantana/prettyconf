@@ -4,7 +4,19 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, TypeVar, overload
 
-from .casts import JSON, Base64, Boolean, Eval, Float, Integer, List, Option, Tuple, warn_unless_cast
+from .casts import (
+    JSON,
+    AbstractCast,
+    Base64,
+    Boolean,
+    Eval,
+    Float,
+    Integer,
+    List,
+    Option,
+    Tuple,
+    warn_unless_cast,
+)
 from .exceptions import InvalidConfigurationError, UnknownConfigurationError
 from .loaders import Environment, RecursiveSearch
 from .wrappers import SecretValue
@@ -30,7 +42,6 @@ def _unchanged(value):
 
 def _caller_path():
     # MAGIC! Get the caller's module path.
-    # noinspection PyProtectedMember
     frame = sys._getframe(MAGIC_FRAME_DEPTH)  # noqa: SLF001
     return str(Path(frame.f_code.co_filename).resolve().parent)
 
@@ -81,16 +92,21 @@ class Configuration:
     def __call__(self, item: str, *, default: D) -> str | D: ...
 
     @overload
-    def __call__(self, item: str, cast: Callable[..., T]) -> T: ...
+    def __call__(self, item: str, cast: AbstractCast[T], *, default: Any = ...) -> T: ...
 
     @overload
-    def __call__(self, item: str, cast: Callable[..., T], *, default: Any) -> T: ...
+    def __call__(self, item: str, cast: Callable[..., T], *, default: Any = ...) -> T: ...
 
     @overload
     def __call__(self, item: str, *, wrapper: type[SecretValue[Any]]) -> SecretValue[str]: ...
 
     @overload
     def __call__(self, item: str, *, default: D, wrapper: type[SecretValue[Any]]) -> SecretValue[str | D]: ...
+
+    @overload
+    def __call__(
+        self, item: str, cast: AbstractCast[T], *, default: Any = ..., wrapper: type[SecretValue[Any]]
+    ) -> SecretValue[T]: ...
 
     @overload
     def __call__(
