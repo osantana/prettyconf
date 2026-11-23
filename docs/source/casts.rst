@@ -4,6 +4,11 @@ Casts
 Builtin Casts
 ~~~~~~~~~~~~~
 
+A configuration value always arrives as text. A cast reads that text and
+returns the value your code will use. The builtin casts do one of three jobs.
+
+Some return a value of one type:
+
 #. ``config.boolean`` - converts values like ``On|Off``, ``1|0``, ``yes|no``,
    ``true|false``, ``t|f`` into booleans.
 #. ``config.int`` - converts the value into an integer.
@@ -13,16 +18,29 @@ Builtin Casts
 #. ``config.path`` - converts the value into a ``pathlib.Path``.
 #. ``config.enum`` - converts the name or the value of a member into that
    member of an ``Enum``, see :ref:`enum`.
+
+Some read a format, which is a way of writing a structure as text:
+
+#. ``config.list`` - reads comma separated values into a list.
+#. ``config.tuple`` - reads comma separated values into a tuple.
+#. ``config.json`` - reads a JSON document. What you get is what the document
+   holds, usually a ``dict`` or a ``list``.
 #. ``config.eval`` - safely evaluate strings with Python literals to Python
    objects (alias to Python's ``ast.literal_eval``).
-#. ``config.list`` - converts comma separated strings into lists. Give it
-   another cast to convert the elements: ``config.list[config.int]``.
-#. ``config.tuple`` - converts comma separated strings into tuples. It takes an
-   element cast the same way: ``config.tuple[config.float]``.
-#. ``config.json`` - unserialize a string with JSON object into Python.
+
+One undoes an encoding, which is what made a value fit in a single line:
+
 #. ``config.base64`` - decodes a whole file encoded as a single base64
    string, see :ref:`base64`.
-#. ``config.option`` - get a return value based on specific options:
+
+A list, a tuple and a base64 string contain something else, so these casts take
+the cast of their content between brackets. ``config.list[config.int]`` is a
+list of integers, and ``config.base64[config.json]`` is a JSON document encoded
+as base64. Without the brackets, ``config.list`` and ``config.tuple`` return
+strings and ``config.base64`` returns ``bytes``.
+
+There is also ``config.option``, which returns a value picked from the options
+you give:
 
 .. code-block:: python
 
@@ -108,6 +126,20 @@ encoding to get ``str`` instead:
 
     SIGNING_KEY = config("APPLE_SIGNING_KEY", cast=Base64("utf-8"))  # str
 
+When the file has a format that another cast reads, put that cast between
+brackets. The content is decoded as UTF-8 text, or with the encoding you gave
+to ``Base64``, and handed to it:
+
+.. code-block:: python
+
+    CREDENTIALS = config(
+        "GOOGLE_CREDENTIALS",
+        cast=config.base64[config.json],
+        wrapper=config.secret,
+    )
+
+    CREDENTIALS.reveal()["client_email"]
+
 Wrapped base64 works too: whitespace and newlines are stripped before decoding,
 so a value pasted from a wrapping ``base64`` still loads. A value that is not
 valid base64 raises ``InvalidConfigurationError``. As with the other casts, the
@@ -115,6 +147,9 @@ error message does not include the rejected value, so a broken key does not end
 up in your logs.
 
 .. versionadded:: 3.0.0
+
+.. versionchanged:: 3.1.0
+    ``config.base64`` takes the cast of its content between brackets.
 
 
 Custom casts

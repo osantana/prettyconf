@@ -191,6 +191,66 @@ def test_base64_cast_repr():
     assert repr(Base64('utf-8')) == "Base64(encoding='utf-8')"
 
 
+def test_base64_cast_hands_its_content_to_another_cast():
+    encoded = base64.b64encode(b'{"type": "service_account"}').decode()
+
+    assert Base64()[JSON()](encoded) == {'type': 'service_account'}
+    assert config.base64[config.json](encoded) == {'type': 'service_account'}
+
+
+@pytest.mark.parametrize(
+    ('cast', 'content', 'result'),
+    [
+        (Integer(), b'42', 42),
+        (Boolean(), b'yes', True),
+        (List(), b'a, b', ['a', 'b']),
+        (List()[Integer()], b'1, 2', [1, 2]),
+    ],
+)
+def test_base64_cast_content_reaches_the_other_cast_as_text(cast, content, result):
+    encoded = base64.b64encode(content).decode()
+
+    assert Base64()[cast](encoded) == result
+
+
+def test_base64_cast_content_is_decoded_with_the_encoding_of_the_cast():
+    latin1_content = bytes([99, 97, 102, 233])
+    encoded = base64.b64encode(latin1_content).decode()
+
+    assert Base64('latin-1')[List()](encoded) == [latin1_content.decode('latin-1')]
+
+    with pytest.raises(InvalidConfigurationError):
+        Base64()[List()](encoded)
+
+
+def test_base64_cast_shortcut_is_not_changed_by_a_content_cast():
+    encoded = base64.b64encode(b'42').decode()
+
+    assert config.base64[config.int](encoded) == 42
+    assert config.base64(encoded) == b'42'
+
+
+def test_fail_invalid_content_in_a_base64_cast_without_leaking_it():
+    encoded = base64.b64encode(b'super-secret').decode()
+
+    with pytest.raises(InvalidConfigurationError) as error:
+        Base64()[JSON()](encoded)
+
+    assert 'super-secret' not in str(error.value)
+    assert encoded not in str(error.value)
+
+
+def test_base64_cast_warns_about_a_content_cast_that_is_not_a_cast():
+    with pytest.warns(DeprecationWarning, match=r'config\.int') as caught:
+        Base64()[int]
+
+    assert caught[0].filename == __file__
+
+
+def test_base64_content_cast_repr():
+    assert repr(Base64()[Base64()]) == "Base64Of(cast=Base64(encoding=None), encoding='utf-8')"
+
+
 @pytest.mark.parametrize('value', ['not base64!', 42, None])
 def test_fail_invalid_base64(value):
     with pytest.raises(InvalidConfigurationError):

@@ -256,6 +256,10 @@ class Base64(AbstractCast[ContentT]):
     def __repr__(self):
         return f'Base64(encoding={self.encoding!r})'
 
+    def __getitem__(self, cast: AbstractCast[U]) -> 'Base64Of[U]':
+        warn_unless_cast(cast)
+        return Base64Of(cast, self.encoding or 'utf-8')
+
     @staticmethod
     def _join_lines(value):
         if isinstance(value, str):
@@ -283,3 +287,15 @@ class Base64(AbstractCast[ContentT]):
 
     def __call__(self, value) -> ContentT:
         return self._decode(value)
+
+
+class Base64Of(AbstractCast[U]):
+    def __init__(self, cast: AbstractCast[U], encoding: str = 'utf-8'):
+        self.cast = cast
+        self.text = Base64(encoding)
+
+    def __repr__(self):
+        return f'Base64Of(cast={self.cast!r}, encoding={self.text.encoding!r})'
+
+    def __call__(self, value) -> U:
+        return self.cast(self.text(value))

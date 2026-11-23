@@ -19,6 +19,12 @@
   - ``config.list`` and ``config.tuple`` take an element cast:
     ``config.list[config.int]`` returns a ``list[int]``, for the type checker
     and at runtime.
+  - ``config.base64`` takes the cast of its content the same way:
+    ``config.base64[config.json]`` decodes the value and reads the result as
+    JSON. The content reaches the other cast as UTF-8 text, or in the encoding
+    given to ``Base64``.
+  - The casts page describes the builtin casts by what they do: return a type,
+    read a format, or undo an encoding.
   - ``config.eval`` is now a cast object like the others, instead of a bare
     function. An invalid value raises ``InvalidConfigurationError`` without the
     value in the message, where it used to raise the ``ValueError`` or

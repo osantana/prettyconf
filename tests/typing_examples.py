@@ -27,6 +27,9 @@ def _with_builtin_casts() -> None:
     assert_type(config('PORTS', cast=config.list[config.int]), list[int])
     assert_type(config('FLAGS', cast=config.tuple[config.boolean]), tuple[bool, ...])
     assert_type(config('HOSTS', cast=List(delimiter=';')), list[str])
+    assert_type(config('PIN', cast=config.base64[config.int]), int)
+    assert_type(config('PORTS', cast=config.base64[config.list[config.int]]), list[int])
+    assert_type(config('PIN', cast=config.base64[config.int], wrapper=config.secret), SecretValue[int])
 
 
 class _LogLevel(enum.Enum):
