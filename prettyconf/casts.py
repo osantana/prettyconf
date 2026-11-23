@@ -12,6 +12,8 @@ T = TypeVar('T')
 U = TypeVar('U')
 ContentT = TypeVar('ContentT', bytes, str)
 
+# TODO: remove in the next major release, together with warn_unless_cast, when
+# a cast that is not an AbstractCast instance stops being accepted.
 NATIVE_TYPE_REPLACEMENTS = (
     (bool, 'config.boolean'),
     (int, 'config.int'),
