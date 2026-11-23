@@ -20,10 +20,9 @@ the cast and the wrapper too.
 Keeping secrets out of logs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Settings get printed. Someone leaves a ``print(settings.API_KEY)`` behind while
-debugging, a log line includes the database URL, an error tracker saves the
-local variables of the function that failed. If the setting is a password or an
-API key, it is now readable in all of those places.
+A setting read with ``config()`` is a plain value. If it is a password or an API
+key and some code prints it or writes it to a log, anyone who can read that
+output can read the secret.
 
 Use the ``config.secret`` wrapper for these settings. It returns a
 ``SecretValue``, which prints as ``***``. To get the real value you call
@@ -52,8 +51,8 @@ call ``reveal()`` where you pass the secret on:
 
     server.login(EMAIL_USER, EMAIL_PASSWORD.reveal())    # smtplib
 
-Type checkers know what is inside. ``PIN`` above is a ``SecretValue[int]`` and
-``PIN.reveal()`` is an ``int``.
+Type checkers keep the type of the value: ``PIN`` above is a
+``SecretValue[int]`` and ``PIN.reveal()`` is an ``int``.
 
 
 Writing a wrapper

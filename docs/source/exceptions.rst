@@ -15,19 +15,17 @@ catch anything the library throws:
     except ConfigurationError:
         DEBUG = False
 
-No cast ever puts the value it rejected in its error message. A cast is as
-likely to be handed a private key as it is a debug flag, and the message ends up
-in tracebacks, in logs and in error trackers. What you get instead is the name of
-the configuration that failed and the reason it failed:
+The error message of a cast does not include the value that was rejected. The
+value may be a password or a private key, and exceptions get logged. The
+message has the name of the configuration and the reason it is invalid:
 
 .. code-block:: text
 
     prettyconf.exceptions.InvalidConfigurationError: Configuration 'API_KEY' is
     invalid: Value is not a valid base64 encoded file
 
-Keep this in mind when writing a custom cast: raise
-``InvalidConfigurationError`` describing *why* the value is wrong, never
-including the value itself. ``prettyconf`` adds the variable name for you.
+Do the same in your own casts: raise ``InvalidConfigurationError`` with the
+reason and leave the value out. ``prettyconf`` adds the variable name.
 
 The hierarchy is:
 

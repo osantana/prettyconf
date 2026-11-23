@@ -66,8 +66,9 @@ you pass a ``default`` of type ``T``.
 Namespaces
 ~~~~~~~~~~
 
-Settings that belong together usually share a prefix. Index ``config`` with
-that prefix to get a configuration that adds it to every name:
+Settings for the same service often share a prefix, like ``AUTH0_DOMAIN`` and
+``AUTH0_TOKEN``. Index ``config`` with that prefix to get a configuration that
+adds it to every name:
 
 .. code-block:: python
 
@@ -83,10 +84,10 @@ The prefix is used exactly as written, separator included, so ``config["AUTH0"]`
 would read ``AUTH0DOMAIN``. A namespace takes ``cast``, ``default`` and
 ``wrapper`` like ``config`` itself, reads from the same loaders, and can be
 indexed again: ``config["AUTH0_"]["API_"]("TOKEN")`` reads ``AUTH0_API_TOKEN``.
-Errors always name the whole variable.
+Error messages show the full name.
 
-A namespace is a snapshot: create it after customizing ``config.loaders``, not
-before.
+A namespace keeps the loaders that ``config`` had when you created it. If you
+replace ``config.loaders``, create the namespace afterwards.
 
 .. versionadded:: 3.1.0
 

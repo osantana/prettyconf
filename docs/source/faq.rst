@@ -30,8 +30,7 @@ Is prettyconf tied to Django_, Flask_ or FastAPI_?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 No, prettyconf was designed to be framework agnostic, be it for the web or cli
-applications. It works the same way in a Django ``settings.py``, in a Flask
-application factory or in a FastAPI startup module.
+applications. You call ``config()`` the same way in any of them.
 
 .. _`Django`: https://www.djangoproject.com/
 .. _`Flask`: https://flask.palletsprojects.com/

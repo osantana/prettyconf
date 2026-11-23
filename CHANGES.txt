@@ -1,15 +1,12 @@
 3.1.0
 =====
 
-  - Add a ``wrapper`` argument to ``config()``, which receives the value after
-    the cast: ``config("PIN", cast=config.int, wrapper=config.secret)``. A cast
-    decides the type of a setting and a wrapper decides what happens to the
-    value next, so the two are independent.
-  - Add the ``config.secret`` wrapper, which puts the value in a ``SecretValue``
-    that shows as ``***`` in ``repr``, ``str`` and logs, and only hands the value
-    over through ``reveal()``. A ``SecretValue`` is not a string on purpose:
-    serializing or concatenating it raises ``TypeError`` instead of leaking the
-    secret. Type checkers follow the cast through it, so the example above is a
+  - Add a ``wrapper`` argument to ``config()``. It is called with the value the
+    cast returned: ``config("PIN", cast=config.int, wrapper=config.secret)``.
+  - Add the ``config.secret`` wrapper. It returns a ``SecretValue``, which prints
+    as ``***`` and gives the value back through ``reveal()``. A ``SecretValue``
+    is not a string: ``json.dumps`` and concatenation raise ``TypeError``. Type
+    checkers keep the type of the value, so the example above is a
     ``SecretValue[int]``.
   - Add the ``config.int`` and ``config.float`` casts. Unlike ``cast=int``, they
     raise ``InvalidConfigurationError`` naming the variable, and never put the

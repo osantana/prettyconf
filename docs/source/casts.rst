@@ -58,8 +58,8 @@ line. ``config.base64`` decodes a file that was encoded as one base64 string:
 
     CREDENTIALS = config("GOOGLE_CREDENTIALS", cast=config.base64)  # bytes
 
-The cast returns ``bytes``, which is what most crypto libraries expect and what
-``json.loads`` accepts. Pass an encoding to get ``str`` instead:
+The cast returns ``bytes``, and ``json.loads`` accepts them as they are. Pass an
+encoding to get ``str`` instead:
 
 .. code-block:: python
 
@@ -100,18 +100,18 @@ implements ``__call__``:
 
    DISCOUNT = config("DISCOUNT", default="10", cast=Percentage())
 
-Annotating the return type of ``__call__`` is what lets a type checker infer
-that ``DISCOUNT`` is a ``float``. See :ref:`type-checking`. Raise
-``InvalidConfigurationError`` saying *why* the value is wrong, and leave the
-value itself out of the message: ``prettyconf`` adds the name of the variable.
+Annotate the return type of ``__call__`` and a type checker will know that
+``DISCOUNT`` is a ``float``. See :ref:`type-checking`. When the value is wrong,
+raise ``InvalidConfigurationError`` with the reason and leave the value out of
+the message. ``prettyconf`` adds the name of the variable.
 
 .. deprecated:: 3.1.0
-    Passing anything that is not an ``AbstractCast`` instance as a cast, such as
-    ``cast=int``, ``cast=bool`` or a plain function, still works but emits a
-    ``DeprecationWarning``, and will stop working in the next major release.
-    The native types were never reliable casts: ``bool("false")`` is ``True``
+    A cast that is not an ``AbstractCast`` instance, such as ``cast=int``,
+    ``cast=bool`` or a plain function, still works but emits a
+    ``DeprecationWarning``. It will stop working in the next major release.
+    The native types give wrong results as casts: ``bool("false")`` is ``True``
     and ``list("a,b")`` is ``["a", ",", "b"]``. Use ``config.int``,
-    ``config.boolean``, ``config.list`` and friends, or write a subclass.
+    ``config.boolean`` or ``config.list`` instead, or write a subclass.
 
 
 Useful third-parties casts
