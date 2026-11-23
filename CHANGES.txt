@@ -1,13 +1,16 @@
 3.1.0
 =====
 
-  - Add the ``config.secret()`` cast, which wraps any other cast and returns a
-    ``SecretValue`` that shows as ``***`` in ``repr``, ``str`` and logs, and only
-    hands the value over through ``reveal()``. ``config.secret()`` covers the
-    plain string case and ``config.secret(config.base64)``,
-    ``config.secret(config.json)`` or ``config.secret(int)`` cover the rest. A
-    ``SecretValue`` is not a string on purpose: serializing or concatenating it
-    raises ``TypeError`` instead of leaking the secret.
+  - Add a ``wrapper`` argument to ``config()``, which receives the value after
+    the cast: ``config("PIN", cast=int, wrapper=config.secret)``. A cast decides
+    the type of a setting and a wrapper decides what happens to the value next,
+    so the two are independent.
+  - Add the ``config.secret`` wrapper, which puts the value in a ``SecretValue``
+    that shows as ``***`` in ``repr``, ``str`` and logs, and only hands the value
+    over through ``reveal()``. A ``SecretValue`` is not a string on purpose:
+    serializing or concatenating it raises ``TypeError`` instead of leaking the
+    secret. Type checkers follow the cast through it, so the example above is a
+    ``SecretValue[int]``.
 
 3.0.1
 =====

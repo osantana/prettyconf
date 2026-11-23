@@ -4,14 +4,16 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, TypeVar, overload
 
-from .casts import JSON, Base64, Boolean, List, Option, Secret, Tuple
+from .casts import JSON, Base64, Boolean, List, Option, Tuple
 from .exceptions import InvalidConfigurationError, UnknownConfigurationError
 from .loaders import Environment, RecursiveSearch
+from .wrappers import SecretValue
 
 MAGIC_FRAME_DEPTH = 2
 
 T = TypeVar('T')
 D = TypeVar('D')
+W = TypeVar('W')
 
 
 class _NotGiven:
@@ -38,24 +40,12 @@ class Configuration:
     json = JSON()
     base64 = Base64()  # Base64('utf-8') decodes to str instead
 
+    # Shortcut for standard wrappers
+    secret = SecretValue
+
     @staticmethod
     def option(options: Mapping[str, T]) -> Option[T]:
         return Option(options)
-
-    @overload
-    @staticmethod
-    def secret() -> Secret[str]: ...
-
-    @overload
-    @staticmethod
-    def secret(cast: Callable[..., T]) -> Secret[T]: ...
-
-    @staticmethod
-    def secret(cast=None):
-        if cast is not None and not callable(cast):
-            raise TypeError('config.secret takes a cast: use cast=config.secret() for a plain secret')
-
-        return Secret(cast)
 
     def __init__(self, loaders=None):
         self._recursive_search = None
@@ -84,9 +74,28 @@ class Configuration:
     @overload
     def __call__(self, item: str, cast: Callable[..., T], *, default: Any) -> T: ...
 
-    def __call__(self, item, cast=lambda v: v, *, default=_NOT_GIVEN):
+    @overload
+    def __call__(self, item: str, *, wrapper: type[SecretValue[Any]]) -> SecretValue[str]: ...
+
+    @overload
+    def __call__(self, item: str, *, default: D, wrapper: type[SecretValue[Any]]) -> SecretValue[str | D]: ...
+
+    @overload
+    def __call__(
+        self, item: str, cast: Callable[..., T], *, default: Any = ..., wrapper: type[SecretValue[Any]]
+    ) -> SecretValue[T]: ...
+
+    @overload
+    def __call__(
+        self, item: str, cast: Callable[..., Any] = ..., *, default: Any = ..., wrapper: Callable[..., W]
+    ) -> W: ...
+
+    def __call__(self, item, cast=lambda v: v, *, default=_NOT_GIVEN, wrapper=lambda v: v):
         if not callable(cast):
             raise TypeError('Cast must be callable')
+
+        if not callable(wrapper):
+            raise TypeError('Wrapper must be callable')
 
         if self._recursive_search:
             self._recursive_search.starting_path = _caller_path()
@@ -97,12 +106,12 @@ class Configuration:
             except KeyError:
                 continue
 
-            return self._cast(item, cast, value)
+            return wrapper(self._cast(item, cast, value))
 
         if default is _NOT_GIVEN:
             raise UnknownConfigurationError(f"Configuration '{item}' not found")
 
-        return self._cast(item, cast, default)
+        return wrapper(self._cast(item, cast, default))
 
     @staticmethod
     def _cast(item, cast, value):

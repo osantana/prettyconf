@@ -1,7 +1,10 @@
+from pathlib import Path
+
 from typing_extensions import assert_type
 
 from prettyconf import config
-from prettyconf.casts import Base64, Secret, SecretValue
+from prettyconf.casts import Base64
+from prettyconf.wrappers import SecretValue
 
 
 def _without_cast(fallback: int) -> None:
@@ -24,13 +27,15 @@ def _with_callable_casts() -> None:
     assert_type(config('NUMBERS', cast=lambda value: [int(v) for v in value.split(';')]), list[int])
 
 
-def _with_secret_casts() -> None:
-    assert_type(config('API_KEY', cast=config.secret()), SecretValue[str])
-    assert_type(config('API_KEY', cast=config.secret(str)), SecretValue[str])
-    assert_type(config('CREDENTIALS', cast=config.secret(config.base64)), SecretValue[bytes])
-    assert_type(config('PORT', cast=config.secret(int)), SecretValue[int])
-    assert_type(config('PORT', cast=config.secret(int)).reveal(), int)
-    assert_type(config('PORT', cast=Secret(int)), SecretValue[int])
+def _with_wrappers() -> None:
+    assert_type(config('API_KEY', wrapper=config.secret), SecretValue[str])
+    assert_type(config('API_KEY', default=None, wrapper=config.secret), SecretValue[str | None])
+    assert_type(config('CREDENTIALS', cast=config.base64, wrapper=config.secret), SecretValue[bytes])
+    assert_type(config('DEBUG', config.boolean, wrapper=config.secret), SecretValue[bool])
+    assert_type(config('DEBUG', cast=config.boolean, default=False, wrapper=config.secret), SecretValue[bool])
+    assert_type(config('DEBUG', cast=config.boolean, wrapper=SecretValue), SecretValue[bool])
+    assert_type(config('DEBUG', cast=config.boolean, wrapper=config.secret).reveal(), bool)
+    assert_type(config('DATA_DIR', wrapper=Path), Path)
 
 
 def _with_option_cast() -> None:

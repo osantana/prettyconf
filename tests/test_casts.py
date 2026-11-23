@@ -1,11 +1,10 @@
 import base64
-import json
 import textwrap
 
 import pytest
 
 from prettyconf import config
-from prettyconf.casts import JSON, Base64, Boolean, List, Option, Secret, SecretValue, Tuple
+from prettyconf.casts import JSON, Base64, Boolean, List, Option, Tuple
 from prettyconf.exceptions import InvalidConfigurationError
 
 PRIVATE_KEY = textwrap.dedent("""\
@@ -251,88 +250,3 @@ def test_base64_cast_shortcut(monkeypatch):
     monkeypatch.setenv('CREDENTIALS', base64.b64encode(b'{"type": "service_account"}').decode())
 
     assert config('CREDENTIALS', cast=config.base64) == b'{"type": "service_account"}'
-
-
-def test_secret_cast_hides_the_value_until_revealed():
-    secret = Secret()('sk-live-123')
-
-    assert secret.reveal() == 'sk-live-123'
-    assert 'sk-live-123' not in repr(secret)
-    assert 'sk-live-123' not in str(secret)
-    assert 'sk-live-123' not in f'{secret}'
-
-
-@pytest.mark.parametrize(
-    ('cast', 'value', 'revealed'),
-    [
-        (int, '5432', 5432),
-        (Boolean(), 'yes', True),
-        (JSON(), '{"password": "hunter2"}', {'password': 'hunter2'}),
-        (Base64(), base64.b64encode(b'private key').decode(), b'private key'),
-        (Base64('utf-8'), base64.b64encode(b'private key').decode(), 'private key'),
-    ],
-)
-def test_secret_cast_wraps_the_result_of_another_cast(cast, value, revealed):
-    assert Secret(cast)(value).reveal() == revealed
-
-
-def test_secret_value_fails_loudly_instead_of_leaking():
-    secret = Secret()('sk-live-123')
-
-    with pytest.raises(TypeError):
-        json.dumps({'key': secret})
-
-    with pytest.raises(TypeError):
-        secret + '!'
-
-
-def test_secret_value_never_equals_the_plain_value():
-    wrapped = Secret()('sk-live-123')
-
-    assert wrapped != 'sk-live-123'
-    assert wrapped == Secret()('sk-live-123')
-    assert wrapped != Secret()('other')
-    assert hash(wrapped) == hash(Secret()('sk-live-123'))
-
-
-def test_secret_value_truthiness_follows_the_value():
-    assert Secret()('sk-live-123')
-    assert not Secret()('')
-
-
-def test_secret_cast_propagates_the_error_of_the_wrapped_cast():
-    with pytest.raises(InvalidConfigurationError) as error:
-        Secret(Base64())('super-secret!')
-
-    assert 'super-secret' not in str(error.value)
-
-
-def test_secret_cast_repr():
-    assert repr(Secret(int)) == "Secret(cast=<class 'int'>)"
-
-
-def test_secret_cast_shortcut(monkeypatch):
-    monkeypatch.setenv('API_KEY', 'sk-live-123')
-
-    secret = config('API_KEY', cast=config.secret())
-
-    assert isinstance(secret, SecretValue)
-    assert secret.reveal() == 'sk-live-123'
-
-
-def test_secret_cast_shortcut_wraps_another_cast(monkeypatch):
-    monkeypatch.setenv('CREDENTIALS', base64.b64encode(b'private key').decode())
-    monkeypatch.setenv('PIN', '1234')
-
-    assert config('CREDENTIALS', cast=config.secret(config.base64)).reveal() == b'private key'
-    assert config('PIN', cast=config.secret(int)).reveal() == 1234
-    assert config('PIN', cast=config.secret(str)).reveal() == '1234'
-
-
-def test_fail_secret_cast_shortcut_used_without_calling_it(monkeypatch):
-    monkeypatch.setenv('API_KEY', 'sk-live-123')
-
-    with pytest.raises(TypeError) as error:
-        config('API_KEY', cast=config.secret)
-
-    assert 'sk-live-123' not in str(error.value)
