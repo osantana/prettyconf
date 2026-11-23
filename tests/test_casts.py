@@ -125,6 +125,14 @@ def test_if_cast_is_unbounded():
     assert config.eval('None') is None
 
 
+@pytest.mark.parametrize('value', ['super-secret', 'super-secret(', '1 +', None])
+def test_fail_invalid_eval_without_leaking_the_value(value):
+    with pytest.raises(InvalidConfigurationError) as error:
+        config.eval(value)
+
+    assert 'super-secret' not in str(error.value)
+
+
 @pytest.mark.parametrize(
     ('value', 'result'),
     [

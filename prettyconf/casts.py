@@ -63,7 +63,10 @@ class Float(AbstractCast):
 
 class Eval(AbstractCast):
     def __call__(self, value) -> Any:
-        return ast.literal_eval(value)
+        try:
+            return ast.literal_eval(value)
+        except (ValueError, TypeError, SyntaxError, MemoryError, RecursionError) as ex:
+            raise InvalidConfigurationError('Value is not a valid Python literal') from ex
 
 
 class Boolean(AbstractCast):

@@ -15,7 +15,10 @@
     ``config.list[config.int]`` returns a ``list[int]``, for the type checker
     and at runtime.
   - ``config.eval`` is now a cast object like the others, instead of a bare
-    function.
+    function. An invalid value raises ``InvalidConfigurationError`` without the
+    value in the message, where it used to raise the ``ValueError`` or
+    ``SyntaxError`` of ``ast.literal_eval``. Code that caught those needs to
+    catch ``InvalidConfigurationError`` instead.
   - Add namespaces: ``config["AUTH0_"]`` returns a configuration that adds the
     prefix to every name, so ``config["AUTH0_"]("TOKEN")`` reads
     ``AUTH0_TOKEN``. Namespaces can be nested and take the same arguments as
