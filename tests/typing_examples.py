@@ -1,3 +1,5 @@
+import decimal
+import enum
 from pathlib import Path
 
 from typing_extensions import assert_type
@@ -25,6 +27,19 @@ def _with_builtin_casts() -> None:
     assert_type(config('PORTS', cast=config.list[config.int]), list[int])
     assert_type(config('FLAGS', cast=config.tuple[config.boolean]), tuple[bool, ...])
     assert_type(config('HOSTS', cast=List(delimiter=';')), list[str])
+
+
+class _LogLevel(enum.Enum):
+    DEBUG = 'debug'
+    INFO = 'info'
+
+
+def _with_value_casts() -> None:
+    assert_type(config('DATA_DIR', cast=config.path), Path)
+    assert_type(config('PRICE', cast=config.decimal), decimal.Decimal)
+    assert_type(config('LOG_LEVEL', cast=config.enum(_LogLevel)), _LogLevel)
+    assert_type(config('LEVELS', cast=config.list[config.enum(_LogLevel)]), list[_LogLevel])
+    assert_type(config('PRICE', cast=config.decimal, wrapper=config.secret), SecretValue[decimal.Decimal])
 
 
 class _Upper(AbstractCast[str]):

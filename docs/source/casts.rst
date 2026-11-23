@@ -8,6 +8,11 @@ Builtin Casts
    ``true|false``, ``t|f`` into booleans.
 #. ``config.int`` - converts the value into an integer.
 #. ``config.float`` - converts the value into a float.
+#. ``config.decimal`` - converts the value into a ``decimal.Decimal``, keeping
+   the digits as written (``"0.10"`` stays ``Decimal("0.10")``).
+#. ``config.path`` - converts the value into a ``pathlib.Path``.
+#. ``config.enum`` - converts the name or the value of a member into that
+   member of an ``Enum``, see :ref:`enum`.
 #. ``config.eval`` - safely evaluate strings with Python literals to Python
    objects (alias to Python's ``ast.literal_eval``).
 #. ``config.list`` - converts comma separated strings into lists. Give it
@@ -35,6 +40,42 @@ Builtin Casts
     MODULES = config("ENVIRONMENT",
                      default="production",
                      cast=config.option(environments))
+
+
+.. _enum:
+
+Settings with a fixed set of values
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When a setting only accepts a few values, declare them in an ``Enum`` and use
+``config.enum``:
+
+.. code-block:: python
+
+    import enum
+
+    from prettyconf import config
+
+
+    class LogLevel(enum.Enum):
+        DEBUG = "debug"
+        INFO = "info"
+
+
+    LOG_LEVEL = config("LOG_LEVEL", default="info", cast=config.enum(LogLevel))
+
+The variable can hold the name of a member (``LOG_LEVEL=DEBUG``) or its value
+(``LOG_LEVEL=debug``). Names are tried first and the match is exact, so
+``Debug`` is rejected. Anything else raises ``InvalidConfigurationError`` with
+the list of valid names:
+
+.. code-block:: text
+
+    Configuration 'LOG_LEVEL' is invalid: Value is not one of the valid options: DEBUG, INFO
+
+Type checkers know that ``LOG_LEVEL`` is a ``LogLevel``.
+
+.. versionadded:: 3.1.0
 
 
 .. _base64:

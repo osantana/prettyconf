@@ -11,6 +11,11 @@
   - Add the ``config.int`` and ``config.float`` casts. Unlike ``cast=int``, they
     raise ``InvalidConfigurationError`` naming the variable, and never put the
     rejected value in the message.
+  - Add the ``config.decimal`` and ``config.path`` casts, for ``decimal.Decimal``
+    and ``pathlib.Path``.
+  - Add the ``config.enum`` cast: ``config.enum(LogLevel)`` accepts the name or
+    the value of a member and returns the member. An invalid value is reported
+    with the list of valid names.
   - ``config.list`` and ``config.tuple`` take an element cast:
     ``config.list[config.int]`` returns a ``list[int]``, for the type checker
     and at runtime.

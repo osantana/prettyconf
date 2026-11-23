@@ -1,7 +1,7 @@
 import copy
+import pathlib
 import sys
 from collections.abc import Callable, Mapping
-from pathlib import Path
 from typing import Any, TypeVar, overload
 
 from .casts import (
@@ -9,11 +9,15 @@ from .casts import (
     AbstractCast,
     Base64,
     Boolean,
+    Decimal,
+    Enum,
     Eval,
     Float,
     Integer,
     List,
+    MemberT,
     Option,
+    Path,
     Tuple,
     warn_unless_cast,
 )
@@ -43,7 +47,7 @@ def _unchanged(value):
 def _caller_path():
     # MAGIC! Get the caller's module path.
     frame = sys._getframe(MAGIC_FRAME_DEPTH)  # noqa: SLF001
-    return str(Path(frame.f_code.co_filename).resolve().parent)
+    return str(pathlib.Path(frame.f_code.co_filename).resolve().parent)
 
 
 class Configuration:
@@ -51,6 +55,8 @@ class Configuration:
     boolean = Boolean()
     int = Integer()
     float = Float()
+    decimal = Decimal()
+    path = Path()
     list = List()
     tuple = Tuple()
     eval = Eval()
@@ -63,6 +69,10 @@ class Configuration:
     @staticmethod
     def option(options: Mapping[str, T]) -> Option[T]:
         return Option(options)
+
+    @staticmethod
+    def enum(members: type[MemberT]) -> Enum[MemberT]:
+        return Enum(members)
 
     def __init__(self, loaders=None):
         self.prefix = ''

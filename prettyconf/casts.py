@@ -1,7 +1,10 @@
 import ast
 import base64
 import binascii
+import decimal
+import enum
 import json
+import pathlib
 import warnings
 from collections.abc import Callable, Mapping
 from typing import Any, ClassVar, Generic, TypeVar, overload
@@ -11,6 +14,7 @@ from .exceptions import InvalidConfigurationError
 T = TypeVar('T')
 U = TypeVar('U')
 ContentT = TypeVar('ContentT', bytes, str)
+MemberT = TypeVar('MemberT', bound=enum.Enum)
 
 # TODO: remove in the next major release, together with warn_unless_cast, when
 # a cast that is not an AbstractCast instance stops being accepted.
@@ -60,6 +64,39 @@ class Float(AbstractCast[float]):
             return float(value)
         except (TypeError, ValueError) as ex:
             raise InvalidConfigurationError('Value is not a valid float') from ex
+
+
+class Decimal(AbstractCast[decimal.Decimal]):
+    def __call__(self, value) -> decimal.Decimal:
+        try:
+            return decimal.Decimal(value)
+        except (decimal.InvalidOperation, TypeError, ValueError) as ex:
+            raise InvalidConfigurationError('Value is not a valid decimal') from ex
+
+
+class Path(AbstractCast[pathlib.Path]):
+    def __call__(self, value) -> pathlib.Path:
+        try:
+            return pathlib.Path(value)
+        except TypeError as ex:
+            raise InvalidConfigurationError('Value is not a valid path') from ex
+
+
+class Enum(AbstractCast[MemberT]):
+    def __init__(self, members: type[MemberT]):
+        self.members = members
+
+    def __call__(self, value) -> MemberT:
+        try:
+            return self.members[value]
+        except (KeyError, TypeError):
+            pass
+
+        try:
+            return self.members(value)
+        except ValueError as ex:
+            choices = ', '.join(member.name for member in self.members)
+            raise InvalidConfigurationError(f'Value is not one of the valid options: {choices}') from ex
 
 
 class Eval(AbstractCast[Any]):
