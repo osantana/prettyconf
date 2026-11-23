@@ -63,6 +63,34 @@ you pass a ``default`` of type ``T``.
 .. versionadded:: 3.0.0
 
 
+Namespaces
+~~~~~~~~~~
+
+Settings that belong together usually share a prefix. Index ``config`` with
+that prefix to get a configuration that adds it to every name:
+
+.. code-block:: python
+
+    from prettyconf import config
+
+    auth0 = config["AUTH0_"]
+
+    AUTH0_DOMAIN = auth0("DOMAIN")                          # reads AUTH0_DOMAIN
+    AUTH0_TOKEN = auth0("TOKEN", wrapper=config.secret)     # reads AUTH0_TOKEN
+    AUTH0_RETRIES = auth0("RETRIES", default="3", cast=config.int)
+
+The prefix is used exactly as written, separator included, so ``config["AUTH0"]``
+would read ``AUTH0DOMAIN``. A namespace takes ``cast``, ``default`` and
+``wrapper`` like ``config`` itself, reads from the same loaders, and can be
+indexed again: ``config["AUTH0_"]["API_"]("TOKEN")`` reads ``AUTH0_API_TOKEN``.
+Errors always name the whole variable.
+
+A namespace is a snapshot: create it after customizing ``config.loaders``, not
+before.
+
+.. versionadded:: 3.1.0
+
+
 Configuration files discovery
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -19,6 +19,10 @@
     and at runtime.
   - ``config.eval`` is now a cast object like the others, instead of a bare
     function.
+  - Add namespaces: ``config["AUTH0_"]`` returns a configuration that adds the
+    prefix to every name, so ``config["AUTH0_"]("TOKEN")`` reads
+    ``AUTH0_TOKEN``. Namespaces can be nested and take the same arguments as
+    ``config``.
 
   Deprecations:
 

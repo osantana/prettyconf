@@ -44,6 +44,15 @@ def _with_wrappers() -> None:
     assert_type(config('DATA_DIR', wrapper=Path), Path)
 
 
+def _with_namespaces() -> None:
+    auth0 = config['AUTH0_']
+
+    assert_type(auth0('DOMAIN'), str)
+    assert_type(auth0('RETRIES', cast=config.int), int)
+    assert_type(auth0('TOKEN', wrapper=config.secret), SecretValue[str])
+    assert_type(config['AUTH0_']['API_']('RETRIES', cast=config.int), int)
+
+
 def _with_option_cast() -> None:
     environments = {
         'production': ('spam', 'eggs'),

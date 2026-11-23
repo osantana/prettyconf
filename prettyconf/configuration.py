@@ -1,3 +1,4 @@
+import copy
 import sys
 from collections.abc import Callable, Mapping
 from pathlib import Path
@@ -53,6 +54,7 @@ class Configuration:
         return Option(options)
 
     def __init__(self, loaders=None):
+        self.prefix = ''
         self._recursive_search = None
         if loaders is None:
             self._recursive_search = RecursiveSearch()
@@ -66,6 +68,11 @@ class Configuration:
     def __repr__(self):
         loaders = ', '.join([repr(loader) for loader in self.loaders])
         return f'{self.__class__.__name__}(loaders=[{loaders}])'
+
+    def __getitem__(self, prefix: str) -> 'Configuration':
+        namespace = copy.copy(self)
+        namespace.prefix = self.prefix + prefix
+        return namespace
 
     @overload
     def __call__(self, item: str) -> str: ...
@@ -104,6 +111,8 @@ class Configuration:
 
         if cast is not _unchanged:
             warn_unless_cast(cast)
+
+        item = self.prefix + item
 
         if self._recursive_search:
             self._recursive_search.starting_path = _caller_path()
