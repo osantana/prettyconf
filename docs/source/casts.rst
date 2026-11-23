@@ -42,10 +42,9 @@ Builtin Casts
 Encoding a whole file in one variable
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Some credentials only ever exist as files — a Google service account
-``.json``, an Apple ``.p8`` signing key — but a configuration variable has to be
-a single line. ``config.base64`` decodes a file that was encoded as one
-base64 string:
+Some credentials come as files, like a Google service account ``.json`` or an
+Apple ``.p8`` signing key, and a configuration variable has to be a single
+line. ``config.base64`` decodes a file that was encoded as one base64 string:
 
 .. code-block:: sh
 
@@ -70,9 +69,9 @@ The cast returns ``bytes``, which is what most crypto libraries expect and what
 
 Wrapped base64 works too: whitespace and newlines are stripped before decoding,
 so a value pasted from a wrapping ``base64`` still loads. A value that is not
-valid base64 raises ``InvalidConfigurationError``, and — like every other cast —
-the rejected value never appears in the error message, so a broken key does not
-end up in your logs.
+valid base64 raises ``InvalidConfigurationError``. As with the other casts, the
+error message does not include the rejected value, so a broken key does not end
+up in your logs.
 
 .. versionadded:: 3.0.0
 

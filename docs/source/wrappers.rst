@@ -1,9 +1,8 @@
 Wrappers
 --------
 
-A cast decides the *type* of a setting. A wrapper decides what happens to the
-value once it has that type, and the two are independent: ``wrapper`` receives
-whatever the cast returned.
+You can pass a ``wrapper`` to ``config()``. It is called with the value that
+the cast returned, and ``config()`` returns whatever the wrapper returns:
 
 .. code-block:: python
 
@@ -12,7 +11,8 @@ whatever the cast returned.
     value = config("NAME", cast=some_cast, wrapper=some_wrapper)
     # the same as some_wrapper(some_cast(raw_value))
 
-The default value, when one is used, goes through the cast and the wrapper too.
+If the variable is not set and you gave a ``default``, the default goes through
+the cast and the wrapper too.
 
 
 .. _secret:
@@ -20,11 +20,14 @@ The default value, when one is used, goes through the cast and the wrapper too.
 Keeping secrets out of logs
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-A password or an API key read as a plain value ends up wherever the settings
-object is printed: a debug page, a log line, an error tracker. Being a secret
-has nothing to do with the type of the value, so it is a wrapper and not a cast:
-``config.secret`` puts the value in a ``SecretValue``, which shows as ``***``
-everywhere and only hands the real value over when you call ``reveal()``.
+Settings get printed. Someone leaves a ``print(settings.API_KEY)`` behind while
+debugging, a log line includes the database URL, an error tracker saves the
+local variables of the function that failed. If the setting is a password or an
+API key, it is now readable in all of those places.
+
+Use the ``config.secret`` wrapper for these settings. It returns a
+``SecretValue``, which prints as ``***``. To get the real value you call
+``reveal()``:
 
 .. code-block:: python
 
@@ -36,24 +39,27 @@ everywhere and only hands the real value over when you call ``reveal()``.
 
     print(API_KEY)            # ***
     repr(API_KEY)             # SecretValue(***)
-    API_KEY.reveal()          # the actual key, a str
+    API_KEY.reveal()          # the key, a str
     PIN.reveal()              # an int
     CREDENTIALS.reveal()      # bytes
 
-A ``SecretValue`` is deliberately not a string. Serializing it with
-``json.dumps`` or concatenating it raises ``TypeError`` instead of quietly
-writing the secret out, and it never compares equal to a plain value. The price
-is that it cannot be handed to a library as it is: pass ``reveal()`` at the
-point where the secret is actually needed.
+A ``SecretValue`` is not a string, and code that expects one fails:
+``json.dumps`` and string concatenation raise ``TypeError``, and comparing it
+with a plain value is always ``False``. Libraries will not accept it either, so
+call ``reveal()`` where you pass the secret on:
 
-Type checkers follow the cast through the wrapper: ``PIN`` above is a
-``SecretValue[int]``, and ``PIN.reveal()`` is an ``int``.
+.. code-block:: python
+
+    server.login(EMAIL_USER, EMAIL_PASSWORD.reveal())    # smtplib
+
+Type checkers know what is inside. ``PIN`` above is a ``SecretValue[int]`` and
+``PIN.reveal()`` is an ``int``.
 
 
 Writing a wrapper
 ~~~~~~~~~~~~~~~~~
 
-Any callable that takes the value and returns something is a wrapper:
+A wrapper is any callable that takes the value and returns something:
 
 .. code-block:: python
 
