@@ -1,10 +1,13 @@
 import ast
 import base64
 import binascii
+import datetime
 import decimal
 import enum
 import json
 import pathlib
+import re
+import urllib.parse
 import warnings
 from collections.abc import Callable, Mapping
 from typing import Any, ClassVar, Generic, TypeVar, overload
@@ -80,6 +83,63 @@ class Path(AbstractCast[pathlib.Path]):
             return pathlib.Path(value)
         except TypeError as ex:
             raise InvalidConfigurationError('Value is not a valid path') from ex
+
+
+class Timedelta(AbstractCast[datetime.timedelta]):
+    units: ClassVar[dict[str, str]] = {
+        'ms': 'milliseconds',
+        's': 'seconds',
+        'm': 'minutes',
+        'h': 'hours',
+        'd': 'days',
+    }
+    number = r'\d+(?:\.\d+)?'
+    seconds_pattern = re.compile(number)
+    parts_pattern = re.compile(rf'({number})(ms|s|m|h|d)')
+    duration_pattern = re.compile(rf'(?:{number}(?:ms|s|m|h|d))+')
+
+    def _parse(self, text) -> datetime.timedelta:
+        if self.seconds_pattern.fullmatch(text):
+            return datetime.timedelta(seconds=float(text))
+
+        if not self.duration_pattern.fullmatch(text):
+            raise ValueError(text)
+
+        duration = datetime.timedelta()
+        for amount, unit in self.parts_pattern.findall(text):
+            duration += datetime.timedelta(**{self.units[unit]: float(amount)})
+
+        return duration
+
+    def __call__(self, value) -> datetime.timedelta:
+        if isinstance(value, datetime.timedelta):
+            return value
+
+        try:
+            return self._parse(str(value).strip())
+        except (ValueError, OverflowError) as ex:
+            raise InvalidConfigurationError('Value is not a valid duration') from ex
+
+
+class URL(AbstractCast[urllib.parse.SplitResult]):
+    def __call__(self, value) -> urllib.parse.SplitResult:
+        if not isinstance(value, str):
+            raise InvalidConfigurationError('Value is not a valid URL')
+
+        try:
+            url = urllib.parse.urlsplit(value)
+            url.port  # noqa: B018 - reading the port is what validates it
+        except ValueError as ex:
+            raise InvalidConfigurationError('Value is not a valid URL') from ex
+
+        separator = value[len(url.scheme) : len(url.scheme) + 3]
+        if not url.scheme or separator != '://':
+            raise InvalidConfigurationError('Value is not a valid URL: it needs a scheme followed by ://')
+
+        if not url.netloc and not url.path:
+            raise InvalidConfigurationError('Value is not a valid URL: nothing follows the scheme')
+
+        return url
 
 
 class Enum(AbstractCast[MemberT]):

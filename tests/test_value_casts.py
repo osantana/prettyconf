@@ -1,3 +1,4 @@
+import datetime
 import decimal
 import enum
 import pathlib
@@ -5,7 +6,7 @@ import pathlib
 import pytest
 
 from prettyconf import config
-from prettyconf.casts import AbstractCast, Decimal, Enum, Path
+from prettyconf.casts import URL, AbstractCast, Decimal, Enum, Path, Timedelta
 from prettyconf.exceptions import InvalidConfigurationError
 
 
@@ -102,3 +103,98 @@ def test_enum_cast_error_names_the_configuration(monkeypatch):
         config('LOG_LEVEL', cast=config.enum(LogLevel))
 
     assert 'verbose' not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    ('value', 'result'),
+    [
+        ('30', datetime.timedelta(seconds=30)),
+        ('1.5', datetime.timedelta(seconds=1.5)),
+        (30, datetime.timedelta(seconds=30)),
+        ('500ms', datetime.timedelta(milliseconds=500)),
+        ('30s', datetime.timedelta(seconds=30)),
+        ('5m', datetime.timedelta(minutes=5)),
+        ('2h', datetime.timedelta(hours=2)),
+        ('7d', datetime.timedelta(days=7)),
+        ('1.5h', datetime.timedelta(minutes=90)),
+        ('1h30m', datetime.timedelta(minutes=90)),
+        ('1d2h3m4s5ms', datetime.timedelta(days=1, hours=2, minutes=3, seconds=4, milliseconds=5)),
+        (' 30s ', datetime.timedelta(seconds=30)),
+        (datetime.timedelta(minutes=5), datetime.timedelta(minutes=5)),
+    ],
+)
+def test_timedelta_cast(value, result):
+    assert Timedelta()(value) == result
+
+
+@pytest.mark.parametrize(
+    'value',
+    ['super-secret', '', '5 m', '5x', 'm5', '-5s', '1e3', 'nan', 'inf', '5M', '1h 30m', None, '9' * 400 + 'd'],
+)
+def test_fail_invalid_timedelta_without_leaking_the_value(value):
+    with pytest.raises(InvalidConfigurationError) as error:
+        Timedelta()(value)
+
+    assert 'super-secret' not in str(error.value)
+
+
+def test_url_cast():
+    url = URL()('postgres://user:password@db.example.com:5432/app?sslmode=require')
+
+    assert url.scheme == 'postgres'
+    assert url.hostname == 'db.example.com'
+    assert url.port == 5432
+    assert url.username == 'user'
+    assert url.password == 'password'  # noqa: S105
+    assert url.path == '/app'
+    assert url.query == 'sslmode=require'
+
+
+@pytest.mark.parametrize(
+    ('value', 'scheme', 'hostname', 'path'),
+    [
+        ('https://example.com', 'https', 'example.com', ''),
+        ('HTTP://example.com/', 'http', 'example.com', '/'),
+        ('sqlite:///db.sqlite3', 'sqlite', None, '/db.sqlite3'),
+        ('redis://localhost:6379/0', 'redis', 'localhost', '/0'),
+    ],
+)
+def test_url_cast_accepts(value, scheme, hostname, path):
+    url = URL()(value)
+
+    assert (url.scheme, url.hostname, url.path) == (scheme, hostname, path)
+
+
+@pytest.mark.parametrize(
+    'value',
+    [
+        'super-secret',
+        'localhost:8000',
+        'example.com/path',
+        '/just/a/path',
+        'http://',
+        'mailto:someone@example.com',
+        'http://example.com:port',
+        'http://[broken',
+        '',
+        None,
+        b'http://example.com',
+    ],
+)
+def test_fail_invalid_url_without_leaking_the_value(value):
+    with pytest.raises(InvalidConfigurationError) as error:
+        URL()(value)
+
+    assert 'super-secret' not in str(error.value)
+
+
+def test_timedelta_and_url_shortcuts(monkeypatch):
+    monkeypatch.setenv('TIMEOUT', '1m30s')
+    monkeypatch.setenv('API_URL', 'https://api.example.com/v1')
+
+    assert config('TIMEOUT', cast=config.timedelta) == datetime.timedelta(seconds=90)
+    assert config('TIMEOUT', default=30, cast=config.timedelta) == datetime.timedelta(seconds=90)
+    assert config('MISSING', default=30, cast=config.timedelta) == datetime.timedelta(seconds=30)
+    assert config('API_URL', cast=config.url).hostname == 'api.example.com'
+    assert isinstance(config.timedelta, AbstractCast)
+    assert isinstance(config.url, AbstractCast)

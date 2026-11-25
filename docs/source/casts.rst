@@ -16,6 +16,10 @@ Some return a value of one type:
 #. ``config.decimal`` - converts the value into a ``decimal.Decimal``, keeping
    the digits as written (``"0.10"`` stays ``Decimal("0.10")``).
 #. ``config.path`` - converts the value into a ``pathlib.Path``.
+#. ``config.timedelta`` - converts a duration like ``30``, ``500ms`` or
+   ``1h30m`` into a ``datetime.timedelta``, see :ref:`timedelta`.
+#. ``config.url`` - splits a URL into its parts and checks that it has a
+   scheme, see :ref:`url`.
 #. ``config.enum`` - converts the name or the value of a member into that
    member of an ``Enum``, see :ref:`enum`.
 
@@ -92,6 +96,77 @@ the list of valid names:
     Configuration 'LOG_LEVEL' is invalid: Value is not one of the valid options: DEBUG, INFO
 
 Type checkers know that ``LOG_LEVEL`` is a ``LogLevel``.
+
+.. versionadded:: 3.1.0
+
+
+.. _timedelta:
+
+Durations
+~~~~~~~~~
+
+``config.timedelta`` reads timeouts, intervals and expiration times into a
+``datetime.timedelta``:
+
+.. code-block:: python
+
+    from prettyconf import config
+
+    TIMEOUT = config("TIMEOUT", default=30, cast=config.timedelta)
+
+A number alone is a number of seconds. A number followed by a unit uses that
+unit, and several of them can be written together:
+
+========== ======================
+value      result
+========== ======================
+``30``     30 seconds
+``1.5``    1.5 seconds
+``500ms``  500 milliseconds
+``30s``    30 seconds
+``5m``     5 minutes
+``2h``     2 hours
+``7d``     7 days
+``1h30m``  1 hour and 30 minutes
+========== ======================
+
+The units are ``ms``, ``s``, ``m``, ``h`` and ``d``, in lower case and with no
+spaces. Negative durations are not accepted.
+
+.. versionadded:: 3.1.0
+
+
+.. _url:
+
+URLs
+~~~~
+
+``config.url`` returns what ``urllib.parse.urlsplit`` returns, after checking
+that the value has a scheme followed by ``://``, something after it, and a port
+that is a number when there is one:
+
+.. code-block:: python
+
+    from prettyconf import config
+
+    API = config("API_URL", cast=config.url)
+
+    API.scheme        # "https"
+    API.hostname      # "api.example.com"
+    API.port          # None, or an int
+    API.path          # "/v1"
+
+A value like ``localhost:8000`` or ``example.com/path`` is rejected, because
+without the scheme ``urlsplit`` reads them as something else.
+
+When the URL carries a password, as database URLs usually do, printing the
+result shows it. Add ``wrapper=config.secret``:
+
+.. code-block:: python
+
+    DATABASE = config("DATABASE_URL", cast=config.url, wrapper=config.secret)
+
+    DATABASE.reveal().password
 
 .. versionadded:: 3.1.0
 

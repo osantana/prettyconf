@@ -1,5 +1,7 @@
+import datetime
 import decimal
 import enum
+import urllib.parse
 from pathlib import Path
 
 from typing_extensions import assert_type
@@ -40,6 +42,8 @@ class _LogLevel(enum.Enum):
 def _with_value_casts() -> None:
     assert_type(config('DATA_DIR', cast=config.path), Path)
     assert_type(config('PRICE', cast=config.decimal), decimal.Decimal)
+    assert_type(config('TIMEOUT', cast=config.timedelta), datetime.timedelta)
+    assert_type(config('API_URL', cast=config.url), urllib.parse.SplitResult)
     assert_type(config('LOG_LEVEL', cast=config.enum(_LogLevel)), _LogLevel)
     assert_type(config('LEVELS', cast=config.list[config.enum(_LogLevel)]), list[_LogLevel])
     assert_type(config('PRICE', cast=config.decimal, wrapper=config.secret), SecretValue[decimal.Decimal])

@@ -6,6 +6,7 @@ from typing import Any, TypeVar, overload
 
 from .casts import (
     JSON,
+    URL,
     AbstractCast,
     Base64,
     Boolean,
@@ -18,6 +19,7 @@ from .casts import (
     MemberT,
     Option,
     Path,
+    Timedelta,
     Tuple,
     warn_unless_cast,
 )
@@ -57,6 +59,8 @@ class Configuration:
     float = Float()
     decimal = Decimal()
     path = Path()
+    timedelta = Timedelta()
+    url = URL()
     list = List()
     tuple = Tuple()
     eval = Eval()
