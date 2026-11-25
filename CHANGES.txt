@@ -13,6 +13,12 @@
     rejected value in the message.
   - Add the ``config.decimal`` and ``config.path`` casts, for ``decimal.Decimal``
     and ``pathlib.Path``.
+  - Add the ``config.timedelta`` cast, which reads a duration into a
+    ``datetime.timedelta``: a number of seconds, or numbers with the units
+    ``ms``, ``s``, ``m``, ``h`` and ``d``, as in ``500ms`` or ``1h30m``.
+  - Add the ``config.url`` cast, which returns the result of
+    ``urllib.parse.urlsplit`` after checking that the value has a scheme
+    followed by ``://`` and a valid port.
   - Add the ``config.enum`` cast: ``config.enum(LogLevel)`` accepts the name or
     the value of a member and returns the member. An invalid value is reported
     with the list of valid names.
@@ -39,6 +45,7 @@
     ``config.base64``, ``Base64("utf-8")`` and ``config.option(...)``, which it
     reported as an unsolved type variable since 3.0.0.
   - Add support for Python 3.15.
+  - Compare prettyconf to pydantic-settings in the FAQ.
 
   Deprecations:
 

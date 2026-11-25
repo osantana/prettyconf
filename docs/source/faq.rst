@@ -91,3 +91,59 @@ environment being just one of them.
 .. _`python-dotenv`: https://github.com/theskumar/python-dotenv
 .. _`pipenv`: https://pipenv.pypa.io/en/latest/shell.html#automatic-loading-of-env
 .. _`docker-compose`: https://docs.docker.com/compose/how-tos/environment-variables/
+
+
+How does prettyconf compare to pydantic-settings_?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+pydantic-settings_ declares the settings as a class. Each setting is an
+attribute with a type annotation, and pydantic_ reads and validates all of them
+when the class is instantiated. If two settings are wrong, the error lists the
+two.
+
+prettyconf reads one setting per ``config()`` call, at the line where you call
+it. There is no class to declare, so a Django ``settings.py`` or a module of
+constants stays written the way it already is. The price is in the errors: a
+wrong setting raises when its line runs, and you only find the next wrong one
+after fixing the first.
+
++----------------+----------------------------------+-------------------------------------+
+|                | prettyconf                       | pydantic-settings                   |
++================+==================================+=====================================+
+| Declaration    | one ``config()`` call per        | a class with annotated attributes   |
+|                | setting                          |                                     |
++----------------+----------------------------------+-------------------------------------+
+| Validation     | when each call runs, stops at    | when the class is instantiated,     |
+|                | the first error                  | reports every error                 |
++----------------+----------------------------------+-------------------------------------+
+| Types          | ``cast=config.int``, see         | the annotation of the attribute     |
+|                | :doc:`casts`                     |                                     |
++----------------+----------------------------------+-------------------------------------+
+| Secrets        | ``wrapper=config.secret``, see   | ``SecretStr`` and ``Secret[T]``     |
+|                | :doc:`wrappers`                  |                                     |
++----------------+----------------------------------+-------------------------------------+
+| Prefixes       | ``config["AUTH0_"]``             | ``env_prefix``                      |
++----------------+----------------------------------+-------------------------------------+
+| ``.env`` file  | found by walking up from the     | the path given in ``env_file``      |
+|                | file that called ``config()``    |                                     |
++----------------+----------------------------------+-------------------------------------+
+| Dependencies   | none                             | pydantic, python-dotenv,            |
+|                |                                  | typing-extensions and               |
+|                |                                  | typing-inspection                   |
++----------------+----------------------------------+-------------------------------------+
+
+pydantic-settings also reads from more places: a directory with one file per
+secret, YAML and TOML files, and the secret managers of AWS, Azure and Google
+Cloud. prettyconf reads environment variables, ``.env`` and ``.ini`` files,
+command line arguments and the AWS Parameter Store, and you write a loader for
+anything else.
+
+The dependencies weigh differently in each project. pydantic has a compiled
+core, and prettyconf is plain Python with nothing to install besides itself. If
+your project already uses pydantic, as every FastAPI_ project does,
+pydantic-settings costs you nothing new and gives you the settings as one
+validated object. If it does not, prettyconf gets you typed settings and
+secrets without bringing pydantic in.
+
+.. _`pydantic-settings`: https://docs.pydantic.dev/latest/concepts/pydantic_settings/
+.. _`pydantic`: https://docs.pydantic.dev/
