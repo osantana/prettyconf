@@ -19,6 +19,9 @@
   - Add the ``config.url`` cast, which returns the result of
     ``urllib.parse.urlsplit`` after checking that the value has a scheme
     followed by ``://`` and a valid port.
+  - ``Integer``, ``Float``, ``Decimal`` and ``Timedelta`` take a ``minimum``
+    and a ``maximum``: ``cast=Integer(minimum=1, maximum=65535)``. A value
+    outside the limits raises ``InvalidConfigurationError`` naming the limit.
   - Add the ``config.enum`` cast: ``config.enum(LogLevel)`` accepts the name or
     the value of a member and returns the member. An invalid value is reported
     with the list of valid names.

@@ -64,6 +64,39 @@ you give:
                      cast=config.option(environments))
 
 
+.. _limits:
+
+Limits
+~~~~~~
+
+The casts of values that have an order take a ``minimum`` and a ``maximum``.
+``config.int`` has no limits, so build the cast yourself:
+
+.. code-block:: python
+
+    import datetime
+
+    from prettyconf import config
+    from prettyconf.casts import Float, Integer, Timedelta
+
+    PORT = config("PORT", default=8000, cast=Integer(minimum=1, maximum=65535))
+    SAMPLE_RATE = config("SAMPLE_RATE", default=1, cast=Float(minimum=0, maximum=1))
+    TIMEOUT = config("TIMEOUT", default=30, cast=Timedelta(maximum=datetime.timedelta(minutes=5)))
+
+Both limits are inclusive and either one can be left out. ``Integer``,
+``Float``, ``Decimal`` and ``Timedelta`` take them. A value outside the limits
+raises ``InvalidConfigurationError`` with the limit in the message:
+
+.. code-block:: text
+
+    Configuration 'PORT' is invalid: Value must be at most 65535
+
+A cast with limits works wherever a cast does, so
+``config.list[Integer(minimum=1, maximum=65535)]`` is a list of ports.
+
+.. versionadded:: 3.1.0
+
+
 .. _enum:
 
 Settings with a fixed set of values

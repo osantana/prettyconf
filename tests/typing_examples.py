@@ -7,7 +7,7 @@ from pathlib import Path
 from typing_extensions import assert_type
 
 from prettyconf import config
-from prettyconf.casts import AbstractCast, Base64, List
+from prettyconf.casts import AbstractCast, Base64, Float, Integer, List, Timedelta
 from prettyconf.wrappers import SecretValue
 
 
@@ -44,6 +44,10 @@ def _with_value_casts() -> None:
     assert_type(config('PRICE', cast=config.decimal), decimal.Decimal)
     assert_type(config('TIMEOUT', cast=config.timedelta), datetime.timedelta)
     assert_type(config('API_URL', cast=config.url), urllib.parse.SplitResult)
+    assert_type(config('PORT', cast=Integer(minimum=1, maximum=65535)), int)
+    assert_type(config('RATE', cast=Float(minimum=0)), float)
+    assert_type(config('PORTS', cast=config.list[Integer(minimum=1)]), list[int])
+    assert_type(config('TTL', cast=Timedelta(maximum=datetime.timedelta(hours=1))), datetime.timedelta)
     assert_type(config('LOG_LEVEL', cast=config.enum(_LogLevel)), _LogLevel)
     assert_type(config('LEVELS', cast=config.list[config.enum(_LogLevel)]), list[_LogLevel])
     assert_type(config('PRICE', cast=config.decimal, wrapper=config.secret), SecretValue[decimal.Decimal])

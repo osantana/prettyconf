@@ -53,26 +53,41 @@ def warn_unless_cast(cast, stacklevel=3):
     )
 
 
-class Integer(AbstractCast[int]):
+class BoundedCast(AbstractCast[T]):
+    def __init__(self, minimum=None, maximum=None):
+        self.minimum = minimum
+        self.maximum = maximum
+
+    def _check(self, value):
+        if self.minimum is not None and not value >= self.minimum:
+            raise InvalidConfigurationError(f'Value must be at least {self.minimum}')
+
+        if self.maximum is not None and not value <= self.maximum:
+            raise InvalidConfigurationError(f'Value must be at most {self.maximum}')
+
+        return value
+
+
+class Integer(BoundedCast[int]):
     def __call__(self, value) -> int:
         try:
-            return int(value)
+            return self._check(int(value))
         except (TypeError, ValueError) as ex:
             raise InvalidConfigurationError('Value is not a valid integer') from ex
 
 
-class Float(AbstractCast[float]):
+class Float(BoundedCast[float]):
     def __call__(self, value) -> float:
         try:
-            return float(value)
+            return self._check(float(value))
         except (TypeError, ValueError) as ex:
             raise InvalidConfigurationError('Value is not a valid float') from ex
 
 
-class Decimal(AbstractCast[decimal.Decimal]):
+class Decimal(BoundedCast[decimal.Decimal]):
     def __call__(self, value) -> decimal.Decimal:
         try:
-            return decimal.Decimal(value)
+            return self._check(decimal.Decimal(value))
         except (decimal.InvalidOperation, TypeError, ValueError) as ex:
             raise InvalidConfigurationError('Value is not a valid decimal') from ex
 
@@ -85,7 +100,7 @@ class Path(AbstractCast[pathlib.Path]):
             raise InvalidConfigurationError('Value is not a valid path') from ex
 
 
-class Timedelta(AbstractCast[datetime.timedelta]):
+class Timedelta(BoundedCast[datetime.timedelta]):
     units: ClassVar[dict[str, str]] = {
         'ms': 'milliseconds',
         's': 'seconds',
@@ -113,10 +128,10 @@ class Timedelta(AbstractCast[datetime.timedelta]):
 
     def __call__(self, value) -> datetime.timedelta:
         if isinstance(value, datetime.timedelta):
-            return value
+            return self._check(value)
 
         try:
-            return self._parse(str(value).strip())
+            return self._check(self._parse(str(value).strip()))
         except (ValueError, OverflowError) as ex:
             raise InvalidConfigurationError('Value is not a valid duration') from ex
 

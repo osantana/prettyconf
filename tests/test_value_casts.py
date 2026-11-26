@@ -6,7 +6,7 @@ import pathlib
 import pytest
 
 from prettyconf import config
-from prettyconf.casts import URL, AbstractCast, Decimal, Enum, Path, Timedelta
+from prettyconf.casts import URL, AbstractCast, Decimal, Enum, Float, Integer, Path, Timedelta
 from prettyconf.exceptions import InvalidConfigurationError
 
 
@@ -186,6 +186,65 @@ def test_fail_invalid_url_without_leaking_the_value(value):
         URL()(value)
 
     assert 'super-secret' not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    ('cast', 'value', 'result'),
+    [
+        (Integer(minimum=1, maximum=65535), '1', 1),
+        (Integer(minimum=1, maximum=65535), '65535', 65535),
+        (Integer(minimum=0), 0, 0),
+        (Integer(maximum=0), '-7', -7),
+        (Float(minimum=0, maximum=1), '0.5', 0.5),
+        (Decimal(minimum=decimal.Decimal('0.01')), '0.01', decimal.Decimal('0.01')),
+        (Timedelta(minimum=datetime.timedelta(seconds=1)), '1s', datetime.timedelta(seconds=1)),
+        (Timedelta(maximum=datetime.timedelta(hours=1)), 30, datetime.timedelta(seconds=30)),
+    ],
+)
+def test_casts_accept_values_inside_their_limits(cast, value, result):
+    assert cast(value) == result
+
+
+@pytest.mark.parametrize(
+    ('cast', 'value', 'reason'),
+    [
+        (Integer(minimum=1, maximum=65535), '0', 'at least 1'),
+        (Integer(minimum=1, maximum=65535), '65536', 'at most 65535'),
+        (Integer(minimum=0), '-1', 'at least 0'),
+        (Integer(maximum=0), 1, 'at most 0'),
+        (Float(minimum=0, maximum=1), '1.5', 'at most 1'),
+        (Float(minimum=0), 'nan', 'at least 0'),
+        (Decimal(minimum=decimal.Decimal('0.01')), '0.001', 'at least 0.01'),
+        (Decimal(minimum=0), 'NaN', 'not a valid decimal'),
+        (Timedelta(minimum=datetime.timedelta(seconds=1)), '500ms', 'at least 0:00:01'),
+        (Timedelta(maximum=datetime.timedelta(hours=1)), '2h', 'at most 1:00:00'),
+        (Timedelta(maximum=datetime.timedelta(hours=1)), datetime.timedelta(hours=2), 'at most 1:00:00'),
+    ],
+)
+def test_casts_reject_values_outside_their_limits_without_leaking_them(cast, value, reason):
+    with pytest.raises(InvalidConfigurationError, match=reason) as error:
+        cast(value)
+
+    assert str(value) not in str(error.value).replace(reason, '')
+
+
+def test_limits_of_a_cast_apply_to_the_default_and_name_the_configuration(monkeypatch):
+    monkeypatch.setenv('PORT', '70000')
+    port = Integer(minimum=1, maximum=65535)
+
+    with pytest.raises(InvalidConfigurationError, match="'PORT' is invalid: Value must be at most 65535"):
+        config('PORT', cast=port)
+
+    with pytest.raises(InvalidConfigurationError, match="'MISSING_PORT' is invalid: Value must be at least 1"):
+        config('MISSING_PORT', default=0, cast=port)
+
+
+def test_limits_of_a_cast_apply_to_the_elements_of_a_list():
+    ports = config.list[Integer(minimum=1, maximum=65535)]
+
+    assert ports('80, 443') == [80, 443]
+    with pytest.raises(InvalidConfigurationError, match='at most 65535'):
+        ports('80, 70000')
 
 
 def test_timedelta_and_url_shortcuts(monkeypatch):
