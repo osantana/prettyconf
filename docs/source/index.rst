@@ -10,6 +10,7 @@ Contents:
    installation.rst
    usage.rst
    casts.rst
+   wrappers.rst
    advanced.rst
    loaders.rst
    exceptions.rst

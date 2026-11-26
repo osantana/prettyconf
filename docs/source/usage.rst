@@ -52,13 +52,44 @@ type from the ``cast`` you pass, so a type checker knows what each setting is:
     TIMEOUT = config("TIMEOUT", default=None)              # str | None
     DEBUG = config("DEBUG", default=False, cast=config.boolean)  # bool
     HOSTS = config("HOSTS", cast=config.list)              # list[str]
-    PORT = config("PORT", cast=int)                        # int
+    PORTS = config("PORTS", cast=config.list[config.int])  # list[int]
+    PORT = config("PORT", cast=config.int)                 # int
+    WORKERS = config("WORKERS", config.int)                # int, cast given by position
 
-Any callable works as a ``cast``, and its return type is what you get back, so
-custom casts are inferred too. Without a ``cast``, the value comes back as
-``str``, or as ``str | T`` when you pass a ``default`` of type ``T``.
+The return type of the cast is what you get back, so custom casts are inferred
+too. Without a ``cast``, the value comes back as ``str``, or as ``str | T`` when
+you pass a ``default`` of type ``T``.
 
 .. versionadded:: 3.0.0
+
+
+Namespaces
+~~~~~~~~~~
+
+Settings for the same service often share a prefix, like ``AUTH0_DOMAIN`` and
+``AUTH0_TOKEN``. Index ``config`` with that prefix to get a configuration that
+adds it to every name:
+
+.. code-block:: python
+
+    from prettyconf import config
+
+    auth0 = config["AUTH0_"]
+
+    AUTH0_DOMAIN = auth0("DOMAIN")                          # reads AUTH0_DOMAIN
+    AUTH0_TOKEN = auth0("TOKEN", wrapper=config.secret)     # reads AUTH0_TOKEN
+    AUTH0_RETRIES = auth0("RETRIES", default="3", cast=config.int)
+
+The prefix is used exactly as written, separator included, so ``config["AUTH0"]``
+would read ``AUTH0DOMAIN``. A namespace takes ``cast``, ``default`` and
+``wrapper`` like ``config`` itself, reads from the same loaders, and can be
+indexed again: ``config["AUTH0_"]["API_"]("TOKEN")`` reads ``AUTH0_API_TOKEN``.
+Error messages show the full name.
+
+A namespace keeps the loaders that ``config`` had when you created it. If you
+replace ``config.loaders``, create the namespace afterwards.
+
+.. versionadded:: 3.1.0
 
 
 Configuration files discovery

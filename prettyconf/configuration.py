@@ -1,17 +1,37 @@
-import ast
+import copy
+import pathlib
 import sys
 from collections.abc import Callable, Mapping
-from pathlib import Path
 from typing import Any, TypeVar, overload
 
-from .casts import JSON, Base64, Boolean, List, Option, Tuple
+from .casts import (
+    JSON,
+    URL,
+    AbstractCast,
+    Base64,
+    Boolean,
+    Decimal,
+    Enum,
+    Eval,
+    Float,
+    Integer,
+    List,
+    MemberT,
+    Option,
+    Path,
+    Timedelta,
+    Tuple,
+    warn_unless_cast,
+)
 from .exceptions import InvalidConfigurationError, UnknownConfigurationError
 from .loaders import Environment, RecursiveSearch
+from .wrappers import SecretValue
 
 MAGIC_FRAME_DEPTH = 2
 
 T = TypeVar('T')
 D = TypeVar('D')
+W = TypeVar('W')
 
 
 class _NotGiven:
@@ -22,27 +42,44 @@ class _NotGiven:
 _NOT_GIVEN = _NotGiven()
 
 
+def _unchanged(value):
+    return value
+
+
 def _caller_path():
     # MAGIC! Get the caller's module path.
-    # noinspection PyProtectedMember
     frame = sys._getframe(MAGIC_FRAME_DEPTH)  # noqa: SLF001
-    return str(Path(frame.f_code.co_filename).resolve().parent)
+    return str(pathlib.Path(frame.f_code.co_filename).resolve().parent)
 
 
 class Configuration:
     # Shortcut for standard casts
     boolean = Boolean()
+    int = Integer()
+    float = Float()
+    decimal = Decimal()
+    path = Path()
+    timedelta = Timedelta()
+    url = URL()
     list = List()
     tuple = Tuple()
-    eval = staticmethod(ast.literal_eval)
+    eval = Eval()
     json = JSON()
     base64 = Base64()  # Base64('utf-8') decodes to str instead
+
+    # Shortcut for standard wrappers
+    secret = SecretValue
 
     @staticmethod
     def option(options: Mapping[str, T]) -> Option[T]:
         return Option(options)
 
+    @staticmethod
+    def enum(members: type[MemberT]) -> Enum[MemberT]:
+        return Enum(members)
+
     def __init__(self, loaders=None):
+        self.prefix = ''
         self._recursive_search = None
         if loaders is None:
             self._recursive_search = RecursiveSearch()
@@ -57,6 +94,11 @@ class Configuration:
         loaders = ', '.join([repr(loader) for loader in self.loaders])
         return f'{self.__class__.__name__}(loaders=[{loaders}])'
 
+    def __getitem__(self, prefix: str) -> 'Configuration':
+        namespace = copy.copy(self)
+        namespace.prefix = self.prefix + prefix
+        return namespace
+
     @overload
     def __call__(self, item: str) -> str: ...
 
@@ -64,14 +106,43 @@ class Configuration:
     def __call__(self, item: str, *, default: D) -> str | D: ...
 
     @overload
-    def __call__(self, item: str, cast: Callable[..., T]) -> T: ...
+    def __call__(self, item: str, cast: AbstractCast[T], *, default: Any = ...) -> T: ...
 
     @overload
-    def __call__(self, item: str, cast: Callable[..., T], *, default: Any) -> T: ...
+    def __call__(self, item: str, cast: Callable[..., T], *, default: Any = ...) -> T: ...
 
-    def __call__(self, item, cast=lambda v: v, *, default=_NOT_GIVEN):
+    @overload
+    def __call__(self, item: str, *, wrapper: type[SecretValue[Any]]) -> SecretValue[str]: ...
+
+    @overload
+    def __call__(self, item: str, *, default: D, wrapper: type[SecretValue[Any]]) -> SecretValue[str | D]: ...
+
+    @overload
+    def __call__(
+        self, item: str, cast: AbstractCast[T], *, default: Any = ..., wrapper: type[SecretValue[Any]]
+    ) -> SecretValue[T]: ...
+
+    @overload
+    def __call__(
+        self, item: str, cast: Callable[..., T], *, default: Any = ..., wrapper: type[SecretValue[Any]]
+    ) -> SecretValue[T]: ...
+
+    @overload
+    def __call__(
+        self, item: str, cast: Callable[..., Any] = ..., *, default: Any = ..., wrapper: Callable[..., W]
+    ) -> W: ...
+
+    def __call__(self, item, cast=_unchanged, *, default=_NOT_GIVEN, wrapper=_unchanged):
         if not callable(cast):
             raise TypeError('Cast must be callable')
+
+        if not callable(wrapper):
+            raise TypeError('Wrapper must be callable')
+
+        if cast is not _unchanged:
+            warn_unless_cast(cast)
+
+        item = self.prefix + item
 
         if self._recursive_search:
             self._recursive_search.starting_path = _caller_path()
@@ -82,12 +153,12 @@ class Configuration:
             except KeyError:
                 continue
 
-            return self._cast(item, cast, value)
+            return wrapper(self._cast(item, cast, value))
 
         if default is _NOT_GIVEN:
             raise UnknownConfigurationError(f"Configuration '{item}' not found")
 
-        return self._cast(item, cast, default)
+        return wrapper(self._cast(item, cast, default))
 
     @staticmethod
     def _cast(item, cast, value):
